@@ -1,0 +1,15 @@
+[
+{
+  "modid": "fruitphone",
+  "name": "Fruit Phone",
+  "description": "Waila-compatible immersive block information.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://unascribed.com",
+  "authorList": ["Una Thompson (unascribed)"],
+  "credits": "MUH IMMERSHUN",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

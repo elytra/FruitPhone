@@ -1,0 +1,162 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		jcenter()
+		maven {
+			name = "forge"
+			url = "http://files.minecraftforge.net/maven"
+		}
+		maven {
+			name = "sonatype"
+			url = "https://oss.sonatype.org/content/repositories/snapshots/"
+		}
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+		classpath 'me.tatarka:gradle-retrolambda:3.2.0'
+	}
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'maven'
+
+ext.configFile = file('build.properties')
+
+ext.config = parseConfig(configFile)
+ext.priv = parseConfig(file('private.properties'))
+
+group = "com.unascribed"
+archivesBaseName = "FruitPhone"
+version = config.version
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+retrolambda {
+	javaVersion JavaVersion.VERSION_1_6
+	defaultMethods true
+}
+
+repositories {
+	maven {
+		name = 'sonatype-nexus'
+		url = 'https://oss.sonatype.org/content/repositories/public/'
+	}
+	maven {
+		name = 'unascribed'
+		url = 'http://unascribed.com/maven/releases'
+	}
+	jcenter()
+	ivy {
+		artifactPattern "http://unascribed.com/jars/[organisation]/[module].[ext]"
+	}
+}
+
+configurations {
+	deploy
+}
+
+jar {
+	classifier = 'slim'
+	manifest {
+		attributes (
+			'FMLAT': 'fruitphone_at.cfg',
+			'FMLCorePlugin': 'io.github.elytra.fruitphone.early.FruitPhoneLoadingPlugin',
+			'FMLCorePluginContainsFMLMod': 'true',
+			'ForceLoadAsMod': 'true',
+		)
+	}
+}
+
+shadowJar {
+	classifier = ''
+}
+
+reobf {
+	shadowJar { mappingType = 'SEARGE' }
+}
+
+tasks.build.dependsOn reobfShadowJar
+
+artifacts {
+	archives shadowJar
+}
+
+dependencies {
+	deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
+	
+	compile fileTree(dir: 'libs', include: '*.jar')
+}
+
+minecraft {
+	version = config.forge
+	mappings = config.mappings
+
+	runDir = "minecraft"
+
+	replaceIn 'src/main/java/io/github/elytra/fruitphone/FruitPhone.java'
+	replace '@VERSION@', project.version
+}
+
+processResources {
+	// this will ensure that this task is redone when the versions change.
+	inputs.property "version", project.version
+	inputs.property "mcversion", project.minecraft.version
+
+	// replace stuff in mcmod.info, nothing else
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+
+		// replace version and mcversion
+		expand 'version':project.version, 'mcversion':project.minecraft.version
+	}
+
+	// copy everything else, thats not the mcmod.info
+	from(sourceSets.main.resources.srcDirs) {
+		exclude 'mcmod.info'
+		exclude '*.xcf'
+		exclude '*.wav'
+	}
+}
+
+def parseConfig(File config) {
+	if (!config.exists()) return new Properties()
+	config.withReader {
+		def prop = new Properties()
+		prop.load(it)
+		return (new ConfigSlurper().parse(prop))
+	}
+}
+
+uploadArchives {
+	repositories.mavenDeployer {
+		configuration = configurations.deploy
+		pom.artifactId = 'fruitphone'
+		repository(url: "scp://"+priv.scpHost+priv.scpPath+"/releases") {
+			authentication(userName: priv.scpUser, privateKey: file(priv.scpKey))
+		}
+	}
+}
+
+/**
+ * Generate classpath files for use with atom-autocomplete-java
+ */
+task atom << {
+	File f = file(".classpath");
+	StringBuilder classpath = new StringBuilder();
+	def addToClasspath = {
+		classpath.append(it.getAbsolutePath());
+		classpath.append(File.pathSeparator);
+	};
+	configurations.compile.files.each addToClasspath
+	configurations.compile.files.each addToClasspath
+	configurations.forgeGradleMc.files.each addToClasspath
+	configurations.forgeGradleMcDeps.files.each addToClasspath
+	configurations.provided.files.each addToClasspath
+	f.text = classpath.toString();
+}
