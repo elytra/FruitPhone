@@ -22,7 +22,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientProxy extends Proxy {
@@ -30,8 +29,9 @@ public class ClientProxy extends Proxy {
 	public void preInit() {
 		super.preInit();
 
-		ModelLoader.setCustomModelResourceLocation(FruitPhone.handheld, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
-		ModelLoader.setCustomModelResourceLocation(FruitPhone.passive, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
+		ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
+		ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
+		ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
 	}
 
 	@Override
@@ -39,19 +39,14 @@ public class ClientProxy extends Proxy {
 		super.postInit();
 
 		Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tintIndex) -> {
-			if (stack.getItem() == FruitPhone.passive && tintIndex == 0) return -1;
-			if (stack.hasTagCompound() && stack.getTagCompound().hasKey("display", NBT.TAG_COMPOUND)) {
-				if (stack.getTagCompound().getCompoundTag("display").hasKey("Color", NBT.TAG_INT)) {
-					return stack.getTagCompound().getCompoundTag("display").getInteger("Color");
-				}
-			}
-			return 0xFFA20030;
-		}, FruitPhone.handheld, FruitPhone.passive);
+			if (stack.getItem() == FruitItems.PASSIVE && tintIndex == 0) return -1;
+			return ((ItemFruit)stack.getItem()).getColor(stack);
+		}, FruitItems.HANDHELD, FruitItems.PASSIVE);
 	}
 
 	@SubscribeEvent
 	public void onRenderHand(RenderSpecificHandEvent e) {
-		if (e.getItemStack() != null && e.getItemStack().getItem() == FruitPhone.handheld) {
+		if (e.getItemStack() != null && e.getItemStack().getItem() == FruitItems.HANDHELD) {
 			Minecraft mc = Minecraft.getMinecraft();
 			
 			AbstractClientPlayer p = mc.thePlayer;

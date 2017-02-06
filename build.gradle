@@ -55,6 +55,10 @@ repositories {
 	ivy {
 		artifactPattern "http://unascribed.com/jars/[organisation]/[module].[ext]"
 	}
+	maven {
+		name = 'jei'
+		url = "http://dvs1.progwml6.com/files/maven"
+	}
 }
 
 configurations {
@@ -91,6 +95,12 @@ dependencies {
 	deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
 	
 	compile fileTree(dir: 'libs', include: '*.jar')
+	
+	shadow 'io.github.elytra:concrete:0.0.6'
+	compile 'io.github.elytra:concrete:0.0.6'
+	
+	compile 'mezz.jei:jei_1.10.2:3.14.4.404:api'
+	runtime 'mezz.jei:jei_1.10.2:3.14.4.404'
 }
 
 minecraft {
