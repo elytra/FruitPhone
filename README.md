@@ -10,5 +10,5 @@ It also acts as an alternative frontend for Waila, as it includes a Waila shim.
 A TheOneProbe shim was attempted but is quite difficult due to how rigid that
 API is. PRs accepted.
 
-Yes, doing that required a lot of ugly hacks. Would've been really easy and
-clean in 1.7 with render hooks. *glares*
+Yes, making things render on the item required a lot of ugly hacks. Would've
+been really easy and clean in 1.7 with render hooks. *glares*

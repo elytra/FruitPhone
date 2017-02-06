@@ -11,7 +11,8 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.oredict.RecipeSorter;
+import net.minecraftforge.oredict.RecipeSorter.Category;
 
 @Mod(modid="fruitphone", name="Fruit Phone", version="@VERSION@")
 public class FruitPhone {
@@ -21,29 +22,19 @@ public class FruitPhone {
 		
 		@Override
 		public Item getTabIconItem() {
-			return handheld;
+			return FruitItems.HANDHELD;
 		}
 	};
-	
-	public static ItemFruitHandheld handheld;
-	public static ItemFruitPassive passive;
 	
 	@SidedProxy(clientSide="io.github.elytra.fruitphone.ClientProxy", serverSide="io.github.elytra.fruitphone.Proxy")
 	public static Proxy proxy;
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
-		handheld = new ItemFruitHandheld();
-		handheld.setRegistryName("handheld");
-		handheld.setCreativeTab(tab);
-		handheld.setUnlocalizedName("fruitphone.handheld");
-		GameRegistry.register(handheld);
+		RecipeSorter.register("fruitphone:upgrade", FruitUpgradeRecipe.class, Category.SHAPED, "after:forge:shapedore");
 		
-		passive = new ItemFruitPassive();
-		passive.setRegistryName("passive");
-		passive.setCreativeTab(tab);
-		passive.setUnlocalizedName("fruitphone.passive");
-		GameRegistry.register(passive);
+		FruitItems.register();
+		FruitRecipes.register();
 		
 		proxy.preInit();
 		MinecraftForge.EVENT_BUS.register(proxy);
