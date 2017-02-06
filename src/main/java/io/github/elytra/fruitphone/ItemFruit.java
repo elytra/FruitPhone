@@ -39,9 +39,13 @@ public class ItemFruit extends Item {
 	
 	@Override
 	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
-		subItems.add(new ItemStack(itemIn));
+		addSubItems(itemIn, 0, subItems);
+	}
+	
+	protected void addSubItems(Item itemIn, int meta, List<ItemStack> subItems) {
+		subItems.add(new ItemStack(itemIn, 1, meta));
 		for (Integer color : FruitRecipes.craftableColors) {
-			ItemStack is = new ItemStack(itemIn);
+			ItemStack is = new ItemStack(itemIn, 1, meta);
 			is.setTagCompound(new NBTTagCompound());
 			is.getTagCompound().setInteger("fruitphone:color", color);
 			subItems.add(is);
