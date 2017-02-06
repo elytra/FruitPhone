@@ -1,7 +1,10 @@
 itemGroup.fruitphone=Fruit Phone
 
-item.fruitphone.handheld.name=Fruit Phone
+item.fruitphone.handheld.name=Fruit Pad
+item.fruitphone.handheld_mini.name=Fruit Phone
 item.fruitphone.passive.name=Fruit Glass
+
+tile.fruitphone.reader=Fruit Book
 
 tooltip.fruitphone.color=Color: %s
 

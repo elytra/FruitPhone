@@ -16,36 +16,68 @@ import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
+import net.minecraft.item.Item;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
 
 public class ClientProxy extends Proxy {
+	private boolean isServerVanilla = false;
+	
 	@Override
 	public void preInit() {
 		super.preInit();
 
-		ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
-		ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
-		ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
+		if (!FruitPhone.inst.optionalMode) {
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
+		}
 	}
 
 	@Override
 	public void postInit() {
 		super.postInit();
 
-		Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tintIndex) -> {
-			if (stack.getItem() == FruitItems.PASSIVE && tintIndex == 0) return -1;
-			return ((ItemFruit)stack.getItem()).getColor(stack);
-		}, FruitItems.HANDHELD, FruitItems.PASSIVE);
+		if (!FruitPhone.inst.optionalMode) {
+			Minecraft.getMinecraft().getItemColors().registerItemColorHandler((stack, tintIndex) -> {
+				if (stack.getItem() == FruitItems.PASSIVE && tintIndex == 0) return -1;
+				return ((ItemFruit)stack.getItem()).getColor(stack);
+			}, FruitItems.HANDHELD, FruitItems.PASSIVE);
+		}
 	}
 
 	@SubscribeEvent
+	public void onClientConnectedToServer(ClientConnectedToServerEvent e) {
+		isServerVanilla = !e.getConnectionType().equals("MODDED");
+	}
+	
+	@SubscribeEvent
+	public void onRenderHud(RenderGameOverlayEvent.Post e) {
+		if (e.getType() == ElementType.ALL) {
+			// check if the user has:
+			// 1. enabled optional mode
+			// 2. connected to a Forge server without Fruit Phone
+			// 3. connected to a vanilla server
+			// 4. equipped glasses (todo)
+			if (FruitPhone.inst.optionalMode ||
+					Item.REGISTRY.getNameForObject(FruitItems.PASSIVE) == null ||
+					isServerVanilla) {
+				System.out.println("Render for always-on passive");
+			}
+		}
+	}
+	
+	@SubscribeEvent
 	public void onRenderHand(RenderSpecificHandEvent e) {
+		if (FruitPhone.inst.optionalMode) return;
 		if (e.getItemStack() != null && e.getItemStack().getItem() == FruitItems.HANDHELD) {
 			Minecraft mc = Minecraft.getMinecraft();
 			

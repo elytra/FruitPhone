@@ -32,7 +32,15 @@ public class FruitRecipes {
 				"ghg",
 				'/', "ingotIron",
 				'g', "blockGlass",
-				'h', FruitItems.HANDHELD));
+				'h', new ItemStack(FruitItems.HANDHELD, 1, OreDictionary.WILDCARD_VALUE)));
+		
+		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 0),
+				"p",
+				'p', new ItemStack(FruitItems.HANDHELD, 1, 1)));
+		
+		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 1),
+				"p",
+				'p', new ItemStack(FruitItems.HANDHELD, 1, 0)));
 		
 		// Elegant Tungsten
 		colorRecipe(0x2C2D2D, "ingotTungsten");
@@ -173,21 +181,27 @@ public class FruitRecipes {
 		tag.setInteger("fruitphone:color", color);
 		
 		ItemStack handheld = new ItemStack(FruitItems.HANDHELD);
+		ItemStack handheldMini = new ItemStack(FruitItems.HANDHELD, 1, 1);
 		ItemStack passive = new ItemStack(FruitItems.PASSIVE);
 		
 		handheld.setTagCompound(tag.copy());
+		handheldMini.setTagCompound(tag.copy());
 		passive.setTagCompound(tag.copy());
 		
 		Object[] handheldIngredients = new Object[ingredients.length+1];
+		Object[] handheldMiniIngredients = new Object[ingredients.length+1];
 		Object[] passiveIngredients = new Object[ingredients.length+1];
 		
 		handheldIngredients[0] = FruitItems.HANDHELD;
+		handheldMiniIngredients[0] = new ItemStack(FruitItems.HANDHELD, 1, 1);
 		passiveIngredients[0] = FruitItems.PASSIVE;
 		
 		System.arraycopy(ingredients, 0, handheldIngredients, 1, ingredients.length);
+		System.arraycopy(ingredients, 0, handheldMiniIngredients, 1, ingredients.length);
 		System.arraycopy(ingredients, 0, passiveIngredients, 1, ingredients.length);
 		
 		GameRegistry.addRecipe(new ShapelessOreRecipe(handheld, handheldIngredients));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(handheldMini, handheldMiniIngredients));
 		GameRegistry.addRecipe(new ShapelessOreRecipe(passive, passiveIngredients));
 		
 		Object[] handheldDirectIngredients = new Object[ingredients.length+2];
