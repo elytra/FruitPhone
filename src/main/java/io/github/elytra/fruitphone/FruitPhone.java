@@ -5,16 +5,37 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.github.elytra.concrete.NetworkContext;
+import io.github.elytra.fruitphone.capability.FruitEquipmentCapability;
+import io.github.elytra.fruitphone.capability.FruitEquipmentStorage;
+import io.github.elytra.fruitphone.item.FruitItems;
+import io.github.elytra.fruitphone.network.EquipmentDataPacket;
+import io.github.elytra.fruitphone.network.SetAlwaysOnPacket;
+import io.github.elytra.fruitphone.proxy.Proxy;
+import io.github.elytra.fruitphone.recipe.FruitRecipes;
+import io.github.elytra.fruitphone.recipe.FruitUpgradeRecipe;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.GameRules.ValueType;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.RecipeSorter;
@@ -37,13 +58,17 @@ public class FruitPhone {
 		}
 	};
 	
-	@SidedProxy(clientSide="io.github.elytra.fruitphone.ClientProxy", serverSide="io.github.elytra.fruitphone.Proxy")
+	@SidedProxy(clientSide="io.github.elytra.fruitphone.proxy.ClientProxy", serverSide="io.github.elytra.fruitphone.proxy.Proxy")
 	public static Proxy proxy;
 	
 	@Instance
 	public static FruitPhone inst;
 	
 	public boolean optionalMode;
+	
+	@CapabilityInject(FruitEquipmentCapability.class)
+	public Capability<FruitEquipmentCapability> CAPABILITY_EQUIPMENT;
+	public NetworkContext NETWORK;
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
@@ -70,9 +95,17 @@ public class FruitPhone {
 			FruitItems.register();
 			FruitRecipes.register();
 			
+			CapabilityManager.INSTANCE.register(FruitEquipmentCapability.class, new FruitEquipmentStorage(), FruitEquipmentCapability::new);
+			
 			proxy.preInit();
 		}
+		
+		NETWORK = NetworkContext.forChannel("FruitPhone")
+				.register(EquipmentDataPacket.class)
+				.register(SetAlwaysOnPacket.class);
+		
 		MinecraftForge.EVENT_BUS.register(proxy);
+		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@EventHandler
@@ -87,6 +120,42 @@ public class FruitPhone {
 		} else {
 			if (offerer == Side.SERVER) return true;
 			return mods.containsKey("fruitphone") && VERSION.equals(mods.get("fruitphone"));
+		}
+	}
+	
+	@SubscribeEvent
+	public void onStartTracking(PlayerEvent.StartTracking e) {
+		EquipmentDataPacket.forEntity(e.getTarget()).ifPresent((m) -> m.sendTo(e.getEntityPlayer()));
+	}
+	
+	@SubscribeEvent
+	public void onPlayerJoin(PlayerLoggedInEvent e) {
+		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
+		EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
+	}
+	
+	@SubscribeEvent
+	public void onWorldLoad(WorldEvent.Load e) {
+		e.getWorld().getGameRules().addGameRule("fruitphone:alwaysOn", "false", ValueType.BOOLEAN_VALUE);
+		World world = e.getWorld();
+		GameRulePoller.forBooleanRule("fruitphone:alwaysOn", world, (newValue) -> {
+			new SetAlwaysOnPacket(newValue).sendToAllIn(world);
+		});
+	}
+	
+	@SubscribeEvent
+	public void onCapabilityAttach(AttachCapabilitiesEvent.Entity e) {
+		if (optionalMode) return;
+		if (e.getObject() instanceof EntityPlayer) {
+			e.addCapability(new ResourceLocation(MODID, "equipment"), new FruitEquipmentCapability());
+		}
+	}
+	
+	@SubscribeEvent
+	public void onClone(PlayerEvent.Clone e) {
+		if (optionalMode) return;
+		if (e.isWasDeath()) {
+			e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).copyFrom(e.getOriginal().getCapability(CAPABILITY_EQUIPMENT, null));
 		}
 	}
 }

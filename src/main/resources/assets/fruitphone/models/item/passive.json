@@ -1,8 +1,7 @@
 {
 	"parent": "builtin/generated",
 	"textures": {
-		"layer0": "fruitphone:item/passive",
-		"layer1": "fruitphone:item/passive_overlay"
+		"layer0": "fruitphone:item/passive"
 	},
 	"display": {
 		"ground": {

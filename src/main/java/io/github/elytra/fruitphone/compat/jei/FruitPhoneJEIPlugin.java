@@ -1,7 +1,7 @@
 package io.github.elytra.fruitphone.compat.jei;
 
-import io.github.elytra.fruitphone.FruitItems;
-import io.github.elytra.fruitphone.ItemFruit;
+import io.github.elytra.fruitphone.item.FruitItems;
+import io.github.elytra.fruitphone.item.ItemFruit;
 import mezz.jei.api.BlankModPlugin;
 import mezz.jei.api.ISubtypeRegistry;
 import mezz.jei.api.JEIPlugin;

@@ -1,5 +1,6 @@
-package io.github.elytra.fruitphone;
+package io.github.elytra.fruitphone.item;
 
+import io.github.elytra.fruitphone.FruitPhone;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class FruitItems {

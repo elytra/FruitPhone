@@ -1,8 +1,9 @@
-package io.github.elytra.fruitphone;
+package io.github.elytra.fruitphone.item;
 
 import java.util.List;
 import java.util.Locale;
 
+import io.github.elytra.fruitphone.recipe.FruitRecipes;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
