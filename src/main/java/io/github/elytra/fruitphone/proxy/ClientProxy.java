@@ -167,9 +167,7 @@ public class ClientProxy extends Proxy {
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 				// now that all that is over, we can do what was super easy in 1.7... render stuff ON the item.
 				// M U H  I M M E R S H U N
-				
-				// we draw a dark rectangle over the screen part of the phone to simulate a backlight
-				Gui.drawRect(30, 50, 130, 110, 0x44555555);
+				Gui.drawRect(30, 50, 130, 110, 0x88172E64);
 				GlStateManager.translate(0, 0, 40);
 				
 				// <rendering code goes here, TODO>
