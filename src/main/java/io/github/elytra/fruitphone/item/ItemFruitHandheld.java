@@ -1,4 +1,4 @@
-package io.github.elytra.fruitphone;
+package io.github.elytra.fruitphone.item;
 
 import java.util.List;
 

@@ -1,9 +1,10 @@
-package io.github.elytra.fruitphone;
+package io.github.elytra.fruitphone.recipe;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import io.github.elytra.fruitphone.item.FruitItems;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;

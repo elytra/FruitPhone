@@ -1,5 +1,6 @@
-package io.github.elytra.fruitphone;
+package io.github.elytra.fruitphone.recipe;
 
+import io.github.elytra.fruitphone.item.ItemFruit;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
