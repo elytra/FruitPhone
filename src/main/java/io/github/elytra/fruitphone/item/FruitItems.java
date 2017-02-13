@@ -7,6 +7,7 @@ public class FruitItems {
 
 	public static ItemFruitHandheld HANDHELD;
 	public static ItemFruitPassive PASSIVE;
+	public static ItemRemover REMOVER;
 	
 	public static void register() {
 		HANDHELD = new ItemFruitHandheld();
@@ -24,6 +25,13 @@ public class FruitItems {
 		PASSIVE.setMaxStackSize(1);
 		PASSIVE.setHasSubtypes(true);
 		GameRegistry.register(PASSIVE);
+		
+		REMOVER = new ItemRemover();
+		REMOVER.setRegistryName("remover");
+		REMOVER.setCreativeTab(FruitPhone.tab);
+		REMOVER.setUnlocalizedName("fruitphone.remover");
+		REMOVER.setMaxStackSize(1);
+		GameRegistry.register(REMOVER);
 	}
 
 }

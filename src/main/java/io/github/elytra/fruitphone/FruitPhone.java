@@ -136,7 +136,12 @@ public class FruitPhone {
 	
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load e) {
-		e.getWorld().getGameRules().addGameRule("fruitphone:alwaysOn", "false", ValueType.BOOLEAN_VALUE);
+		if (!e.getWorld().getGameRules().getBoolean("fruitphone:alwaysOn")) {
+			// boolean rules default to false, so if it's false then we can set it to false
+			// this has no effect if the gamerule already existed, and adds it to tabcomplete if it didn't
+			// the important part is it won't overwrite an already-true gamerule
+			e.getWorld().getGameRules().addGameRule("fruitphone:alwaysOn", "false", ValueType.BOOLEAN_VALUE);
+		}
 		World world = e.getWorld();
 		GameRulePoller.forBooleanRule("fruitphone:alwaysOn", world, (newValue) -> {
 			new SetAlwaysOnPacket(newValue).sendToAllIn(world);

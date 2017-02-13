@@ -94,6 +94,7 @@ artifacts {
 dependencies {
 	deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
 	
+	compile project(':ProbeDataProviderAPI')
 	compile fileTree(dir: 'libs', include: '*.jar')
 	
 	shadow 'io.github.elytra:concrete:0.0.6'
