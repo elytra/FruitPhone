@@ -1,15 +1,15 @@
 package io.github.elytra.fruitphone.proxy;
 
 import java.util.Map;
-
 import org.lwjgl.opengl.GL11;
-
 import com.google.common.base.Objects;
 
 import io.github.elytra.fruitphone.FruitPhone;
+import io.github.elytra.fruitphone.FruitRenderer;
 import io.github.elytra.fruitphone.client.render.LayerFruitGlass;
 import io.github.elytra.fruitphone.item.FruitItems;
 import io.github.elytra.fruitphone.item.ItemFruit;
+import io.github.elytra.fruitphone.item.ItemFruitPassive;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.Gui;
@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformT
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.MathHelper;
@@ -34,6 +35,9 @@ import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -43,6 +47,8 @@ public class ClientProxy extends Proxy {
 	private boolean isServerVanilla = false;
 	public boolean alwaysOn = false;
 	
+	public static float ticks;
+	
 	@Override
 	public void preInit() {
 		super.preInit();
@@ -51,8 +57,7 @@ public class ClientProxy extends Proxy {
 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
-			
-			
+			ModelLoader.setCustomModelResourceLocation(FruitItems.REMOVER, 0, new ModelResourceLocation("fruitphone:remover#inventory"));
 		}
 	}
 
@@ -73,6 +78,20 @@ public class ClientProxy extends Proxy {
 	}
 
 	@SubscribeEvent
+	public void onRenderTick(RenderTickEvent e) {
+		if (e.phase == Phase.START) {
+			ticks = ((int)ticks)+e.renderTickTime;
+		}
+	}
+	
+	@SubscribeEvent
+	public void onClientTick(ClientTickEvent e) {
+		if (e.phase == Phase.START) {
+			ticks++;
+		}
+	}
+	
+	@SubscribeEvent
 	public void onClientConnectedToServer(ClientConnectedToServerEvent e) {
 		isServerVanilla = !e.getConnectionType().equals("MODDED");
 	}
@@ -86,6 +105,7 @@ public class ClientProxy extends Proxy {
 			// 3. we are connected to a Forge server without Fruit Phone
 			// 4. we are connected to a vanilla server
 			// 5. the player has equipped glasses
+			ItemStack glasses = null;
 			if (
 				FruitPhone.inst.optionalMode ||
 				alwaysOn ||
@@ -93,9 +113,22 @@ public class ClientProxy extends Proxy {
 				isServerVanilla ||
 				(
 					Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null) &&
-					Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses != null // TODO 1.11: use isEmpty
+					(glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses) != null // TODO 1.11: use isEmpty
 				)) {
-				System.out.println("Render for passive");
+				int color = -1;
+				if (glasses != null) {
+					if (glasses.getItem() instanceof ItemFruitPassive) {
+						ItemFruitPassive item = (ItemFruitPassive)glasses.getItem();
+						color = item.getColor(glasses);
+					}
+				}
+				GlStateManager.pushMatrix(); {
+					Gui.drawRect(10, 10, 110, 70, color);
+					Gui.drawRect(11, 11, 109, 69, 0xFF000000);
+					Gui.drawRect(11, 11, 109, 69, 0x88172E64);
+					GlStateManager.translate(15f, 15f, 0f);
+					FruitRenderer.renderFruit(90, 50);
+				} GlStateManager.popMatrix();
 			}
 		}
 	}
@@ -167,10 +200,11 @@ public class ClientProxy extends Proxy {
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 				// now that all that is over, we can do what was super easy in 1.7... render stuff ON the item.
 				// M U H  I M M E R S H U N
-				Gui.drawRect(30, 50, 130, 110, 0x88172E64);
-				GlStateManager.translate(0, 0, 40);
+				GlStateManager.translate(30, 50, 40);
+				Gui.drawRect(0, 0, 100, 60, 0x88172E64);
 				
-				// <rendering code goes here, TODO>
+				GlStateManager.translate(5, 5, 40);
+				FruitRenderer.renderFruit(90, 50);
 				
 				GL11.glEnable(GL11.GL_LIGHTING);
 				GlStateManager.enableLighting();
@@ -185,4 +219,5 @@ public class ClientProxy extends Proxy {
 			
 		}
 	}
+	
 }

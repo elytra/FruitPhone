@@ -43,6 +43,13 @@ public class FruitRecipes {
 				"p",
 				'p', new ItemStack(FruitItems.HANDHELD, 1, 0)));
 		
+		GameRegistry.addRecipe(new FruitUpgradeRecipe(FruitItems.REMOVER,
+				"i ",
+				"/w",
+				'/', "stickWood",
+				'w', "plankWood",
+				'i', "ingotIron"));
+		
 		// Elegant Tungsten
 		colorRecipe(0x2C2D2D, "ingotTungsten");
 		colorRecipe(0x2C2D2D, "dyeBlack", "ingotIron");
