@@ -24,9 +24,9 @@
 
 package com.elytradev.fruitphone;
 
+import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.List;
-
-import org.lwjgl.util.Dimension;
 
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Rendering;
@@ -34,6 +34,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.math.IntMath;
 
 import io.github.elytra.probe.api.IProbeData;
 import net.minecraft.block.state.IBlockState;
@@ -51,6 +52,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -69,6 +71,47 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class FruitRenderer {
 
+	public static class DataSize {
+		private int width;
+		private int height;
+		
+		public int getWidth() {
+			return width;
+		}
+		
+		public int getHeight() {
+			return height;
+		}
+		
+		
+		
+		public void setWidthIfGreater(int width) {
+			if (width > this.width) this.width = width;
+		}
+		
+		public void addWidth(int width) {
+			this.width += width;
+		}
+		
+		public void setWidth(int width) {
+			this.width = width;
+		}
+		
+		
+		
+		public void setHeightIfGreater(int height) {
+			if (height > this.height) this.height = height;
+		}
+		
+		public void setHeight(int height) {
+			this.height = height;
+		}
+		
+		public void addHeight(int height) {
+			this.height += height;
+		}
+	}
+
 	private static final ResourceLocation SPINNER = new ResourceLocation("fruitphone", "textures/gui/spinner.png");
 	
 	// TODO entity support
@@ -83,8 +126,9 @@ public class FruitRenderer {
 	 * @param width The maximum width of the render
 	 * @param height The maximum height of the render
 	 */
-	public static void renderAndSyncTarget(int width, int height) {
+	public static void renderAndSyncTarget(int width, int height, boolean lit) {
 		EntityPlayer player = Minecraft.getMinecraft().player;
+		World world = Minecraft.getMinecraft().world;
 		
 		Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
 		Vec3d look = player.getLook(ClientProxy.partialTicks);
@@ -97,18 +141,62 @@ public class FruitRenderer {
 		BlockPos pos = rtr.getBlockPos();
 		
 		if (!Objects.equal(pos, currentDataPos)) {
-			GlStateManager.enableBlend();
-			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-			GlStateManager.color(1, 1, 1);
-			renderSpinner(0, 0);
-			GlStateManager.disableBlend();
-		} else {
-			if (currentRawData != null) {
-				currentFormattedData = format(currentRawData, currentDataPos);
-				currentRawData = null;
+			IBlockState state = world.getBlockState(pos);
+			if (!state.getBlock().hasTileEntity(state)) {
+				currentDataPos = pos;
+				currentRawData = Collections.emptyList();
+			} else {
+				render(format(Collections.emptyList(), pos), width, height, lit);
+				GlStateManager.enableBlend();
+				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+				GlStateManager.color(1, 1, 1);
+				renderSpinner(0, 20);
+				GlStateManager.disableBlend();
+				return;
 			}
-			render(currentFormattedData);
 		}
+		if (currentRawData != null) {
+			currentFormattedData = format(currentRawData, currentDataPos);
+			currentRawData = null;
+		}
+		render(currentFormattedData, width, height, lit);
+	}
+	
+	public static DataSize calculateAndSyncTarget(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
+		DataSize ds = calculateAndSyncTargetUnbounded(preferredWidth, preferredHeight);
+		ds.setWidth(Math.min(maxWidth, ds.getWidth()));
+		ds.setHeight(Math.min(maxHeight, ds.getHeight()));
+		return ds;
+	}
+	
+	public static DataSize calculateAndSyncTargetUnbounded(int preferredWidth, int preferredHeight) {
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		World world = Minecraft.getMinecraft().world;
+		
+		Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
+		Vec3d look = player.getLook(ClientProxy.partialTicks);
+		double dist = 4;
+		Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+		RayTraceResult rtr = player.world.rayTraceBlocks(eyes, max, false, false, false);
+		
+		if (rtr == null || rtr.typeOfHit != Type.BLOCK) return new DataSize();
+		
+		BlockPos pos = rtr.getBlockPos();
+		
+		if (!Objects.equal(pos, currentDataPos)) {
+			IBlockState state = world.getBlockState(pos);
+			if (!state.getBlock().hasTileEntity(state)) {
+				currentDataPos = pos;
+				currentRawData = Collections.emptyList();
+			} else {
+				return calculatePreferredDataSize(format(Collections.emptyList(), pos), preferredWidth, preferredHeight);
+			}
+		}
+		if (currentRawData != null) {
+			currentFormattedData = format(currentRawData, currentDataPos);
+			currentRawData = null;
+		}
+		return calculatePreferredDataSize(currentFormattedData, preferredWidth, preferredHeight);
 	}
 	
 	/**
@@ -118,6 +206,7 @@ public class FruitRenderer {
 	 * method doing something specific, it is likely to change drastically in
 	 * the future.
 	 * @param data The IProbeData lines to clean
+	 * @param src The BlockPos that this data came from
 	 * @return The cleaned IProbeData lines
 	 */
 	public static List<IProbeData> format(List<IProbeData> data, BlockPos src) {
@@ -152,25 +241,106 @@ public class FruitRenderer {
 		return newData;
 	}
 	
+	public static DataSize calculatePreferredDataSize(List<IProbeData> data, int preferredWidth, int preferredHeight) {
+		DataSize ds = new DataSize();
+		int x = 0;
+		int y = 0;
+		boolean first = true;
+		for (IProbeData d : data) {
+			int lineSize = 0;
+			if (first) {
+				first = false;
+			} else {
+				y += 2;
+			}
+			boolean renderLabel = true;
+			if (d.hasInventory() && !d.getInventory().isEmpty()) {
+				if (d.getInventory().size() == 1) {
+					ds.setWidthIfGreater(x+16);
+					x += 20;
+					lineSize = Math.max(lineSize, 16);
+				}
+				RenderHelper.disableStandardItemLighting();
+			}
+			if (d.hasBar()) {
+				String str;
+				if (d instanceof FruitProbeData && ((FruitProbeData) d).getBarLabel() != null) {
+					str = ((FruitProbeData) d).getBarLabel();
+				} else if (d.hasLabel() && Strings.isNullOrEmpty(d.getBarUnit())) {
+					str = d.getLabel().getFormattedText();
+					renderLabel = false;
+				} else {
+					str = d.getBarCurrent()+d.getBarUnit();
+				}
+				
+				ds.setWidthIfGreater(preferredWidth);
+				ds.setWidthIfGreater(x+4+(Minecraft.getMinecraft().fontRenderer.getStringWidth(str)));
+				
+				lineSize = Math.max(lineSize, d.hasLabel() ? 20 : 11);
+			}
+			if (renderLabel && d.hasLabel()) {
+				ds.setWidthIfGreater(x+(Minecraft.getMinecraft().fontRenderer.getStringWidth(d.getLabel().getFormattedText())));
+				lineSize = Math.max(lineSize, 8);
+			}
+			if (d.hasInventory() && d.getInventory().size() > 1) {
+				y += lineSize;
+				int perRow = 5;
+				lineSize = IntMath.divide(d.getInventory().size(), perRow, RoundingMode.UP)*18;
+				ds.setWidthIfGreater(Math.min(perRow, d.getInventory().size())*18);
+			}
+			y += lineSize;
+			x = 0;
+		}
+		ds.setWidthIfGreater(x);
+		ds.setHeightIfGreater(y);
+		return ds;
+	}
+	
+	public static float getContainScale(int canvasWidth, int canvasHeight, int dataWidth, int dataHeight) {
+		// no need to scale if the data fits
+		if (dataWidth <= canvasWidth && dataHeight <= canvasHeight) return 1;
+		return Math.min(((float)canvasWidth)/((float)dataWidth), ((float)canvasHeight)/((float)dataHeight));
+	}
+	
 	/**
 	 * Render the given data.
 	 * @param data The IProbeData lines to render
 	 * @see #format
 	 */
-	public static void render(List<IProbeData> data) {
+	public static void render(List<IProbeData> data, int width, int height, boolean lit) {
+		DataSize preferred = calculatePreferredDataSize(data, width, height);
+		GlStateManager.pushMatrix();
+		float contain = getContainScale(width, height, preferred.width, preferred.height);
+		
+		/*
+		Gui.drawRect(0, 0, width, height, 0xFF00FF00);
+		GlStateManager.translate(0, 0, 40);
+		*/
+		GlStateManager.scale(contain, contain, 1);
+		/*
+		Gui.drawRect(0, 0, preferred.width, preferred.height, 0xAAFF0000);
+		GlStateManager.translate(0, 0, 40);
+		*/
+		
 		int x = 0;
 		int y = 0;
+		boolean first = true;
 		for (IProbeData d : data) {
 			int lineSize = 0;
 			int textPosY = y+2;
+			if (first) {
+				first = false;
+			} else {
+				y += 2;
+			}
 			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
-				RenderHelper.enableGUIStandardItemLighting();
+				if (lit) RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1) {
 					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y);
 					x += 20;
 					textPosY += 2;
-					lineSize = Math.max(lineSize, 20);
+					lineSize = Math.max(lineSize, 16);
 				}
 				RenderHelper.disableStandardItemLighting();
 			}
@@ -186,11 +356,11 @@ public class FruitRenderer {
 				float zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
 				
 				int startX = (int)(x+1+((zero/maxNormalized)*69));
-				int endX = (int)(x+1+((currentNormalized/maxNormalized)*69));
+				int endX = (int)(x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
 				
-				Gui.drawRect(x, barY, x+70, barY+11, -1);
+				Gui.drawRect(x, barY, width, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
-				Gui.drawRect(x+1, barY+1, x+69, barY+10, 0xFF000000);
+				Gui.drawRect(x+1, barY+1, width-1, barY+10, 0xFF000000);
 				GlStateManager.translate(0, 0, 40);
 				Gui.drawRect(startX, barY+1, endX, barY+10, 0xFFAA0000);
 				
@@ -205,13 +375,13 @@ public class FruitRenderer {
 					str = d.getBarCurrent()+d.getBarUnit();
 				}
 				FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
-				fr.drawString(str, (x+69)-fr.getStringWidth(str), barY+2, -1, false);
+				fr.drawString(str, (width-1)-fr.getStringWidth(str), barY+2, -1, false);
 				
-				lineSize = Math.max(lineSize, d.hasLabel() ? 22 : 12);
+				lineSize = Math.max(lineSize, d.hasLabel() ? 20 : 11);
 			}
 			if (renderLabel && d.hasLabel()) {
 				Minecraft.getMinecraft().fontRenderer.drawString(d.getLabel().getFormattedText(), x, textPosY, -1, false);
-				lineSize = Math.max(lineSize, 12);
+				lineSize = Math.max(lineSize, 8);
 			}
 			if (d.hasInventory() && d.getInventory().size() > 1) {
 				y += lineSize;
@@ -225,12 +395,12 @@ public class FruitRenderer {
 					Gui.drawRect(x+17, y+1, x+18, y+17, 0xDDFFFFFF);
 					Gui.drawRect(x, y+17, x+1, y+18, 0xAAFFFFFF);
 					Gui.drawRect(x+17, y, x+18, y+1, 0xAAFFFFFF);
-					RenderHelper.enableGUIStandardItemLighting();
+					if (lit) RenderHelper.enableGUIStandardItemLighting();
 					Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(is, x+1, y+1);
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
 					RenderHelper.disableStandardItemLighting();
 					x += 18;
-					if (x > 80) {
+					if (x > 82) {
 						x = 0;
 						y += 18;
 					}
@@ -239,6 +409,7 @@ public class FruitRenderer {
 			y += lineSize;
 			x = 0;
 		}
+		GlStateManager.popMatrix();
 	}
 	
 	public static void renderSpinner(int x, int y) {
@@ -247,8 +418,5 @@ public class FruitRenderer {
 		Gui.drawModalRectWithCustomSizedTexture(x, y, 16*tocks, 0, 16, 16, 96, 16);
 	}
 
-	public static Dimension calculateFruitSize() {
-		return new Dimension(0, 0);
-	}
 	
 }

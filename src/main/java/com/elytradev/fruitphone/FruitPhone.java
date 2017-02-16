@@ -278,7 +278,7 @@ public class FruitPhone {
 							
 							int percentCook = (int)((curCook/maxCook)*100);
 							list.add(new ProbeData()
-									.withInventory(ImmutableList.of(ItemStack.EMPTY))
+									//.withInventory(ImmutableList.of(ItemStack.EMPTY))
 									.withBar(0, percentCook, 100, "%"));
 						}
 						
@@ -327,12 +327,14 @@ public class FruitPhone {
 					if (provider != null) {
 						provider.provideProbeData(list);
 					}
+					ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
+					if (!Objects.equal(pkt, lastData.get(e.player))) {
+						pkt.sendTo(e.player);
+					}
+					lastData.put(e.player, pkt);
+				} else {
+					lastData.remove(e.player);
 				}
-				ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
-				if (!Objects.equal(pkt, lastData.get(e.player))) {
-					pkt.sendTo(e.player);
-				}
-				lastData.put(e.player, pkt);
 			}
 		}
 	}

@@ -29,6 +29,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitRenderer;
+import com.elytradev.fruitphone.FruitRenderer.DataSize;
 import com.elytradev.fruitphone.client.render.LayerFruitGlass;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.item.ItemFruit;
@@ -117,6 +118,8 @@ public class ClientProxy extends Proxy {
 		if (!FruitPhone.inst.optionalMode) {
 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 2, new ModelResourceLocation("fruitphone:handheld_portrait#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 3, new ModelResourceLocation("fruitphone:handheld_portrait_mini#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.REMOVER, 0, new ModelResourceLocation("fruitphone:remover#inventory"));
 		}
@@ -191,11 +194,14 @@ public class ClientProxy extends Proxy {
 					}
 				}
 				GlStateManager.pushMatrix(); {
-					Gui.drawRect(10, 10, 110, 70, color);
-					Gui.drawRect(11, 11, 109, 69, 0xFF000000);
-					Gui.drawRect(11, 11, 109, 69, 0x88172E64);
-					GlStateManager.translate(15f, 15f, 0f);
-					FruitRenderer.renderAndSyncTarget(90, 50);
+					DataSize ds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/2, e.getResolution().getScaledHeight());
+					if (ds.getWidth() > 0 && ds.getHeight() > 0) {
+						Gui.drawRect(10, 10, ds.getWidth()+20, ds.getHeight()+20, color);
+						Gui.drawRect(11, 11, ds.getWidth()+19, ds.getHeight()+19, 0xFF000000);
+						Gui.drawRect(11, 11, ds.getWidth()+19, ds.getHeight()+19, 0x88172E64);
+						GlStateManager.translate(15f, 15f, 0f);
+						FruitRenderer.renderAndSyncTarget(ds.getWidth(), ds.getHeight(), true);
+					}
 				} GlStateManager.popMatrix();
 			}
 		}
@@ -246,11 +252,35 @@ public class ClientProxy extends Proxy {
 			rotateArm.invoke(ir, partialTicks);
 			GlStateManager.enableRescaleNormal();
 
-			ir.renderItemInFirstPerson(p, partialTicks, interpPitch, hand, swing, e.getItemStack(), equip);
+			DataSize ds = FruitRenderer.calculateAndSyncTargetUnbounded(50, 50);
+			boolean portraitMode = false;
+			if (((float)ds.getHeight())/((float)ds.getWidth()) > 1.25f) {
+				portraitMode = true;
+			}
+			
+			float screenAspect = ((float)mc.displayHeight)/((float)mc.displayWidth);
+			if (screenAspect > (9f/16f)) {
+				// Shift the item into view on screens more narrow than 16:9
+				float dist = screenAspect-(9f/16f);
+				if (handSide == EnumHandSide.RIGHT) {
+					dist *= -1;
+				} else {
+					dist *= 2;
+				}
+				GlStateManager.translate(dist, 0, 0);
+			}
+			
+			ItemStack is = e.getItemStack();
+			if (portraitMode) {
+				is = is.copy();
+				is.setItemDamage(is.getItemDamage()+2);
+			}
+			
+			ir.renderItemInFirstPerson(p, partialTicks, interpPitch, hand, swing, is, equip);
 			
 			TransformType transform = (handSide == EnumHandSide.RIGHT ? TransformType.FIRST_PERSON_RIGHT_HAND : TransformType.FIRST_PERSON_LEFT_HAND);
 			
-			IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(e.getItemStack(), mc.world, p);
+			IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(is, mc.world, p);
 			
 			GlStateManager.pushMatrix();
 				float f = -0.4F * MathHelper.sin(MathHelper.sqrt(swing) * (float) Math.PI);
@@ -268,6 +298,7 @@ public class ClientProxy extends Proxy {
 				GlStateManager.scale(0.00625, -0.00625, 0.000001f);
 				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				// intentionally desyncing the state manager to force lighting off
+				GlStateManager.enableLighting();
 				GL11.glDisable(GL11.GL_LIGHTING);
 				GlStateManager.enableBlend();
 				GlStateManager.disableAlpha();
@@ -278,7 +309,20 @@ public class ClientProxy extends Proxy {
 				Gui.drawRect(0, 0, 100, 60, 0x88172E64);
 				
 				GlStateManager.translate(5, 5, 40);
-				FruitRenderer.renderAndSyncTarget(90, 50);
+				if (ds.getWidth() > 0 && ds.getWidth() > 0) {
+					if (portraitMode) {
+						if (handSide == EnumHandSide.RIGHT) {
+							GlStateManager.rotate(90f, 0, 0, 1);
+							GlStateManager.translate(0, -90, 0);
+						} else {
+							GlStateManager.rotate(-90f, 0, 0, 1);
+							GlStateManager.translate(-50, 0, 0);
+						}
+						FruitRenderer.renderAndSyncTarget(50, 90, false);
+					} else {
+						FruitRenderer.renderAndSyncTarget(90, 50, false);
+					}
+				}
 				
 				GL11.glEnable(GL11.GL_LIGHTING);
 				GlStateManager.enableLighting();
