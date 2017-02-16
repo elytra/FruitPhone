@@ -19,6 +19,7 @@ buildscript {
 
 plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'net.minecrell.licenser' version '0.3'
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
