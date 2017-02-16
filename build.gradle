@@ -30,7 +30,7 @@ ext.configFile = file('build.properties')
 ext.config = parseConfig(configFile)
 ext.priv = parseConfig(file('private.properties'))
 
-group = "com.unascribed"
+group = "com.elytradev"
 archivesBaseName = "FruitPhone"
 version = config.version
 
@@ -70,7 +70,7 @@ jar {
 	manifest {
 		attributes (
 			'FMLAT': 'fruitphone_at.cfg',
-			'FMLCorePlugin': 'io.github.elytra.fruitphone.early.FruitPhoneLoadingPlugin',
+			'FMLCorePlugin': 'com.elytradev.fruitphone.early.FruitPhoneLoadingPlugin',
 			'FMLCorePluginContainsFMLMod': 'true',
 			'ForceLoadAsMod': 'true',
 		)
@@ -110,7 +110,7 @@ minecraft {
 
 	runDir = "minecraft"
 
-	replaceIn 'src/main/java/io/github/elytra/fruitphone/FruitPhone.java'
+	replaceIn 'src/main/java/com/elytradev/fruitphone/FruitPhone.java'
 	replace '@VERSION@', project.version
 }
 
