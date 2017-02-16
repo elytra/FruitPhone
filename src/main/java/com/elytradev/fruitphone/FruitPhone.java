@@ -42,17 +42,24 @@ import com.elytradev.fruitphone.proxy.Proxy;
 import com.elytradev.fruitphone.recipe.FruitRecipes;
 import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import io.github.elytra.concrete.NetworkContext;
+import com.elytradev.concrete.NetworkContext;
+import com.elytradev.concrete.reflect.accessor.Accessor;
+import com.elytradev.concrete.reflect.accessor.Accessors;
+
 import io.github.elytra.probe.api.IProbeData;
 import io.github.elytra.probe.api.IProbeDataProvider;
+import io.github.elytra.probe.api.impl.ProbeData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -65,10 +72,15 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -82,6 +94,9 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraftforge.oredict.RecipeSorter;
 import net.minecraftforge.oredict.RecipeSorter.Category;
 
@@ -133,6 +148,11 @@ public class FruitPhone {
 	@CapabilityInject(IProbeDataProvider.class)
 	public static Capability<IProbeDataProvider> CAPABILITY_PROBE;
 	public NetworkContext NETWORK;
+	
+	private Accessor<Integer> cookTime = Accessors.findField(TileEntityFurnace.class, "field_174906_k", "cookTime", "k");
+	private Accessor<Integer> totalCookTime = Accessors.findField(TileEntityFurnace.class, "field_174905_l", "totalCookTime", "l");
+	private Accessor<Integer> furnaceBurnTime = Accessors.findField(TileEntityFurnace.class, "field_145956_a", "furnaceBurnTime", "a");
+	private Accessor<Integer> currentItemBurnTime = Accessors.findField(TileEntityFurnace.class, "field_145963_i", "currentItemBurnTime", "i");
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
@@ -230,6 +250,7 @@ public class FruitPhone {
 	@SubscribeEvent
 	public void onPlayerTick(PlayerTickEvent e) {
 		if (e.phase == Phase.START) {
+			if (e.player.world.isRemote) return;
 			Vec3d eyes = e.player.getPositionEyes(1);
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
@@ -246,6 +267,62 @@ public class FruitPhone {
 						provider = te.getCapability(CAPABILITY_PROBE, null);
 					} else if (te.hasCapability(CAPABILITY_PROBE, rtr.sideHit)) {
 						provider = te.getCapability(CAPABILITY_PROBE, rtr.sideHit);
+					} else {
+						if (te instanceof TileEntityFurnace) {
+							TileEntityFurnace tef = (TileEntityFurnace)te;
+							list.add(new ProbeData()
+									.withLabel("Fuel")
+									.withBar(0, furnaceBurnTime.get(tef), currentItemBurnTime.get(tef), ""));
+							float curCook = cookTime.get(tef);
+							float maxCook = totalCookTime.get(tef);
+							
+							int percentCook = (int)((curCook/maxCook)*100);
+							list.add(new ProbeData()
+									.withInventory(ImmutableList.of(ItemStack.EMPTY))
+									.withBar(0, percentCook, 100, "%"));
+						}
+						
+						IEnergyStorage energy = null;
+						if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {
+							energy = te.getCapability(CapabilityEnergy.ENERGY, null);
+						} else if (te.hasCapability(CapabilityEnergy.ENERGY, rtr.sideHit)) {
+							energy = te.getCapability(CapabilityEnergy.ENERGY, rtr.sideHit);
+						}
+						
+						IFluidHandler fluid = null;
+						if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
+							fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+						} else if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, rtr.sideHit)) {
+							fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, rtr.sideHit);
+						}
+						
+						IItemHandler item = null;
+						if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
+							item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
+						} else if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, rtr.sideHit)) {
+							item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, rtr.sideHit);
+						} else if (te instanceof IInventory) {
+							item = new InvWrapper((IInventory)te);
+						}
+						
+						if (energy != null) {
+							list.add(new ProbeData()
+									.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), "FU"));
+						}
+						if (fluid != null) {
+							for (IFluidTankProperties tank : fluid.getTankProperties()) {
+								list.add(new ProbeData()
+										.withBar(0, tank.getContents().amount, tank.getCapacity(), "mB"));
+							}
+						}
+						if (item != null) {
+							List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
+							for (int i = 0; i < item.getSlots(); i++) {
+								is.add(item.getStackInSlot(i));
+							}
+							list.add(new ProbeData()
+									.withInventory(ImmutableList.copyOf(is)));
+						}
 					}
 					if (provider != null) {
 						provider.provideProbeData(list);
@@ -253,7 +330,6 @@ public class FruitPhone {
 				}
 				ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
 				if (!Objects.equal(pkt, lastData.get(e.player))) {
-					System.out.println("notequal");
 					pkt.sendTo(e.player);
 				}
 				lastData.put(e.player, pkt);
@@ -267,7 +343,7 @@ public class FruitPhone {
 		if (e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
 			ItemStack glasses = Minecraft.getMinecraft().player.getCapability(CAPABILITY_EQUIPMENT, null).glasses;
 			if (!glasses.isEmpty()) {
-				e.getEntityPlayer().dropItem(glasses, false);
+				e.getEntityPlayer().entityDropItem(glasses, 1.2f);
 			}
 		}
 	}

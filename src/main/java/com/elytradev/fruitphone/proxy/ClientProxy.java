@@ -35,10 +35,10 @@ import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 import com.google.common.base.Objects;
 
-import io.github.elytra.concrete.accessor.Accessor;
-import io.github.elytra.concrete.accessor.Accessors;
-import io.github.elytra.concrete.invoker.Invoker;
-import io.github.elytra.concrete.invoker.Invokers;
+import com.elytradev.concrete.reflect.accessor.Accessor;
+import com.elytradev.concrete.reflect.accessor.Accessors;
+import com.elytradev.concrete.reflect.invoker.Invoker;
+import com.elytradev.concrete.reflect.invoker.Invokers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.Gui;

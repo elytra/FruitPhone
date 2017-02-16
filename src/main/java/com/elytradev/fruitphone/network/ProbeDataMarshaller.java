@@ -26,7 +26,7 @@ package com.elytradev.fruitphone.network;
 
 import com.elytradev.fruitphone.MoreByteBufUtils;
 import com.google.common.collect.ImmutableList;
-import io.github.elytra.concrete.Marshaller;
+import com.elytradev.concrete.Marshaller;
 import io.github.elytra.probe.api.IProbeData;
 import io.github.elytra.probe.api.impl.ProbeData;
 import io.netty.buffer.ByteBuf;
