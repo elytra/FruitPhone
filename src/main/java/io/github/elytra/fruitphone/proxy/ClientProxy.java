@@ -112,8 +112,8 @@ public class ClientProxy extends Proxy {
 				Item.REGISTRY.getNameForObject(FruitItems.PASSIVE) == null ||
 				isServerVanilla ||
 				(
-					Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null) &&
-					(glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses) != null // TODO 1.11: use isEmpty
+					Minecraft.getMinecraft().player.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null) &&
+					!(glasses = Minecraft.getMinecraft().player.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses).isEmpty()
 				)) {
 				int color = -1;
 				if (glasses != null) {
@@ -127,7 +127,7 @@ public class ClientProxy extends Proxy {
 					Gui.drawRect(11, 11, 109, 69, 0xFF000000);
 					Gui.drawRect(11, 11, 109, 69, 0x88172E64);
 					GlStateManager.translate(15f, 15f, 0f);
-					FruitRenderer.renderFruit(90, 50);
+					FruitRenderer.renderAndSyncTarget(90, 50);
 				} GlStateManager.popMatrix();
 			}
 		}
@@ -139,7 +139,7 @@ public class ClientProxy extends Proxy {
 		if (e.getItemStack() != null && e.getItemStack().getItem() == FruitItems.HANDHELD) {
 			Minecraft mc = Minecraft.getMinecraft();
 			
-			AbstractClientPlayer p = mc.thePlayer;
+			AbstractClientPlayer p = mc.player;
 			EnumHand hand = e.getHand();
 			ItemRenderer ir = mc.getItemRenderer();
 			
@@ -177,11 +177,11 @@ public class ClientProxy extends Proxy {
 			
 			TransformType transform = (handSide == EnumHandSide.RIGHT ? TransformType.FIRST_PERSON_RIGHT_HAND : TransformType.FIRST_PERSON_LEFT_HAND);
 			
-			IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(e.getItemStack(), mc.theWorld, p);
+			IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(e.getItemStack(), mc.world, p);
 			
 			GlStateManager.pushMatrix();
-				float f = -0.4F * MathHelper.sin(MathHelper.sqrt_float(swing) * (float) Math.PI);
-				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt_float(swing) * ((float) Math.PI * 2F));
+				float f = -0.4F * MathHelper.sin(MathHelper.sqrt(swing) * (float) Math.PI);
+				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt(swing) * ((float) Math.PI * 2F));
 				float f2 = -0.2F * MathHelper.sin(swing * (float) Math.PI);
 				int i = isMain ? 1 : -1;
 				GlStateManager.translate(i * f, f1, f2);
@@ -204,7 +204,7 @@ public class ClientProxy extends Proxy {
 				Gui.drawRect(0, 0, 100, 60, 0x88172E64);
 				
 				GlStateManager.translate(5, 5, 40);
-				FruitRenderer.renderFruit(90, 50);
+				FruitRenderer.renderAndSyncTarget(90, 50);
 				
 				GL11.glEnable(GL11.GL_LIGHTING);
 				GlStateManager.enableLighting();

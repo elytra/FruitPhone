@@ -10,6 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class ItemFruit extends Item {
@@ -38,8 +39,9 @@ public class ItemFruit extends Item {
 		return 0xFFE1E1E1;
 	}
 	
+	
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
+	public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
 		addSubItems(itemIn, 0, subItems);
 	}
 	

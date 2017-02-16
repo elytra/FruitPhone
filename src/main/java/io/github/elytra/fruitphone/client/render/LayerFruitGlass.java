@@ -34,7 +34,7 @@ public class LayerFruitGlass implements LayerRenderer<EntityPlayer> {
 		if (player.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
 			ItemStack itemstack = player.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses;
 	
-			if (itemstack != null && itemstack.getItem() != null && itemstack.getItem() instanceof ItemFruitPassive) {
+			if (itemstack.getItem() instanceof ItemFruitPassive) {
 				ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
 				GlStateManager.pushMatrix(); {
 					GlStateManager.translate(0f, 0.01f, 0f);

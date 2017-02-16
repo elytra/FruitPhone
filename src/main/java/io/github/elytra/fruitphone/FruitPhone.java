@@ -1,6 +1,7 @@
 package io.github.elytra.fruitphone;
 
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +17,7 @@ import io.github.elytra.fruitphone.recipe.FruitRecipes;
 import io.github.elytra.fruitphone.recipe.FruitUpgradeRecipe;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.GameRules.ValueType;
 import net.minecraft.world.World;
@@ -52,10 +53,19 @@ public class FruitPhone {
 
 	public static CreativeTabs tab = new CreativeTabs("fruitphone") {
 		
+		private ItemStack icon;
+		
 		@Override
-		public Item getTabIconItem() {
-			return FruitItems.HANDHELD;
+		public ItemStack getTabIconItem() {
+			if (icon == null) {
+				icon = new ItemStack(FruitItems.HANDHELD);
+				int color = new Random(System.nanoTime()^System.currentTimeMillis()).nextInt();
+				color |= 0xFF000000;
+				icon.getTagCompound().setInteger("fruitphone:color", color);
+			}
+			return icon;
 		}
+		
 	};
 	
 	@SidedProxy(clientSide="io.github.elytra.fruitphone.proxy.ClientProxy", serverSide="io.github.elytra.fruitphone.proxy.Proxy")
@@ -130,7 +140,7 @@ public class FruitPhone {
 	
 	@SubscribeEvent
 	public void onPlayerJoin(PlayerLoggedInEvent e) {
-		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
+		new SetAlwaysOnPacket(e.player.world.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
 		EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
 	}
 	

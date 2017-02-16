@@ -20,10 +20,6 @@ public class Rendering {
 	private static final DummyScreen GUI = new DummyScreen();
 	
 	
-	public static void drawCreativeTabHoveringText(String tabName, int mouseX, int mouseY) {
-		GUI.drawCreativeTabHoveringText(tabName, mouseX, mouseY);
-	}
-	
 	public static void drawGradientRect(int left, int top, int right, int bottom, int startColor, int endColor) {
 		GUI.drawGradientRect(left, top, right, bottom, startColor, endColor);
 	}
@@ -85,11 +81,6 @@ public class Rendering {
 	
 	private static class DummyScreen extends GuiScreen {
 
-		@Override
-		public void drawCreativeTabHoveringText(String tabName, int mouseX, int mouseY) {
-			super.drawCreativeTabHoveringText(tabName, mouseX, mouseY);
-		}
-		
 		@Override
 		public void drawGradientRect(int left, int top, int right, int bottom, int startColor, int endColor) {
 			super.drawGradientRect(left, top, right, bottom, startColor, endColor);
