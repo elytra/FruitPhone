@@ -18,14 +18,13 @@ import net.minecraft.world.World;
 public class ItemRemover extends Item {
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
+		ItemStack itemStackIn = playerIn.getHeldItem(hand);
 		if (playerIn.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
 			FruitEquipmentCapability fec = playerIn.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null);
 			ItemStack oldGlasses = fec.glasses;
-			// TODO 1.11: use ItemStack.EMPTY
-			fec.glasses = null;
-			// TODO 1.11: use ItemStack.isEmpty
-			if (oldGlasses != null) {
+			fec.glasses = ItemStack.EMPTY;
+			if (!oldGlasses.isEmpty()) {
 				playerIn.playSound(SoundEvents.ITEM_ARMOR_EQUIP_IRON, 1.0f, 0.5f);
 				EquipmentDataPacket.forEntity(playerIn).ifPresent((m) -> m.sendToAllWatching(playerIn));
 				if (!playerIn.inventory.addItemStackToInventory(oldGlasses)) {

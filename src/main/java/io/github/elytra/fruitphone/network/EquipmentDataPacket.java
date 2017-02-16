@@ -35,7 +35,7 @@ public class EquipmentDataPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
-		Entity entity = sender.worldObj.getEntityByID(entityId);
+		Entity entity = sender.world.getEntityByID(entityId);
 		if (entity.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
 			entity.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).deserializeNBT(tag);
 		}
