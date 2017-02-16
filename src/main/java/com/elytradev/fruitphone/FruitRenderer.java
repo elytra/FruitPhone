@@ -24,7 +24,6 @@
 
 package com.elytradev.fruitphone;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.lwjgl.util.Dimension;
@@ -32,12 +31,14 @@ import org.lwjgl.util.Dimension;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Rendering;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import io.github.elytra.probe.api.IProbeData;
-import io.github.elytra.probe.api.impl.ProbeData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -99,7 +100,7 @@ public class FruitRenderer {
 			GlStateManager.enableBlend();
 			GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 			GlStateManager.color(1, 1, 1);
-			renderSpinner((width-16)/2, (height-16)/2);
+			renderSpinner(0, 0);
 			GlStateManager.disableBlend();
 		} else {
 			if (currentRawData != null) {
@@ -120,14 +121,35 @@ public class FruitRenderer {
 	 * @return The cleaned IProbeData lines
 	 */
 	public static List<IProbeData> format(List<IProbeData> data, BlockPos src) {
-		if (data.isEmpty()) {
-			IBlockState b = Minecraft.getMinecraft().world.getBlockState(src);
-			ItemStack pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().world, src, Minecraft.getMinecraft().player);
-			return Collections.singletonList(new ProbeData()
-					.withInventory(ImmutableList.of(pickblock))
-					.withLabel(pickblock.getDisplayName()));
+		List<IProbeData> newData = Lists.newArrayList();
+		IBlockState b = Minecraft.getMinecraft().world.getBlockState(src);
+		ItemStack pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().world, src, Minecraft.getMinecraft().player);
+		FruitProbeData ident = new FruitProbeData();
+		ident.withInventory(ImmutableList.of(pickblock));
+		ident.withLabel(pickblock.getDisplayName());
+		newData.add(ident);
+		boolean first = true;
+		for (IProbeData ipd : data) {
+			if (first && ipd.hasBar() && !ident.hasBar() && (ipd.hasLabel() ? Strings.isNullOrEmpty(ipd.getBarUnit()) : false) && !ipd.hasInventory()) {
+				FruitProbeData nw = new FruitProbeData();
+				ident.withBar(ipd.getBarMinimum(), ipd.getBarCurrent(), ipd.getBarMaximum(), ipd.getBarUnit());
+				if (ipd.hasLabel()) {
+					if (Strings.isNullOrEmpty(ipd.getBarUnit())) {
+						ident.setBarLabel(ipd.getLabel().getFormattedText());
+					} else {
+						nw.withLabel(ipd.getLabel());
+					}
+				}
+				if (ipd.hasInventory()) {
+					nw.withInventory(ipd.getInventory());
+				}
+				newData.add(nw);
+			} else {
+				newData.add(ipd);
+			}
+			first = false;
 		}
-		return data;
+		return newData;
 	}
 	
 	/**
@@ -141,6 +163,7 @@ public class FruitRenderer {
 		for (IProbeData d : data) {
 			int lineSize = 0;
 			int textPosY = y+2;
+			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
 				RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1) {
@@ -157,14 +180,61 @@ public class FruitRenderer {
 					textPosY -= 4;
 					barY += 6;
 				}
-				Gui.drawRect(x, barY, x+70, barY+10, -1);
+				
+				float maxNormalized = d.getBarMaximum()-d.getBarMinimum();
+				float currentNormalized = d.getBarCurrent()-d.getBarMinimum();
+				float zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
+				
+				int startX = (int)(x+1+((zero/maxNormalized)*69));
+				int endX = (int)(x+1+((currentNormalized/maxNormalized)*69));
+				
+				Gui.drawRect(x, barY, x+70, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
-				Gui.drawRect(x+1, barY+1, x+69, barY+9, 0xFF000000);
-				lineSize = Math.max(lineSize, 22);
+				Gui.drawRect(x+1, barY+1, x+69, barY+10, 0xFF000000);
+				GlStateManager.translate(0, 0, 40);
+				Gui.drawRect(startX, barY+1, endX, barY+10, 0xFFAA0000);
+				
+				GlStateManager.translate(0, 0, 40);
+				String str;
+				if (d instanceof FruitProbeData && ((FruitProbeData) d).getBarLabel() != null) {
+					str = ((FruitProbeData) d).getBarLabel();
+				} else if (d.hasLabel() && Strings.isNullOrEmpty(d.getBarUnit())) {
+					str = d.getLabel().getFormattedText();
+					renderLabel = false;
+				} else {
+					str = d.getBarCurrent()+d.getBarUnit();
+				}
+				FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+				fr.drawString(str, (x+69)-fr.getStringWidth(str), barY+2, -1, false);
+				
+				lineSize = Math.max(lineSize, d.hasLabel() ? 22 : 12);
 			}
-			if (d.hasLabel()) {
+			if (renderLabel && d.hasLabel()) {
 				Minecraft.getMinecraft().fontRenderer.drawString(d.getLabel().getFormattedText(), x, textPosY, -1, false);
 				lineSize = Math.max(lineSize, 12);
+			}
+			if (d.hasInventory() && d.getInventory().size() > 1) {
+				y += lineSize;
+				lineSize = 18;
+				for (ItemStack is : d.getInventory()) {
+					if (is == null) is = ItemStack.EMPTY;
+					Gui.drawRect(x+1, y+1, x+17, y+17, 0x22FFFFFF);
+					Gui.drawRect(x, y, x+17, y+1, 0x77FFFFFF);
+					Gui.drawRect(x+1, y+17, x+18, y+18, 0xDDFFFFFF);
+					Gui.drawRect(x, y+1, x+1, y+17, 0x77FFFFFF);
+					Gui.drawRect(x+17, y+1, x+18, y+17, 0xDDFFFFFF);
+					Gui.drawRect(x, y+17, x+1, y+18, 0xAAFFFFFF);
+					Gui.drawRect(x+17, y, x+18, y+1, 0xAAFFFFFF);
+					RenderHelper.enableGUIStandardItemLighting();
+					Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(is, x+1, y+1);
+					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
+					RenderHelper.disableStandardItemLighting();
+					x += 18;
+					if (x > 80) {
+						x = 0;
+						y += 18;
+					}
+				}
 			}
 			y += lineSize;
 			x = 0;

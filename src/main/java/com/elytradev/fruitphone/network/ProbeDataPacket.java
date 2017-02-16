@@ -4,11 +4,11 @@ import java.util.List;
 
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitRenderer;
-import io.github.elytra.concrete.Message;
-import io.github.elytra.concrete.NetworkContext;
-import io.github.elytra.concrete.annotation.field.MarshalledAs;
-import io.github.elytra.concrete.annotation.type.Asynchronous;
-import io.github.elytra.concrete.annotation.type.ReceivedOn;
+import com.elytradev.concrete.Message;
+import com.elytradev.concrete.NetworkContext;
+import com.elytradev.concrete.annotation.field.MarshalledAs;
+import com.elytradev.concrete.annotation.type.Asynchronous;
+import com.elytradev.concrete.annotation.type.ReceivedOn;
 import io.github.elytra.probe.api.IProbeData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +36,6 @@ public class ProbeDataPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
-		System.out.println("new data at "+pos);
 		FruitRenderer.currentDataPos = pos;
 		FruitRenderer.currentRawData = data;
 	}

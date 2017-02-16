@@ -49,8 +49,8 @@ repositories {
 		url = 'https://oss.sonatype.org/content/repositories/public/'
 	}
 	maven {
-		name = 'unascribed'
-		url = 'http://unascribed.com/maven/releases'
+		name = 'elytra'
+		url = 'http://repo.elytradev.com/'
 	}
 	jcenter()
 	ivy {
@@ -79,7 +79,7 @@ jar {
 
 shadowJar {
 	classifier = ''
-	relocate 'io.github.elytra.concrete', 'com.elytradev.fruitphone.repackage.io.github.elytra.concrete'
+	relocate 'com.elytradev.concrete', 'com.elytradev.fruitphone.repackage.com.elytradev.concrete'
 	configurations = [project.configurations.shadow]
 }
 
@@ -99,8 +99,8 @@ dependencies {
 	compile project(':ProbeDataProviderAPI')
 	compile fileTree(dir: 'libs', include: '*.jar')
 	
-	shadow 'io.github.elytra:concrete:0.0.9'
-	compile 'io.github.elytra:concrete:0.0.9'
+	shadow 'com.elytradev:concrete:0.1.0'
+	compile 'com.elytradev:concrete:0.1.0'
 	
 	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
 	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'
