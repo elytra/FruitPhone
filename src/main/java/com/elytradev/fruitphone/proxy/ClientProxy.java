@@ -35,6 +35,10 @@ import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 import com.google.common.base.Objects;
 
+import io.github.elytra.concrete.accessor.Accessor;
+import io.github.elytra.concrete.accessor.Accessors;
+import io.github.elytra.concrete.invoker.Invoker;
+import io.github.elytra.concrete.invoker.Invokers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.Gui;
@@ -73,6 +77,30 @@ public class ClientProxy extends Proxy {
 	public boolean alwaysOn = false;
 	
 	public static float ticks;
+	
+	private Accessor<Float> equippedProgressMainHand;
+	private Accessor<Float> equippedProgressOffHand;
+	private Accessor<Float> prevEquippedProgressMainHand;
+	private Accessor<Float> prevEquippedProgressOffHand;
+	
+	private Invoker setLightmap;
+	private Invoker rotateArroundXAndY;
+	private Invoker transformSideFirstPerson;
+	private Invoker transformFirstPerson;
+	private Invoker rotateArm;
+	
+	public ClientProxy() {
+		equippedProgressMainHand = Accessors.findField(ItemRenderer.class, "field_187469_f", "equippedProgressMainHand", "f");
+		equippedProgressOffHand = Accessors.findField(ItemRenderer.class, "field_187471_h", "equippedProgressOffHand", "h");
+		prevEquippedProgressMainHand = Accessors.findField(ItemRenderer.class, "field_187470_g", "prevEquippedProgressMainHand", "g");
+		prevEquippedProgressOffHand = Accessors.findField(ItemRenderer.class, "field_187472_i", "prevEquippedProgressOffHand", "i");
+		
+		setLightmap = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187464_b", "setLightmap", "b"});
+		rotateArroundXAndY = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_178101_a", "rotateArroundXAndY", "a"}, float.class, float.class);
+		transformSideFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187459_b", "transformSideFirstPerson", "b"}, EnumHandSide.class, float.class);
+		transformFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187453_a", "transformFirstPerson", "a"}, EnumHandSide.class, float.class);
+		rotateArm = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187458_c", "rotateArm", "c"}, float.class);
+	}
 	
 	@Override
 	public void preInit() {
@@ -175,11 +203,11 @@ public class ClientProxy extends Proxy {
 			float equippedProgress;
 			
 			if (isMain) {
-				prevEquippedProgress = ir.prevEquippedProgressMainHand;
-				equippedProgress = ir.equippedProgressMainHand;
+				prevEquippedProgress = prevEquippedProgressMainHand.get(ir);
+				equippedProgress = equippedProgressMainHand.get(ir);
 			} else {
-				prevEquippedProgress = ir.prevEquippedProgressOffHand;
-				equippedProgress = ir.equippedProgressOffHand;
+				prevEquippedProgress = prevEquippedProgressOffHand.get(ir);
+				equippedProgress = equippedProgressOffHand.get(ir);
 			}
 			
 			float partialTicks = e.getPartialTicks();
@@ -193,9 +221,9 @@ public class ClientProxy extends Proxy {
 			float swing = swingingHand == hand ? swingProgress : 0.0F;
 			float equip = 1.0F - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
 			
-			ir.rotateArroundXAndY(interpPitch, interpYaw);
-			ir.setLightmap();
-			ir.rotateArm(partialTicks);
+			rotateArroundXAndY.invoke(ir, interpPitch, interpYaw);
+			setLightmap.invoke(ir);
+			rotateArm.invoke(ir, partialTicks);
 			GlStateManager.enableRescaleNormal();
 
 			ir.renderItemInFirstPerson(p, partialTicks, interpPitch, hand, swing, e.getItemStack(), equip);
@@ -210,8 +238,8 @@ public class ClientProxy extends Proxy {
 				float f2 = -0.2F * MathHelper.sin(swing * (float) Math.PI);
 				int i = isMain ? 1 : -1;
 				GlStateManager.translate(i * f, f1, f2);
-				ir.transformSideFirstPerson(handSide, equip);
-				ir.transformFirstPerson(handSide, swing);
+				transformSideFirstPerson.invoke(ir, handSide, equip);
+				transformFirstPerson.invoke(ir, handSide, swing);
 				ForgeHooksClient.handleCameraTransforms(model, transform, handSide == EnumHandSide.LEFT);
 				GlStateManager.disableCull();
 				GlStateManager.translate(-0.5f, 0.5f, 0.03225f);
@@ -235,7 +263,7 @@ public class ClientProxy extends Proxy {
 				GlStateManager.enableLighting();
 				GlStateManager.disableBlend();
 				GlStateManager.enableAlpha();
-				ir.setLightmap();
+				setLightmap.invoke(ir);
 				GlStateManager.enableCull();
 			GlStateManager.popMatrix();
 			

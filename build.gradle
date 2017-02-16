@@ -70,7 +70,6 @@ jar {
 	classifier = 'slim'
 	manifest {
 		attributes (
-			'FMLAT': 'fruitphone_at.cfg',
 			'FMLCorePlugin': 'com.elytradev.fruitphone.early.FruitPhoneLoadingPlugin',
 			'FMLCorePluginContainsFMLMod': 'true',
 			'ForceLoadAsMod': 'true',
@@ -80,6 +79,8 @@ jar {
 
 shadowJar {
 	classifier = ''
+	relocate 'io.github.elytra.concrete', 'com.elytradev.fruitphone.repackage.io.github.elytra.concrete'
+	configurations = [project.configurations.shadow]
 }
 
 reobf {
@@ -98,8 +99,8 @@ dependencies {
 	compile project(':ProbeDataProviderAPI')
 	compile fileTree(dir: 'libs', include: '*.jar')
 	
-	shadow 'io.github.elytra:concrete:0.0.6'
-	compile 'io.github.elytra:concrete:0.0.6'
+	shadow 'io.github.elytra:concrete:0.0.9'
+	compile 'io.github.elytra:concrete:0.0.9'
 	
 	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
 	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'

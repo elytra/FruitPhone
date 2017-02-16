@@ -25,8 +25,6 @@
 package com.elytradev.fruitphone;
 
 import java.util.Map;
-import java.util.Random;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +33,7 @@ import com.elytradev.fruitphone.capability.FruitEquipmentStorage;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
 import com.elytradev.fruitphone.network.SetAlwaysOnPacket;
+import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Proxy;
 import com.elytradev.fruitphone.recipe.FruitRecipes;
 import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
@@ -43,6 +42,7 @@ import io.github.elytra.concrete.NetworkContext;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.GameRules.ValueType;
 import net.minecraft.world.World;
@@ -64,6 +64,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.RecipeSorter;
 import net.minecraftforge.oredict.RecipeSorter.Category;
 
@@ -81,14 +82,23 @@ public class FruitPhone {
 		private ItemStack icon;
 		
 		@Override
-		public ItemStack getTabIconItem() {
+		@SideOnly(Side.CLIENT)
+		public ItemStack getIconItemStack() {
 			if (icon == null) {
 				icon = new ItemStack(FruitItems.HANDHELD);
-				int color = new Random(System.nanoTime()^System.currentTimeMillis()).nextInt();
-				color |= 0xFF000000;
-				icon.getTagCompound().setInteger("fruitphone:color", color);
+				icon.setTagCompound(new NBTTagCompound());
+			}
+			int iTicks = (int)ClientProxy.ticks;
+			if (iTicks%20 == 0) {
+				int col = FruitRecipes.craftableColors.get((iTicks/20) % FruitRecipes.craftableColors.size());
+				icon.getTagCompound().setInteger("fruitphone:color", col);
 			}
 			return icon;
+		}
+
+		@Override
+		public ItemStack getTabIconItem() {
+			return getIconItemStack();
 		}
 		
 	};
@@ -120,7 +130,10 @@ public class FruitPhone {
 				+ "\n"
 				+ "Not required to connect to servers that don't have Fruit\n"
 				+ "Phone. The mod will pretend you're wearing glasses when\n"
-				+ "connected to servers that lack the mod.");
+				+ "connected to servers that lack the mod."
+				+ "\n"
+				+ "If you just want to have the mod pretend you're wearing Fruit\n"
+				+ "Glass at all times, use /gamerule fruitphone:alwaysOn true");
 		
 		config.save();
 		
