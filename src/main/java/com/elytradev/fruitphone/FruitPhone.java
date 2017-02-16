@@ -130,10 +130,11 @@ public class FruitPhone {
 				+ "\n"
 				+ "Not required to connect to servers that don't have Fruit\n"
 				+ "Phone. The mod will pretend you're wearing glasses when\n"
-				+ "connected to servers that lack the mod."
+				+ "connected to servers that lack the mod.\n"
 				+ "\n"
 				+ "If you just want to have the mod pretend you're wearing Fruit\n"
-				+ "Glass at all times, use /gamerule fruitphone:alwaysOn true");
+				+ "Glass at all times, use /gamerule fruitphone:alwaysOn true\n"
+				+ "\n");
 		
 		config.save();
 		
