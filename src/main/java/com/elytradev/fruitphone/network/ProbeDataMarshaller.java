@@ -38,6 +38,8 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 	
 	public static final String NAME = "com.elytradev.fruitphone.network.ProbeDataMarshaller";
 	
+	public static final ProbeDataMarshaller INSTANCE = new ProbeDataMarshaller();
+	
 	private static final int BAR_BIT       = 0b00000001;
 	private static final int LABEL_BIT     = 0b00000010;
 	private static final int INVENTORY_BIT = 0b00000100;

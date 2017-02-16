@@ -24,7 +24,10 @@
 
 package com.elytradev.fruitphone;
 
+import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,18 +35,29 @@ import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 import com.elytradev.fruitphone.capability.FruitEquipmentStorage;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
+import com.elytradev.fruitphone.network.ProbeDataPacket;
 import com.elytradev.fruitphone.network.SetAlwaysOnPacket;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Proxy;
 import com.elytradev.fruitphone.recipe.FruitRecipes;
 import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 import io.github.elytra.concrete.NetworkContext;
+import io.github.elytra.probe.api.IProbeData;
+import io.github.elytra.probe.api.IProbeDataProvider;
+import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules.ValueType;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -52,6 +66,7 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -62,6 +77,8 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -112,7 +129,9 @@ public class FruitPhone {
 	public boolean optionalMode;
 	
 	@CapabilityInject(FruitEquipmentCapability.class)
-	public Capability<FruitEquipmentCapability> CAPABILITY_EQUIPMENT;
+	public static Capability<FruitEquipmentCapability> CAPABILITY_EQUIPMENT;
+	@CapabilityInject(IProbeDataProvider.class)
+	public static Capability<IProbeDataProvider> CAPABILITY_PROBE;
 	public NetworkContext NETWORK;
 	
 	@EventHandler
@@ -151,7 +170,8 @@ public class FruitPhone {
 		
 		NETWORK = NetworkContext.forChannel("FruitPhone")
 				.register(EquipmentDataPacket.class)
-				.register(SetAlwaysOnPacket.class);
+				.register(SetAlwaysOnPacket.class)
+				.register(ProbeDataPacket.class);
 		
 		MinecraftForge.EVENT_BUS.register(proxy);
 		MinecraftForge.EVENT_BUS.register(this);
@@ -198,18 +218,57 @@ public class FruitPhone {
 	}
 	
 	@SubscribeEvent
-	public void onCapabilityAttach(AttachCapabilitiesEvent.Entity e) {
+	public void onCapabilityAttachEntity(AttachCapabilitiesEvent.Entity e) {
 		if (optionalMode) return;
 		if (e.getObject() instanceof EntityPlayer) {
 			e.addCapability(new ResourceLocation(MODID, "equipment"), new FruitEquipmentCapability());
 		}
 	}
 	
+	private Map<EntityPlayer, ProbeDataPacket> lastData = new WeakHashMap<>();
+	
 	@SubscribeEvent
-	public void onClone(PlayerEvent.Clone e) {
+	public void onPlayerTick(PlayerTickEvent e) {
+		if (e.phase == Phase.START) {
+			Vec3d eyes = e.player.getPositionEyes(1);
+			Vec3d look = e.player.getLookVec();
+			double dist = 4;
+			Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+			RayTraceResult rtr = e.player.world.rayTraceBlocks(eyes, max, false, false, false);
+			if (rtr != null && rtr.typeOfHit == Type.BLOCK) {
+				List<IProbeData> list = Lists.newArrayList();
+				BlockPos pos = rtr.getBlockPos();
+				TileEntity te = e.player.world.getTileEntity(pos);
+				if (te != null) {
+					IProbeDataProvider provider = null;
+					// prefer sideless, as that should include all data, which is better for UI
+					if (te.hasCapability(CAPABILITY_PROBE, null)) {
+						provider = te.getCapability(CAPABILITY_PROBE, null);
+					} else if (te.hasCapability(CAPABILITY_PROBE, rtr.sideHit)) {
+						provider = te.getCapability(CAPABILITY_PROBE, rtr.sideHit);
+					}
+					if (provider != null) {
+						provider.provideProbeData(list);
+					}
+				}
+				ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
+				if (!Objects.equal(pkt, lastData.get(e.player))) {
+					System.out.println("notequal");
+					pkt.sendTo(e.player);
+				}
+				lastData.put(e.player, pkt);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onDrops(PlayerDropsEvent e) {
 		if (optionalMode) return;
-		if (e.isWasDeath()) {
-			e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).copyFrom(e.getOriginal().getCapability(CAPABILITY_EQUIPMENT, null));
+		if (e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
+			ItemStack glasses = Minecraft.getMinecraft().player.getCapability(CAPABILITY_EQUIPMENT, null).glasses;
+			if (!glasses.isEmpty()) {
+				e.getEntityPlayer().dropItem(glasses, false);
+			}
 		}
 	}
 }

@@ -24,9 +24,17 @@
 
 package com.elytradev.fruitphone.network;
 
-public class ProbeDataListMarshaller {
+import io.github.elytra.concrete.DefaultMarshallers.ListMarshaller;
+import io.github.elytra.probe.api.IProbeData;
 
-	// Concrete has magical support for lists
-	public static final String NAME = "com.elytradev.fruitphone.network.ProbeDataMarshaller-list";
+public class ProbeDataListMarshaller extends ListMarshaller<IProbeData> {
+
+	public static final String NAME = "com.elytradev.fruitphone.network.ProbeDataListMarshaller";
+	
+	public static final ProbeDataListMarshaller INSTANCE = new ProbeDataListMarshaller();
+	
+	public ProbeDataListMarshaller() {
+		super(ProbeDataMarshaller.INSTANCE);
+	}
 	
 }

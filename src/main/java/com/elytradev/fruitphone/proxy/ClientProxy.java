@@ -78,6 +78,7 @@ public class ClientProxy extends Proxy {
 	
 	public static float ticks;
 	public static float partialTicks;
+	public static float ticksConsiderPaused;
 	
 	private final Accessor<Float> equippedProgressMainHand;
 	private final Accessor<Float> equippedProgressOffHand;
@@ -142,6 +143,9 @@ public class ClientProxy extends Proxy {
 		if (e.phase == Phase.START) {
 			partialTicks = e.renderTickTime;
 			ticks = ((int)ticks)+e.renderTickTime;
+			if (!Minecraft.getMinecraft().isGamePaused()) {
+				ticksConsiderPaused = ((int)ticksConsiderPaused)+e.renderTickTime;
+			}
 		}
 	}
 	
@@ -149,6 +153,9 @@ public class ClientProxy extends Proxy {
 	public void onClientTick(ClientTickEvent e) {
 		if (e.phase == Phase.START) {
 			ticks++;
+			if (!Minecraft.getMinecraft().isGamePaused()) {
+				ticksConsiderPaused++;
+			}
 		}
 	}
 	
