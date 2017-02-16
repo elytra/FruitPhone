@@ -252,37 +252,35 @@ public class ClientProxy extends Proxy {
 			rotateArm.invoke(ir, partialTicks);
 			GlStateManager.enableRescaleNormal();
 
-			DataSize ds = FruitRenderer.calculateAndSyncTargetUnbounded(50, 50);
-			boolean portraitMode = false;
-			if (((float)ds.getHeight())/((float)ds.getWidth()) > 1.25f) {
-				portraitMode = true;
-			}
-			
-			float screenAspect = ((float)mc.displayHeight)/((float)mc.displayWidth);
-			if (screenAspect > (9f/16f)) {
-				// Shift the item into view on screens more narrow than 16:9
-				float dist = screenAspect-(9f/16f);
-				if (handSide == EnumHandSide.RIGHT) {
-					dist *= -1;
-				} else {
-					dist *= 2;
-				}
-				GlStateManager.translate(dist, 0, 0);
-			}
-			
-			ItemStack is = e.getItemStack();
-			if (portraitMode) {
-				is = is.copy();
-				is.setItemDamage(is.getItemDamage()+2);
-			}
-			
-			ir.renderItemInFirstPerson(p, partialTicks, interpPitch, hand, swing, is, equip);
-			
-			TransformType transform = (handSide == EnumHandSide.RIGHT ? TransformType.FIRST_PERSON_RIGHT_HAND : TransformType.FIRST_PERSON_LEFT_HAND);
-			
-			IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(is, mc.world, p);
-			
 			GlStateManager.pushMatrix();
+				DataSize ds = FruitRenderer.calculateAndSyncTargetUnbounded(50, 50);
+				boolean portraitMode = false;
+				if (((float)ds.getHeight())/((float)ds.getWidth()) > 1.25f) {
+					portraitMode = true;
+				}
+				
+				float screenAspect = ((float)mc.displayHeight)/((float)mc.displayWidth);
+				if (screenAspect > (9f/16f)) {
+					// Shift the item into view on screens more narrow than 16:9
+					float dist = screenAspect-(9f/16f);
+					if (handSide == EnumHandSide.RIGHT) {
+						dist *= -1;
+					}
+					GlStateManager.translate(dist, 0, 0);
+				}
+				
+				ItemStack is = e.getItemStack();
+				if (portraitMode) {
+					is = is.copy();
+					is.setItemDamage(is.getItemDamage()+2);
+				}
+				
+				ir.renderItemInFirstPerson(p, partialTicks, interpPitch, hand, swing, is, equip);
+				
+				TransformType transform = (handSide == EnumHandSide.RIGHT ? TransformType.FIRST_PERSON_RIGHT_HAND : TransformType.FIRST_PERSON_LEFT_HAND);
+				
+				IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(is, mc.world, p);
+			
 				float f = -0.4F * MathHelper.sin(MathHelper.sqrt(swing) * (float) Math.PI);
 				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt(swing) * ((float) Math.PI * 2F));
 				float f2 = -0.2F * MathHelper.sin(swing * (float) Math.PI);
