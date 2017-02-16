@@ -42,10 +42,10 @@ import io.github.elytra.concrete.invoker.Invokers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -77,17 +77,21 @@ public class ClientProxy extends Proxy {
 	public boolean alwaysOn = false;
 	
 	public static float ticks;
+	public static float partialTicks;
 	
-	private Accessor<Float> equippedProgressMainHand;
-	private Accessor<Float> equippedProgressOffHand;
-	private Accessor<Float> prevEquippedProgressMainHand;
-	private Accessor<Float> prevEquippedProgressOffHand;
+	private final Accessor<Float> equippedProgressMainHand;
+	private final Accessor<Float> equippedProgressOffHand;
+	private final Accessor<Float> prevEquippedProgressMainHand;
+	private final Accessor<Float> prevEquippedProgressOffHand;
 	
-	private Invoker setLightmap;
-	private Invoker rotateArroundXAndY;
-	private Invoker transformSideFirstPerson;
-	private Invoker transformFirstPerson;
-	private Invoker rotateArm;
+	private final Invoker setLightmap;
+	private final Invoker rotateArroundXAndY;
+	private final Invoker transformSideFirstPerson;
+	private final Invoker transformFirstPerson;
+	private final Invoker rotateArm;
+	
+	private final Invoker applyBobbing;
+	private final Invoker hurtCameraEffect;
 	
 	public ClientProxy() {
 		equippedProgressMainHand = Accessors.findField(ItemRenderer.class, "field_187469_f", "equippedProgressMainHand", "f");
@@ -100,6 +104,9 @@ public class ClientProxy extends Proxy {
 		transformSideFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187459_b", "transformSideFirstPerson", "b"}, EnumHandSide.class, float.class);
 		transformFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187453_a", "transformFirstPerson", "a"}, EnumHandSide.class, float.class);
 		rotateArm = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187458_c", "rotateArm", "c"}, float.class);
+		
+		applyBobbing = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78475_f", "applyBobbing", "e"}, float.class);
+		hurtCameraEffect = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78482_e", "hurtCameraEffect", "d"}, float.class);
 	}
 	
 	@Override
@@ -133,6 +140,7 @@ public class ClientProxy extends Proxy {
 	@SubscribeEvent
 	public void onRenderTick(RenderTickEvent e) {
 		if (e.phase == Phase.START) {
+			partialTicks = e.renderTickTime;
 			ticks = ((int)ticks)+e.renderTickTime;
 		}
 	}
@@ -192,6 +200,13 @@ public class ClientProxy extends Proxy {
 		if (e.getItemStack() != null && e.getItemStack().getItem() == FruitItems.HANDHELD) {
 			Minecraft mc = Minecraft.getMinecraft();
 			
+			e.setCanceled(true);
+			
+			// pops the view bobbing and hurt effect away
+			GlStateManager.popMatrix();
+			// bring back the hurt effect
+			hurtCameraEffect.invoke(mc.entityRenderer, partialTicks);
+			
 			AbstractClientPlayer p = mc.player;
 			EnumHand hand = e.getHand();
 			ItemRenderer ir = mc.getItemRenderer();
@@ -209,8 +224,6 @@ public class ClientProxy extends Proxy {
 				prevEquippedProgress = prevEquippedProgressOffHand.get(ir);
 				equippedProgress = equippedProgressOffHand.get(ir);
 			}
-			
-			float partialTicks = e.getPartialTicks();
 			
 			float swingProgress = p.getSwingProgress(partialTicks);
 			EnumHand swingingHand = Objects.firstNonNull(p.swingingHand, EnumHand.MAIN_HAND);
@@ -247,6 +260,7 @@ public class ClientProxy extends Proxy {
 				// Z is extremely clamped since RenderItem translates to some ridiculous Z before rendering
 				GlStateManager.scale(0.00625, -0.00625, 0.000001f);
 				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+				// intentionally desyncing the state manager to force lighting off
 				GL11.glDisable(GL11.GL_LIGHTING);
 				GlStateManager.enableBlend();
 				GlStateManager.disableAlpha();
@@ -268,7 +282,13 @@ public class ClientProxy extends Proxy {
 			GlStateManager.popMatrix();
 			
 			GlStateManager.disableRescaleNormal();
-			RenderHelper.disableStandardItemLighting();
+			
+			// put the state back how the caller expects it
+			GlStateManager.pushMatrix();
+			hurtCameraEffect.invoke(mc.entityRenderer, partialTicks);
+			if (mc.gameSettings.viewBobbing) {
+				applyBobbing.invoke(mc.entityRenderer, partialTicks);
+			}
 			
 		}
 	}
