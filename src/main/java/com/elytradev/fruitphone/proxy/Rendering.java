@@ -28,8 +28,13 @@ import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
@@ -39,6 +44,46 @@ public class Rendering {
 		Minecraft.getMinecraft().renderEngine.bindTexture(resloc);
 	}
 	
+	public static void drawRect(int left, int top, int right, int bottom, int color) {
+		Gui.drawRect(left, top, right, bottom, color);
+	}
+	
+	public static void drawRect(float left, float top, float right, float bottom, int color) {
+		if (left < right) {
+			float swap = left;
+			left = right;
+			right = swap;
+		}
+
+		if (top < bottom) {
+			float swap = top;
+			top = bottom;
+			bottom = swap;
+		}
+
+		float a = (color >> 24 & 255) / 255F;
+		float r = (color >> 16 & 255) / 255F;
+		float g = (color >> 8 & 255) / 255F;
+		float b = (color & 255) / 255F;
+		Tessellator tessellator = Tessellator.getInstance();
+		VertexBuffer vertexbuffer = tessellator.getBuffer();
+		GlStateManager.enableBlend();
+		GlStateManager.disableTexture2D();
+		GlStateManager.tryBlendFuncSeparate(
+				GlStateManager.SourceFactor.SRC_ALPHA,
+				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+				GlStateManager.SourceFactor.ONE,
+				GlStateManager.DestFactor.ZERO);
+		GlStateManager.color(r, g, b, a);
+		vertexbuffer.begin(7, DefaultVertexFormats.POSITION);
+		vertexbuffer.pos(left, bottom, 0).endVertex();
+		vertexbuffer.pos(right, bottom, 0).endVertex();
+		vertexbuffer.pos(right, top, 0).endVertex();
+		vertexbuffer.pos(left, top, 0).endVertex();
+		tessellator.draw();
+		GlStateManager.enableTexture2D();
+		GlStateManager.disableBlend();
+	}
 	
 	
 	private static final DummyScreen GUI = new DummyScreen();
