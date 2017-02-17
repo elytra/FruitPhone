@@ -276,10 +276,10 @@ public class FruitPhone {
 							float curCook = cookTime.get(tef);
 							float maxCook = totalCookTime.get(tef);
 							
-							int percentCook = (int)((curCook/maxCook)*100);
+							int milliPercentCook = (int)((curCook/maxCook)*1000);
 							list.add(new ProbeData()
 									//.withInventory(ImmutableList.of(ItemStack.EMPTY))
-									.withBar(0, percentCook, 100, "%"));
+									.withBar(0, milliPercentCook, 1000, "c%"));
 						}
 						
 						IEnergyStorage energy = null;

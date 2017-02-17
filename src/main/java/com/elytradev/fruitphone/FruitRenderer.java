@@ -362,11 +362,13 @@ public class FruitRenderer {
 				float startX = (x+1+((zero/maxNormalized)*69));
 				float endX = (x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
 				
+				int color = getColorForUnit(d.getBarUnit());
+				
 				Rendering.drawRect(x, barY, width, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
 				Rendering.drawRect(x+1, barY+1, width-1, barY+10, 0xFF000000);
 				GlStateManager.translate(0, 0, 40);
-				Rendering.drawRect(startX, barY+1, endX, barY+10, 0xFFAA0000);
+				Rendering.drawRect(startX, barY+1, endX, barY+10, color);
 				
 				GlStateManager.translate(0, 0, 40);
 				String str;
@@ -376,10 +378,14 @@ public class FruitRenderer {
 					str = d.getLabel().getFormattedText();
 					renderLabel = false;
 				} else {
-					str = d.getBarCurrent()+d.getBarUnit();
+					str = formatUnit(d.getBarCurrent(), d.getBarUnit());
 				}
 				FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+				GlStateManager.enableBlend();
+				GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR,
+						GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				fr.drawString(str, (width-1)-fr.getStringWidth(str), barY+2, -1, false);
+				GlStateManager.disableBlend();
 				
 				lineSize = Math.max(lineSize, d.hasLabel() ? 20 : 11);
 			}
@@ -392,6 +398,7 @@ public class FruitRenderer {
 				lineSize = 18;
 				for (ItemStack is : d.getInventory()) {
 					if (is == null) is = ItemStack.EMPTY;
+					// TODO replace with texture
 					Gui.drawRect(x+1, y+1, x+17, y+17, 0x22FFFFFF);
 					Gui.drawRect(x, y, x+17, y+1, 0x77FFFFFF);
 					Gui.drawRect(x+1, y+17, x+18, y+18, 0xDDFFFFFF);
@@ -416,6 +423,40 @@ public class FruitRenderer {
 		GlStateManager.popMatrix();
 	}
 	
+	public static int getColorForUnit(String barUnit) {
+		if (barUnit.endsWith("/t")) {
+			barUnit = barUnit.substring(0, barUnit.length()-2);
+		}
+		switch (barUnit) {
+			case "FU":
+			case "RF":
+				return 0xFFAA0000;
+			case "T":
+				return 0xFF00AAFF;
+			case "Dk":
+				return 0xFF00AA00;
+			case "mB":
+				return 0xFF0000AA;
+		}
+		return 0xFFAAAAAA;
+	}
+
+	public static String formatUnit(int barCurrent, String barUnit) {
+		int amt = barCurrent;
+		String unit = barUnit;
+		switch (unit) {
+			case "c%":
+				amt /= 10;
+				unit = "%";
+				break;
+			case "m%":
+				amt /= 100;
+				unit = "%";
+				break;
+		}
+		return amt+unit;
+	}
+
 	public static void renderSpinner(int x, int y) {
 		Rendering.bindTexture(SPINNER);
 		int tocks = (int)(ClientProxy.ticksConsiderPaused/2);
