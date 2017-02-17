@@ -150,7 +150,9 @@ public class FruitRenderer {
 				GlStateManager.enableBlend();
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 				GlStateManager.color(1, 1, 1);
-				renderSpinner(0, 20);
+				GlStateManager.translate(0, 0, 500);
+				renderSpinner(0, 0);
+				GlStateManager.translate(0, 0, -500);
 				GlStateManager.disableBlend();
 				return;
 			}
@@ -322,6 +324,8 @@ public class FruitRenderer {
 		GlStateManager.translate(0, 0, 40);
 		*/
 		
+		int actualWidth = (int) (width/contain);
+		
 		int x = 0;
 		int y = 0;
 		boolean first = true;
@@ -355,14 +359,14 @@ public class FruitRenderer {
 				float currentNormalized = d.getBarCurrent()-d.getBarMinimum();
 				float zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
 				
-				int startX = (int)(x+1+((zero/maxNormalized)*69));
-				int endX = (int)(x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
+				float startX = (x+1+((zero/maxNormalized)*69));
+				float endX = (x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
 				
-				Gui.drawRect(x, barY, width, barY+11, -1);
+				Rendering.drawRect(x, barY, width, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
-				Gui.drawRect(x+1, barY+1, width-1, barY+10, 0xFF000000);
+				Rendering.drawRect(x+1, barY+1, width-1, barY+10, 0xFF000000);
 				GlStateManager.translate(0, 0, 40);
-				Gui.drawRect(startX, barY+1, endX, barY+10, 0xFFAA0000);
+				Rendering.drawRect(startX, barY+1, endX, barY+10, 0xFFAA0000);
 				
 				GlStateManager.translate(0, 0, 40);
 				String str;
@@ -400,7 +404,7 @@ public class FruitRenderer {
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
 					RenderHelper.disableStandardItemLighting();
 					x += 18;
-					if (x > 82) {
+					if ((x+17) >= actualWidth) {
 						x = 0;
 						y += 18;
 					}

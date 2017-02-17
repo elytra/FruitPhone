@@ -183,8 +183,8 @@ public class ClientProxy extends Proxy {
 				Item.REGISTRY.getNameForObject(FruitItems.PASSIVE) == null ||
 				isServerVanilla ||
 				(
-					Minecraft.getMinecraft().player.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null) &&
-					!(glasses = Minecraft.getMinecraft().player.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses).isEmpty()
+					Minecraft.getMinecraft().player.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null) &&
+					!(glasses = Minecraft.getMinecraft().player.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses).isEmpty()
 				)) {
 				int color = -1;
 				if (glasses != null) {
@@ -194,11 +194,10 @@ public class ClientProxy extends Proxy {
 					}
 				}
 				GlStateManager.pushMatrix(); {
-					DataSize ds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/2, e.getResolution().getScaledHeight());
+					DataSize ds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/3, (e.getResolution().getScaledHeight()/3)*2);
 					if (ds.getWidth() > 0 && ds.getHeight() > 0) {
 						Gui.drawRect(10, 10, ds.getWidth()+20, ds.getHeight()+20, color);
-						Gui.drawRect(11, 11, ds.getWidth()+19, ds.getHeight()+19, 0xFF000000);
-						Gui.drawRect(11, 11, ds.getWidth()+19, ds.getHeight()+19, 0x88172E64);
+						Gui.drawRect(11, 11, ds.getWidth()+19, ds.getHeight()+19, 0xFF0C1935);
 						GlStateManager.translate(15f, 15f, 0f);
 						FruitRenderer.renderAndSyncTarget(ds.getWidth(), ds.getHeight(), true);
 					}
@@ -289,11 +288,12 @@ public class ClientProxy extends Proxy {
 				transformSideFirstPerson.invoke(ir, handSide, equip);
 				transformFirstPerson.invoke(ir, handSide, swing);
 				ForgeHooksClient.handleCameraTransforms(model, transform, handSide == EnumHandSide.LEFT);
-				GlStateManager.disableCull();
 				GlStateManager.translate(-0.5f, 0.5f, 0.03225f);
 				// 10 GUI pixels = 1 item pixel
 				// Z is extremely clamped since RenderItem translates to some ridiculous Z before rendering
 				GlStateManager.scale(0.00625, -0.00625, 0.000001f);
+				float oldLightmapX = OpenGlHelper.lastBrightnessX;
+				float oldLightmapY = OpenGlHelper.lastBrightnessY;
 				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 				// intentionally desyncing the state manager to force lighting off
 				GlStateManager.enableLighting();
@@ -324,10 +324,10 @@ public class ClientProxy extends Proxy {
 				
 				GL11.glEnable(GL11.GL_LIGHTING);
 				GlStateManager.enableLighting();
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, oldLightmapX, oldLightmapY);
 				GlStateManager.disableBlend();
 				GlStateManager.enableAlpha();
 				setLightmap.invoke(ir);
-				GlStateManager.enableCull();
 			GlStateManager.popMatrix();
 			
 			GlStateManager.disableRescaleNormal();
