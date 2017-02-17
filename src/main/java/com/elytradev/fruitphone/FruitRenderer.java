@@ -445,12 +445,16 @@ public class FruitRenderer {
 		int amt = barCurrent;
 		String unit = barUnit;
 		switch (unit) {
-			case "c%":
+			case "d%":
 				amt /= 10;
 				unit = "%";
 				break;
-			case "m%":
+			case "c%":
 				amt /= 100;
+				unit = "%";
+				break;
+			case "m%":
+				amt /= 1000;
 				unit = "%";
 				break;
 		}
