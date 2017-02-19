@@ -261,12 +261,11 @@ public class FruitPhone {
 				BlockPos pos = rtr.getBlockPos();
 				TileEntity te = e.player.world.getTileEntity(pos);
 				if (te != null) {
-					IProbeDataProvider provider = null;
 					// prefer sideless, as that should include all data, which is better for UI
 					if (te.hasCapability(CAPABILITY_PROBE, null)) {
-						provider = te.getCapability(CAPABILITY_PROBE, null);
+						te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
 					} else if (te.hasCapability(CAPABILITY_PROBE, rtr.sideHit)) {
-						provider = te.getCapability(CAPABILITY_PROBE, rtr.sideHit);
+						te.getCapability(CAPABILITY_PROBE, rtr.sideHit).provideProbeData(list);
 					} else {
 						if (te instanceof TileEntityFurnace) {
 							TileEntityFurnace tef = (TileEntityFurnace)te;
@@ -318,14 +317,11 @@ public class FruitPhone {
 						if (item != null) {
 							List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
 							for (int i = 0; i < item.getSlots(); i++) {
-								is.add(item.getStackInSlot(i));
+								is.add(item.getStackInSlot(i).copy());
 							}
 							list.add(new ProbeData()
 									.withInventory(ImmutableList.copyOf(is)));
 						}
-					}
-					if (provider != null) {
-						provider.provideProbeData(list);
 					}
 					ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
 					if (!Objects.equal(pkt, lastData.get(e.player))) {

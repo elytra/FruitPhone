@@ -30,6 +30,7 @@ import org.lwjgl.opengl.GL11;
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitRenderer;
 import com.elytradev.fruitphone.FruitRenderer.DataSize;
+import com.elytradev.fruitphone.FruitRenderer.MultiDataSize;
 import com.elytradev.fruitphone.client.render.LayerFruitGlass;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.item.ItemFruit;
@@ -194,12 +195,13 @@ public class ClientProxy extends Proxy {
 					}
 				}
 				GlStateManager.pushMatrix(); {
-					DataSize ds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/3, (e.getResolution().getScaledHeight()/3)*2);
-					if (ds.getWidth() > 0 && ds.getHeight() > 0) {
-						Gui.drawRect(10, 10, ds.getWidth()+20, ds.getHeight()+20, color);
-						Gui.drawRect(11, 11, ds.getWidth()+19, ds.getHeight()+19, 0xFF0C1935);
+					MultiDataSize mds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/3, (e.getResolution().getScaledHeight()/3)*2);
+					if (mds.clamped.getWidth() > 0 && mds.clamped.getHeight() > 0) {
+						float scale = FruitRenderer.getContainScale(mds.clamped.getWidth(), mds.clamped.getHeight(), mds.actual.getWidth(), mds.actual.getHeight());
+						Gui.drawRect(10, 10, (int)(mds.clamped.getWidth()*scale)+20, mds.clamped.getHeight()+20, color);
+						Gui.drawRect(11, 11, (int)(mds.clamped.getWidth()*scale)+19, mds.clamped.getHeight()+19, 0xFF0C1935);
 						GlStateManager.translate(15f, 15f, 0f);
-						FruitRenderer.renderAndSyncTarget(ds.getWidth(), ds.getHeight(), true);
+						FruitRenderer.renderAndSyncTarget(mds.clamped.getWidth(), mds.clamped.getHeight(), true, mds.actual);
 					}
 				} GlStateManager.popMatrix();
 			}
@@ -316,9 +318,9 @@ public class ClientProxy extends Proxy {
 							GlStateManager.rotate(-90f, 0, 0, 1);
 							GlStateManager.translate(-50, 0, 0);
 						}
-						FruitRenderer.renderAndSyncTarget(50, 90, false);
+						FruitRenderer.renderAndSyncTarget(50, 90, false, ds);
 					} else {
-						FruitRenderer.renderAndSyncTarget(90, 50, false);
+						FruitRenderer.renderAndSyncTarget(90, 50, false, ds);
 					}
 				}
 				
