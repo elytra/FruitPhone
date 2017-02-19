@@ -71,6 +71,16 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class FruitRenderer {
 
+	public static class MultiDataSize {
+		public final DataSize clamped;
+		public final DataSize actual;
+		public MultiDataSize(DataSize clamped, DataSize actual) {
+			this.clamped = clamped;
+			this.actual = actual;
+		}
+		
+	}
+
 	public static class DataSize {
 		private int width;
 		private int height;
@@ -113,6 +123,7 @@ public class FruitRenderer {
 	}
 
 	private static final ResourceLocation SPINNER = new ResourceLocation("fruitphone", "textures/gui/spinner.png");
+	private static final ResourceLocation SLOT = new ResourceLocation("fruitphone", "textures/gui/slot.png");
 	
 	// TODO entity support
 	
@@ -120,13 +131,11 @@ public class FruitRenderer {
 	public static List<IProbeData> currentFormattedData;
 	public static List<IProbeData> currentRawData;
 	
-	/**
-	 * Sync data for the object the player is looking at and then render it. A
-	 * spinner will be rendered while syncing.
-	 * @param width The maximum width of the render
-	 * @param height The maximum height of the render
-	 */
 	public static void renderAndSyncTarget(int width, int height, boolean lit) {
+		DataSize preferred = calculateAndSyncTargetUnbounded(width, height);
+		renderAndSyncTarget(width, height, lit, preferred);
+	}
+	public static void renderAndSyncTarget(int width, int height, boolean lit, DataSize preferred) {
 		EntityPlayer player = Minecraft.getMinecraft().player;
 		World world = Minecraft.getMinecraft().world;
 		
@@ -146,7 +155,7 @@ public class FruitRenderer {
 				currentDataPos = pos;
 				currentRawData = Collections.emptyList();
 			} else {
-				render(format(Collections.emptyList(), pos), width, height, lit);
+				render(format(Collections.emptyList(), pos), width, height, lit, preferred);
 				GlStateManager.enableBlend();
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 				GlStateManager.color(1, 1, 1);
@@ -161,14 +170,15 @@ public class FruitRenderer {
 			currentFormattedData = format(currentRawData, currentDataPos);
 			currentRawData = null;
 		}
-		render(currentFormattedData, width, height, lit);
+		render(currentFormattedData, width, height, lit, preferred);
 	}
 	
-	public static DataSize calculateAndSyncTarget(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
-		DataSize ds = calculateAndSyncTargetUnbounded(preferredWidth, preferredHeight);
-		ds.setWidth(Math.min(maxWidth, ds.getWidth()));
-		ds.setHeight(Math.min(maxHeight, ds.getHeight()));
-		return ds;
+	public static MultiDataSize calculateAndSyncTarget(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
+		DataSize actual = calculateAndSyncTargetUnbounded(preferredWidth, preferredHeight);
+		DataSize clamped = new DataSize();
+		clamped.setWidth(Math.min(maxWidth, actual.getWidth()));
+		clamped.setHeight(Math.min(maxHeight, actual.getHeight()));
+		return new MultiDataSize(clamped, actual);
 	}
 	
 	public static DataSize calculateAndSyncTargetUnbounded(int preferredWidth, int preferredHeight) {
@@ -304,13 +314,12 @@ public class FruitRenderer {
 		return Math.min(((float)canvasWidth)/((float)dataWidth), ((float)canvasHeight)/((float)dataHeight));
 	}
 	
-	/**
-	 * Render the given data.
-	 * @param data The IProbeData lines to render
-	 * @see #format
-	 */
-	public static void render(List<IProbeData> data, int width, int height, boolean lit) {
+	public static void render(List<IProbeData> data, int width, int height, boolean glasses) {
 		DataSize preferred = calculatePreferredDataSize(data, width, height);
+		render(data, width, height, glasses, preferred);
+	}
+		
+	public static void render(List<IProbeData> data, int width, int height, boolean glasses, DataSize preferred) {
 		GlStateManager.pushMatrix();
 		float contain = getContainScale(width, height, preferred.width, preferred.height);
 		
@@ -324,7 +333,7 @@ public class FruitRenderer {
 		GlStateManager.translate(0, 0, 40);
 		*/
 		
-		int actualWidth = (int) (width/contain);
+		int actualWidth = glasses ? width : (int) (width/contain);
 		
 		int x = 0;
 		int y = 0;
@@ -339,7 +348,7 @@ public class FruitRenderer {
 			}
 			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
-				if (lit) RenderHelper.enableGUIStandardItemLighting();
+				if (glasses) RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1) {
 					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y);
 					x += 20;
@@ -396,17 +405,14 @@ public class FruitRenderer {
 			if (d.hasInventory() && d.getInventory().size() > 1) {
 				y += lineSize;
 				lineSize = 18;
+				GlStateManager.enableBlend();
+				GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				for (ItemStack is : d.getInventory()) {
 					if (is == null) is = ItemStack.EMPTY;
-					// TODO replace with texture
-					Gui.drawRect(x+1, y+1, x+17, y+17, 0x22FFFFFF);
-					Gui.drawRect(x, y, x+17, y+1, 0x77FFFFFF);
-					Gui.drawRect(x+1, y+17, x+18, y+18, 0xDDFFFFFF);
-					Gui.drawRect(x, y+1, x+1, y+17, 0x77FFFFFF);
-					Gui.drawRect(x+17, y+1, x+18, y+17, 0xDDFFFFFF);
-					Gui.drawRect(x, y+17, x+1, y+18, 0xAAFFFFFF);
-					Gui.drawRect(x+17, y, x+18, y+1, 0xAAFFFFFF);
-					if (lit) RenderHelper.enableGUIStandardItemLighting();
+					Rendering.bindTexture(SLOT);
+					GlStateManager.color(1, 1, 1);
+					Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, 18, 18, 18, 18);
+					if (glasses) RenderHelper.enableGUIStandardItemLighting();
 					Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(is, x+1, y+1);
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
 					RenderHelper.disableStandardItemLighting();
@@ -469,3 +475,4 @@ public class FruitRenderer {
 
 	
 }
+
