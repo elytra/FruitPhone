@@ -289,7 +289,7 @@ public class FruitRenderer {
 				ds.setWidthIfGreater(preferredWidth);
 				ds.setWidthIfGreater(x+4+(Minecraft.getMinecraft().fontRenderer.getStringWidth(str)));
 				
-				lineSize = Math.max(lineSize, d.hasLabel() ? 20 : 11);
+				lineSize = Math.max(lineSize, d.hasLabel() ? 22 : 11);
 			}
 			if (renderLabel && d.hasLabel()) {
 				ds.setWidthIfGreater(x+(Minecraft.getMinecraft().fontRenderer.getStringWidth(d.getLabel().getFormattedText())));
@@ -361,8 +361,7 @@ public class FruitRenderer {
 			if (d.hasBar()) {
 				int barY = textPosY;
 				if (d.hasLabel()) {
-					textPosY -= 4;
-					barY += 6;
+					barY += 10;
 				}
 				
 				double maxNormalized = d.getBarMaximum()-d.getBarMinimum();
@@ -370,13 +369,13 @@ public class FruitRenderer {
 				double zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
 				
 				double startX = (x+1+((zero/maxNormalized)*69));
-				double endX = (x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
+				double endX = (x+1+((currentNormalized/maxNormalized)*((actualWidth-x)-2)));
 				
 				int color = getColorForUnit(d.getBarUnit());
 				
-				Rendering.drawRect(x, barY, width, barY+11, -1);
+				Rendering.drawRect(x, barY, actualWidth, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
-				Rendering.drawRect(x+1, barY+1, width-1, barY+10, 0xFF000000);
+				Rendering.drawRect(x+1, barY+1, actualWidth-1, barY+10, 0xFF000000);
 				GlStateManager.translate(0, 0, 40);
 				Rendering.drawRect(startX, barY+1, endX, barY+10, color);
 				
@@ -394,10 +393,10 @@ public class FruitRenderer {
 				GlStateManager.enableBlend();
 				GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR,
 						GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-				fr.drawString(str, (width-1)-fr.getStringWidth(str), barY+2, -1, false);
+				fr.drawString(str, (actualWidth-1)-fr.getStringWidth(str), barY+2, -1, false);
 				GlStateManager.disableBlend();
 				
-				lineSize = Math.max(lineSize, d.hasLabel() ? 20 : 11);
+				lineSize = Math.max(lineSize, d.hasLabel() ? 22 : 11);
 			}
 			if (renderLabel && d.hasLabel()) {
 				Minecraft.getMinecraft().fontRenderer.drawString(d.getLabel().getFormattedText(), x, textPosY, -1, false);
