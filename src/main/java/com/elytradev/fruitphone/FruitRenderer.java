@@ -279,7 +279,7 @@ public class FruitRenderer {
 					str = d.getLabel().getFormattedText();
 					renderLabel = false;
 				} else {
-					str = Unit.formatSI(d.getBarCurrent(), d.getBarUnit());
+					str = d.getBarUnit() == null ? Unit.FORMAT_STANDARD.format(d.getBarCurrent()) : d.getBarUnit().format(d.getBarCurrent());
 				}
 				
 				ds.setWidthIfGreater(preferredWidth);
@@ -378,7 +378,7 @@ public class FruitRenderer {
 					endX = actualWidth-1;
 				}
 				
-				int color = d.getBarUnit().getBarColor();
+				int color = d.getBarUnit() == null ? 0xFFAAAAAA : d.getBarUnit().getBarColor()|0xFF000000;
 				
 				Rendering.drawRect(x, barY, actualWidth, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
@@ -394,7 +394,7 @@ public class FruitRenderer {
 					str = d.getLabel().getFormattedText();
 					renderLabel = false;
 				} else {
-					str = Unit.formatSI(d.getBarCurrent(), d.getBarUnit());
+					str = d.getBarUnit() == null ? Unit.FORMAT_STANDARD.format(d.getBarCurrent()) : d.getBarUnit().format(d.getBarCurrent());
 				}
 				FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
 				GlStateManager.enableBlend();
