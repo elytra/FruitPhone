@@ -318,7 +318,7 @@ public class FruitPhone {
 									amt = tank.getContents().amount;
 								}
 								list.add(new ProbeData()
-										.withBar(0, amt, tank.getCapacity(), unit));
+										.withBar(0, amt/1000D, tank.getCapacity()/1000D, unit));
 							}
 						}
 						if (item != null) {

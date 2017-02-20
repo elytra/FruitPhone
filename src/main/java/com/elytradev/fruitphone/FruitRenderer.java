@@ -33,6 +33,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.elytradev.probe.api.IProbeData;
+import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.Unit;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -42,6 +43,8 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -50,6 +53,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -384,7 +389,19 @@ public class FruitRenderer {
 				GlStateManager.translate(0, 0, 40);
 				Rendering.drawRect(x+1, barY+1, actualWidth-1, barY+10, 0xFF000000);
 				GlStateManager.translate(0, 0, 40);
-				Rendering.drawRect(startX, barY+1, endX, barY+10, color);
+				if (d.getBarUnit() != null && UnitDictionary.getInstance().isFluid(d.getBarUnit())) {
+					Fluid f = UnitDictionary.getInstance().getFluid(d.getBarUnit());
+					ResourceLocation tex = f.getStill(new FluidStack(f, (int)(d.getBarCurrent()*1000)));
+					TextureAtlasSprite tas = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tex.toString());
+					Rendering.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+					int segments = (int)((endX-startX) / 16);
+					for (int i = 0; i < segments; i++) {
+						Rendering.drawTexturedRect(startX+(i*16), barY+1, startX+((i+1)*16), barY+10, tas);
+					}
+					Rendering.drawTexturedRect(startX+(segments*16), barY+1, endX, barY+10, tas);
+				} else {
+					Rendering.drawRect(startX, barY+1, endX, barY+10, color);
+				}
 				
 				GlStateManager.translate(0, 0, 40);
 				String str;
