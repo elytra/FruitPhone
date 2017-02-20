@@ -25,6 +25,7 @@
 package com.elytradev.fruitphone;
 
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.List;
 
@@ -364,12 +365,12 @@ public class FruitRenderer {
 					barY += 6;
 				}
 				
-				float maxNormalized = d.getBarMaximum()-d.getBarMinimum();
-				float currentNormalized = d.getBarCurrent()-d.getBarMinimum();
-				float zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
+				double maxNormalized = d.getBarMaximum()-d.getBarMinimum();
+				double currentNormalized = d.getBarCurrent()-d.getBarMinimum();
+				double zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
 				
-				float startX = (x+1+((zero/maxNormalized)*69));
-				float endX = (x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
+				double startX = (x+1+((zero/maxNormalized)*69));
+				double endX = (x+1+((currentNormalized/maxNormalized)*((width-x)-1)));
 				
 				int color = getColorForUnit(d.getBarUnit());
 				
@@ -429,6 +430,8 @@ public class FruitRenderer {
 		GlStateManager.popMatrix();
 	}
 	
+	private static final NumberFormat nf = NumberFormat.getIntegerInstance();
+	
 	public static int getColorForUnit(String barUnit) {
 		if (barUnit.endsWith("/t")) {
 			barUnit = barUnit.substring(0, barUnit.length()-2);
@@ -447,8 +450,13 @@ public class FruitRenderer {
 		return 0xFFAAAAAA;
 	}
 
-	public static String formatUnit(int barCurrent, String barUnit) {
-		int amt = barCurrent;
+	public static String formatUnit(double barCurrent, String barUnit) {
+		if (nf.isParseIntegerOnly()) {
+			nf.setParseIntegerOnly(false);
+			nf.setGroupingUsed(true);
+			nf.setMaximumFractionDigits(2);
+		}
+		double amt = barCurrent;
 		String unit = barUnit;
 		switch (unit) {
 			case "d%":
@@ -463,8 +471,28 @@ public class FruitRenderer {
 				amt /= 1000;
 				unit = "%";
 				break;
+			case "mB":
+				if (amt >= 1000) {
+					unit = "B";
+					amt /= 1000;
+				} else {
+					break;
+				}
+			case "FU":
+			case "RF":
+			case "T":
+			case "B":
+			case "Dk":
+				// Inspired by http://stackoverflow.com/a/3758880/4220922
+				if (amt < 1000) break;
+				double log1000 = 6.907755278982137;
+				int exp = (int) (Math.log(amt) / log1000);
+				char pre = "kMGTPEZY".charAt(exp-1);
+				amt /= Math.pow(1000, exp);
+				unit = pre+unit;
+				break;
 		}
-		return amt+unit;
+		return nf.format(amt)+unit;
 	}
 
 	public static void renderSpinner(int x, int y) {
