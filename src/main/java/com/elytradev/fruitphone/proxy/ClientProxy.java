@@ -198,8 +198,17 @@ public class ClientProxy extends Proxy {
 					MultiDataSize mds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/3, (e.getResolution().getScaledHeight()/3)*2);
 					if (mds.clamped.getWidth() > 0 && mds.clamped.getHeight() > 0) {
 						float scale = FruitRenderer.getContainScale(mds.clamped.getWidth(), mds.clamped.getHeight(), mds.actual.getWidth(), mds.actual.getHeight());
-						Gui.drawRect(10, 10, (int)(mds.clamped.getWidth()*scale)+20, mds.clamped.getHeight()+20, color);
-						Gui.drawRect(11, 11, (int)(mds.clamped.getWidth()*scale)+19, mds.clamped.getHeight()+19, 0xFF0C1935);
+						float xScale = 1;
+						float yScale = 1;
+						if (mds.clamped.getWidth() < mds.clamped.getHeight()) {
+							xScale = scale;
+						} else if (mds.clamped.getHeight() < mds.clamped.getWidth()) {
+							yScale = scale;
+						} else {
+							xScale = yScale = scale;
+						}
+						Gui.drawRect(10, 10, (int)(mds.clamped.getWidth()*xScale)+20, (int)(mds.clamped.getHeight()*yScale)+20, color);
+						Gui.drawRect(11, 11, (int)(mds.clamped.getWidth()*xScale)+19, (int)(mds.clamped.getHeight()*yScale)+19, 0xFF0C1935);
 						GlStateManager.translate(15f, 15f, 0f);
 						FruitRenderer.renderAndSyncTarget(mds.clamped.getWidth(), mds.clamped.getHeight(), true, mds.actual);
 					}

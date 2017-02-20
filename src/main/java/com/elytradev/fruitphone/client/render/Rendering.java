@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.elytradev.fruitphone.proxy;
+package com.elytradev.fruitphone.client.render;
 
 import java.util.List;
 
