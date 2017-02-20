@@ -9,7 +9,7 @@ import com.elytradev.concrete.NetworkContext;
 import com.elytradev.concrete.annotation.field.MarshalledAs;
 import com.elytradev.concrete.annotation.type.Asynchronous;
 import com.elytradev.concrete.annotation.type.ReceivedOn;
-import io.github.elytra.probe.api.IProbeData;
+import com.elytradev.probe.api.IProbeData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;

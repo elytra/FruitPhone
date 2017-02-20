@@ -49,9 +49,10 @@ import com.elytradev.concrete.NetworkContext;
 import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
 
-import io.github.elytra.probe.api.IProbeData;
-import io.github.elytra.probe.api.IProbeDataProvider;
-import io.github.elytra.probe.api.impl.ProbeData;
+import com.elytradev.probe.api.IProbeData;
+import com.elytradev.probe.api.IProbeDataProvider;
+import com.elytradev.probe.api.UnitDictionary;
+import com.elytradev.probe.api.impl.ProbeData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -270,14 +271,11 @@ public class FruitPhone {
 							TileEntityFurnace tef = (TileEntityFurnace)te;
 							list.add(new ProbeData()
 									.withLabel("Fuel")
-									.withBar(0, furnaceBurnTime.get(tef), currentItemBurnTime.get(tef), ""));
+									.withBar(0, furnaceBurnTime.get(tef), currentItemBurnTime.get(tef), null));
 							float curCook = cookTime.get(tef);
 							float maxCook = totalCookTime.get(tef);
-							
-							int deciPercentCook = (int)((curCook/maxCook)*1000);
 							list.add(new ProbeData()
-									//.withInventory(ImmutableList.of(ItemStack.EMPTY))
-									.withBar(0, deciPercentCook, 1000, "d%"));
+									.withBar(0, (curCook/maxCook)*100, 100, UnitDictionary.PERCENT));
 						}
 						
 						IEnergyStorage energy = null;
@@ -305,12 +303,12 @@ public class FruitPhone {
 						
 						if (energy != null) {
 							list.add(new ProbeData()
-									.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), "FU"));
+									.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), UnitDictionary.FORGE_ENERGY));
 						}
 						if (fluid != null) {
 							for (IFluidTankProperties tank : fluid.getTankProperties()) {
 								list.add(new ProbeData()
-										.withBar(0, tank.getContents().amount, tank.getCapacity(), "mB"));
+										.withBar(0, tank.getContents().amount, tank.getCapacity(), UnitDictionary.BUCKETS_ANY));
 							}
 						}
 						if (item != null) {

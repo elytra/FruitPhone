@@ -24,11 +24,11 @@
 
 package com.elytradev.fruitphone.network;
 
-import com.elytradev.fruitphone.MoreByteBufUtils;
 import com.google.common.collect.ImmutableList;
 import com.elytradev.concrete.Marshaller;
-import io.github.elytra.probe.api.IProbeData;
-import io.github.elytra.probe.api.impl.ProbeData;
+import com.elytradev.probe.api.IProbeData;
+import com.elytradev.probe.api.UnitDictionary;
+import com.elytradev.probe.api.impl.ProbeData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
@@ -43,6 +43,7 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 	private static final int BAR_BIT       = 0b00000001;
 	private static final int LABEL_BIT     = 0b00000010;
 	private static final int INVENTORY_BIT = 0b00000100;
+	private static final int BAR_UNIT_BIT  = 0b00001000;
 	
 	
 	@Override
@@ -50,18 +51,25 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 		boolean bar = t.hasBar();
 		boolean label = t.hasLabel();
 		boolean inventory = t.hasInventory();
+		boolean barHasUnit = false;
+		if (bar) {
+			barHasUnit = t.getBarUnit() != null;
+		}
 		
 		int bits = 0;
 		if (bar) bits |= BAR_BIT;
 		if (label) bits |= LABEL_BIT;
 		if (inventory) bits |= INVENTORY_BIT;
+		if (barHasUnit) bits |= BAR_UNIT_BIT;
 		out.writeByte(bits);
 		
 		if (bar) {
 			out.writeDouble(t.getBarMinimum());
 			out.writeDouble(t.getBarCurrent());
 			out.writeDouble(t.getBarMaximum());
-			ByteBufUtils.writeUTF8String(out, t.getBarUnit());
+			if (barHasUnit) {
+				ByteBufUtils.writeUTF8String(out, t.getBarUnit().getFullName());
+			}
 		}
 		if (label) {
 			ByteBufUtils.writeUTF8String(out, ITextComponent.Serializer.componentToJson(t.getLabel()));
@@ -86,6 +94,7 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 		boolean bar = (bits & BAR_BIT) != 0;
 		boolean label = (bits & LABEL_BIT) != 0;
 		boolean inventory = (bits & INVENTORY_BIT) != 0;
+		boolean barHasUnit = (bits & BAR_UNIT_BIT) != 0;
 		
 		ProbeData pd = new ProbeData();
 		
@@ -93,7 +102,7 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 			pd.withBar(in.readDouble(),
 					in.readDouble(),
 					in.readDouble(),
-					ByteBufUtils.readUTF8String(in));
+					barHasUnit ? UnitDictionary.getInstance().getUnit(ByteBufUtils.readUTF8String(in)) : null);
 		}
 		if (label) {
 			pd.withLabel(ITextComponent.Serializer.jsonToComponent(ByteBufUtils.readUTF8String(in)));
