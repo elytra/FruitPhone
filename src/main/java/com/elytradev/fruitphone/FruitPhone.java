@@ -51,6 +51,7 @@ import com.elytradev.concrete.reflect.accessor.Accessors;
 
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
+import com.elytradev.probe.api.IUnit;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 import net.minecraft.client.Minecraft;
@@ -275,7 +276,7 @@ public class FruitPhone {
 							float curCook = cookTime.get(tef);
 							float maxCook = totalCookTime.get(tef);
 							list.add(new ProbeData()
-									.withBar(0, (curCook/maxCook)*100, 100, UnitDictionary.PERCENT));
+									.withBar(0, maxCook == 0 ? 0 : (curCook/maxCook)*100, 100, UnitDictionary.PERCENT));
 						}
 						
 						IEnergyStorage energy = null;
@@ -307,8 +308,17 @@ public class FruitPhone {
 						}
 						if (fluid != null) {
 							for (IFluidTankProperties tank : fluid.getTankProperties()) {
+								IUnit unit;
+								int amt;
+								if (tank.getContents() == null) {
+									unit = UnitDictionary.BUCKETS_ANY;
+									amt = 0;
+								} else {
+									unit = UnitDictionary.getInstance().getUnit(tank.getContents().getFluid());
+									amt = tank.getContents().amount;
+								}
 								list.add(new ProbeData()
-										.withBar(0, tank.getContents().amount, tank.getCapacity(), UnitDictionary.BUCKETS_ANY));
+										.withBar(0, amt, tank.getCapacity(), unit));
 							}
 						}
 						if (item != null) {
