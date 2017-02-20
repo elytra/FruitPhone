@@ -261,11 +261,10 @@ public class FruitPhone {
 				BlockPos pos = rtr.getBlockPos();
 				TileEntity te = e.player.world.getTileEntity(pos);
 				if (te != null) {
-					// prefer sideless, as that should include all data, which is better for UI
-					if (te.hasCapability(CAPABILITY_PROBE, null)) {
-						te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
-					} else if (te.hasCapability(CAPABILITY_PROBE, rtr.sideHit)) {
+					if (te.hasCapability(CAPABILITY_PROBE, rtr.sideHit)) {
 						te.getCapability(CAPABILITY_PROBE, rtr.sideHit).provideProbeData(list);
+					} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
+						te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
 					} else {
 						if (te instanceof TileEntityFurnace) {
 							TileEntityFurnace tef = (TileEntityFurnace)te;

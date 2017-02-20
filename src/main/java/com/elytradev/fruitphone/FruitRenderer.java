@@ -29,8 +29,8 @@ import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.List;
 
+import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.proxy.ClientProxy;
-import com.elytradev.fruitphone.proxy.Rendering;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -368,8 +368,15 @@ public class FruitRenderer {
 				double currentNormalized = d.getBarCurrent()-d.getBarMinimum();
 				double zero = (d.getBarMinimum() < 0 ? -d.getBarMinimum() : 0);
 				
-				double startX = (x+1+((zero/maxNormalized)*69));
+				double startX = (x+1+((zero/maxNormalized)*((actualWidth-x)-2)));
 				double endX = (x+1+((currentNormalized/maxNormalized)*((actualWidth-x)-2)));
+				
+				if (startX < x+1) {
+					startX = x+1;
+				}
+				if (endX > actualWidth-1) {
+					endX = actualWidth-1;
+				}
 				
 				int color = getColorForUnit(d.getBarUnit());
 				
@@ -417,7 +424,7 @@ public class FruitRenderer {
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
 					RenderHelper.disableStandardItemLighting();
 					x += 18;
-					if ((x+17) >= actualWidth) {
+					if ((x+17) > actualWidth) {
 						x = 0;
 						y += 18;
 					}
