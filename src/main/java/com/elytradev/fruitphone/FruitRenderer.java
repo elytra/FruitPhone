@@ -24,20 +24,16 @@
 
 package com.elytradev.fruitphone;
 
-import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.List;
 
 import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.math.IntMath;
-
-import io.github.elytra.probe.api.IProbeData;
+import com.elytradev.probe.api.IProbeData;
+import com.elytradev.probe.api.impl.Unit;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -232,11 +228,11 @@ public class FruitRenderer {
 		newData.add(ident);
 		boolean first = true;
 		for (IProbeData ipd : data) {
-			if (first && ipd.hasBar() && !ident.hasBar() && (ipd.hasLabel() ? Strings.isNullOrEmpty(ipd.getBarUnit()) : false) && !ipd.hasInventory()) {
+			if (first && ipd.hasBar() && !ident.hasBar() && (ipd.hasLabel() ? ipd.getBarUnit() == null : false) && !ipd.hasInventory()) {
 				FruitProbeData nw = new FruitProbeData();
 				ident.withBar(ipd.getBarMinimum(), ipd.getBarCurrent(), ipd.getBarMaximum(), ipd.getBarUnit());
 				if (ipd.hasLabel()) {
-					if (Strings.isNullOrEmpty(ipd.getBarUnit())) {
+					if (ipd.getBarUnit() == null) {
 						ident.setBarLabel(ipd.getLabel().getFormattedText());
 					} else {
 						nw.withLabel(ipd.getLabel());
@@ -279,11 +275,11 @@ public class FruitRenderer {
 				String str;
 				if (d instanceof FruitProbeData && ((FruitProbeData) d).getBarLabel() != null) {
 					str = ((FruitProbeData) d).getBarLabel();
-				} else if (d.hasLabel() && Strings.isNullOrEmpty(d.getBarUnit())) {
+				} else if (d.hasLabel() && d.getBarUnit() == null) {
 					str = d.getLabel().getFormattedText();
 					renderLabel = false;
 				} else {
-					str = d.getBarCurrent()+d.getBarUnit();
+					str = Unit.formatSI(d.getBarCurrent(), d.getBarUnit());
 				}
 				
 				ds.setWidthIfGreater(preferredWidth);
@@ -296,9 +292,13 @@ public class FruitRenderer {
 				lineSize = Math.max(lineSize, 8);
 			}
 			if (d.hasInventory() && d.getInventory().size() > 1) {
-				y += lineSize;
-				int perRow = 5;
-				lineSize = IntMath.divide(d.getInventory().size(), perRow, RoundingMode.UP)*18;
+				y += lineSize+2;
+				int perRow = d.getInventory().size() == 9 ? 3 : 5;
+				int lines = d.getInventory().size()/perRow;
+				if (d.getInventory().size()%perRow != 0) {
+					lines++;
+				}
+				lineSize = lines*18;
 				ds.setWidthIfGreater(Math.min(perRow, d.getInventory().size())*18);
 			}
 			y += lineSize;
@@ -378,7 +378,7 @@ public class FruitRenderer {
 					endX = actualWidth-1;
 				}
 				
-				int color = getColorForUnit(d.getBarUnit());
+				int color = d.getBarUnit().getBarColor();
 				
 				Rendering.drawRect(x, barY, actualWidth, barY+11, -1);
 				GlStateManager.translate(0, 0, 40);
@@ -390,11 +390,11 @@ public class FruitRenderer {
 				String str;
 				if (d instanceof FruitProbeData && ((FruitProbeData) d).getBarLabel() != null) {
 					str = ((FruitProbeData) d).getBarLabel();
-				} else if (d.hasLabel() && Strings.isNullOrEmpty(d.getBarUnit())) {
+				} else if (d.hasLabel() && d.getBarUnit() == null) {
 					str = d.getLabel().getFormattedText();
 					renderLabel = false;
 				} else {
-					str = formatUnit(d.getBarCurrent(), d.getBarUnit());
+					str = Unit.formatSI(d.getBarCurrent(), d.getBarUnit());
 				}
 				FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
 				GlStateManager.enableBlend();
@@ -410,10 +410,12 @@ public class FruitRenderer {
 				lineSize = Math.max(lineSize, 8);
 			}
 			if (d.hasInventory() && d.getInventory().size() > 1) {
-				y += lineSize;
-				lineSize = 18;
+				y += lineSize+2;
+				lineSize = 0;
 				GlStateManager.enableBlend();
 				GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+				int perRow = d.getInventory().size() == 9 ? 3 : actualWidth/18;
+				int i = 0;
 				for (ItemStack is : d.getInventory()) {
 					if (is == null) is = ItemStack.EMPTY;
 					Rendering.bindTexture(SLOT);
@@ -424,7 +426,9 @@ public class FruitRenderer {
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
 					RenderHelper.disableStandardItemLighting();
 					x += 18;
-					if ((x+17) > actualWidth) {
+					i++;
+					if (i >= perRow) {
+						i = 0;
 						x = 0;
 						y += 18;
 					}
@@ -434,71 +438,6 @@ public class FruitRenderer {
 			x = 0;
 		}
 		GlStateManager.popMatrix();
-	}
-	
-	private static final NumberFormat nf = NumberFormat.getIntegerInstance();
-	
-	public static int getColorForUnit(String barUnit) {
-		if (barUnit.endsWith("/t")) {
-			barUnit = barUnit.substring(0, barUnit.length()-2);
-		}
-		switch (barUnit) {
-			case "FU":
-			case "RF":
-				return 0xFFAA0000;
-			case "T":
-				return 0xFF00AAFF;
-			case "Dk":
-				return 0xFF00AA00;
-			case "mB":
-				return 0xFF0000AA;
-		}
-		return 0xFFAAAAAA;
-	}
-
-	public static String formatUnit(double barCurrent, String barUnit) {
-		if (nf.isParseIntegerOnly()) {
-			nf.setParseIntegerOnly(false);
-			nf.setGroupingUsed(true);
-			nf.setMaximumFractionDigits(2);
-		}
-		double amt = barCurrent;
-		String unit = barUnit;
-		switch (unit) {
-			case "d%":
-				amt /= 10;
-				unit = "%";
-				break;
-			case "c%":
-				amt /= 100;
-				unit = "%";
-				break;
-			case "m%":
-				amt /= 1000;
-				unit = "%";
-				break;
-			case "mB":
-				if (amt >= 1000) {
-					unit = "B";
-					amt /= 1000;
-				} else {
-					break;
-				}
-			case "FU":
-			case "RF":
-			case "T":
-			case "B":
-			case "Dk":
-				// Inspired by http://stackoverflow.com/a/3758880/4220922
-				if (amt < 1000) break;
-				double log1000 = 6.907755278982137;
-				int exp = (int) (Math.log(amt) / log1000);
-				char pre = "kMGTPEZY".charAt(exp-1);
-				amt /= Math.pow(1000, exp);
-				unit = pre+unit;
-				break;
-		}
-		return nf.format(amt)+unit;
 	}
 
 	public static void renderSpinner(int x, int y) {

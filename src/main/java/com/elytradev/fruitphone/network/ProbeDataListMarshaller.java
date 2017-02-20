@@ -25,7 +25,7 @@
 package com.elytradev.fruitphone.network;
 
 import com.elytradev.concrete.DefaultMarshallers.ListMarshaller;
-import io.github.elytra.probe.api.IProbeData;
+import com.elytradev.probe.api.IProbeData;
 
 public class ProbeDataListMarshaller extends ListMarshaller<IProbeData> {
 

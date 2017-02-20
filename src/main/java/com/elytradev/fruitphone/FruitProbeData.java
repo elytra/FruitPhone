@@ -1,7 +1,7 @@
 package com.elytradev.fruitphone;
 
-import io.github.elytra.probe.api.IProbeData;
-import io.github.elytra.probe.api.impl.ProbeData;
+import com.elytradev.probe.api.IProbeData;
+import com.elytradev.probe.api.impl.ProbeData;
 
 public class FruitProbeData extends ProbeData {
 	private String barLabel;
