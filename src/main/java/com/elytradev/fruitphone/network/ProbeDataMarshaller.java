@@ -58,9 +58,9 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 		out.writeByte(bits);
 		
 		if (bar) {
-			MoreByteBufUtils.writeZigZagVarInt(out, t.getBarMinimum(), 5);
-			MoreByteBufUtils.writeZigZagVarInt(out, t.getBarCurrent(), 5);
-			MoreByteBufUtils.writeZigZagVarInt(out, t.getBarMaximum(), 5);
+			out.writeDouble(t.getBarMinimum());
+			out.writeDouble(t.getBarCurrent());
+			out.writeDouble(t.getBarMaximum());
 			ByteBufUtils.writeUTF8String(out, t.getBarUnit());
 		}
 		if (label) {
@@ -90,9 +90,9 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 		ProbeData pd = new ProbeData();
 		
 		if (bar) {
-			pd.withBar(MoreByteBufUtils.readZigZagVarInt(in, 5),
-					MoreByteBufUtils.readZigZagVarInt(in, 5),
-					MoreByteBufUtils.readZigZagVarInt(in, 5),
+			pd.withBar(in.readDouble(),
+					in.readDouble(),
+					in.readDouble(),
 					ByteBufUtils.readUTF8String(in));
 		}
 		if (label) {

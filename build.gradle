@@ -150,8 +150,8 @@ uploadArchives {
 	repositories.mavenDeployer {
 		configuration = configurations.deploy
 		pom.artifactId = 'fruitphone'
-		repository(url: "scp://"+priv.scpHost+priv.scpPath+"/releases") {
-			authentication(userName: priv.scpUser, privateKey: file(priv.scpKey))
+		repository(url: "sftp://"+priv.sftpHost+priv.sftpPath) {
+			authentication(userName: priv.sftpUser, privateKey: file(priv.sftpKey))
 		}
 	}
 }

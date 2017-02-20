@@ -48,15 +48,15 @@ public class Rendering {
 		Gui.drawRect(left, top, right, bottom, color);
 	}
 	
-	public static void drawRect(float left, float top, float right, float bottom, int color) {
+	public static void drawRect(double left, double top, double right, double bottom, int color) {
 		if (left < right) {
-			float swap = left;
+			double swap = left;
 			left = right;
 			right = swap;
 		}
 
 		if (top < bottom) {
-			float swap = top;
+			double swap = top;
 			top = bottom;
 			bottom = swap;
 		}
