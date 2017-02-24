@@ -32,7 +32,7 @@ public class FruitItems {
 
 	public static ItemFruitHandheld HANDHELD;
 	public static ItemFruitPassive PASSIVE;
-	public static ItemRemover REMOVER;
+	public static ItemDrill REMOVER;
 	
 	public static void register() {
 		HANDHELD = new ItemFruitHandheld();
@@ -51,7 +51,7 @@ public class FruitItems {
 		PASSIVE.setHasSubtypes(true);
 		GameRegistry.register(PASSIVE);
 		
-		REMOVER = new ItemRemover();
+		REMOVER = new ItemDrill();
 		REMOVER.setRegistryName("remover");
 		REMOVER.setCreativeTab(FruitPhone.tab);
 		REMOVER.setUnlocalizedName("fruitphone.remover");

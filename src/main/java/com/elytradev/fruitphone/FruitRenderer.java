@@ -133,8 +133,10 @@ public class FruitRenderer {
 	public static List<IProbeData> currentFormattedData;
 	public static List<IProbeData> currentRawData;
 	
+	private static final Unit DUMMY_UNIT = new Unit("", "", 0, Unit.FORMAT_STANDARD, false);
+	
 	public static void renderAndSyncTarget(int width, int height, boolean lit) {
-		DataSize preferred = calculateAndSyncTargetUnbounded(width, height);
+		DataSize preferred = calculateAndSyncTargetUnclamped(width, height, width, height);
 		renderAndSyncTarget(width, height, lit, preferred);
 	}
 	public static void renderAndSyncTarget(int width, int height, boolean lit, DataSize preferred) {
@@ -176,14 +178,14 @@ public class FruitRenderer {
 	}
 	
 	public static MultiDataSize calculateAndSyncTarget(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
-		DataSize actual = calculateAndSyncTargetUnbounded(preferredWidth, preferredHeight);
+		DataSize actual = calculateAndSyncTargetUnclamped(preferredWidth, preferredHeight, maxWidth, maxHeight);
 		DataSize clamped = new DataSize();
 		clamped.setWidth(Math.min(maxWidth, actual.getWidth()));
 		clamped.setHeight(Math.min(maxHeight, actual.getHeight()));
 		return new MultiDataSize(clamped, actual);
 	}
 	
-	public static DataSize calculateAndSyncTargetUnbounded(int preferredWidth, int preferredHeight) {
+	public static DataSize calculateAndSyncTargetUnclamped(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
 		EntityPlayer player = Minecraft.getMinecraft().player;
 		World world = Minecraft.getMinecraft().world;
 		
@@ -203,14 +205,14 @@ public class FruitRenderer {
 				currentDataPos = pos;
 				currentRawData = Collections.emptyList();
 			} else {
-				return calculatePreferredDataSize(format(Collections.emptyList(), pos), preferredWidth, preferredHeight);
+				return calculatePreferredDataSize(format(Collections.emptyList(), pos), preferredWidth, preferredHeight, maxWidth, maxHeight);
 			}
 		}
 		if (currentRawData != null) {
 			currentFormattedData = format(currentRawData, currentDataPos);
 			currentRawData = null;
 		}
-		return calculatePreferredDataSize(currentFormattedData, preferredWidth, preferredHeight);
+		return calculatePreferredDataSize(currentFormattedData, preferredWidth, preferredHeight, maxWidth, maxHeight);
 	}
 	
 	/**
@@ -255,26 +257,22 @@ public class FruitRenderer {
 		return newData;
 	}
 	
-	public static DataSize calculatePreferredDataSize(List<IProbeData> data, int preferredWidth, int preferredHeight) {
+	public static DataSize calculatePreferredDataSize(List<IProbeData> data, int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
 		DataSize ds = new DataSize();
 		int x = 0;
 		int y = 0;
-		boolean first = true;
+		int slots = 0;
 		for (IProbeData d : data) {
 			int lineSize = 0;
-			if (first) {
-				first = false;
-			} else {
-				y += 2;
-			}
+			y += 2;
 			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
-				if (d.getInventory().size() == 1) {
+				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
 					ds.setWidthIfGreater(x+16);
+					y -= 2;
 					x += 20;
 					lineSize = Math.max(lineSize, 16);
 				}
-				RenderHelper.disableStandardItemLighting();
 			}
 			if (d.hasBar()) {
 				String str;
@@ -296,21 +294,26 @@ public class FruitRenderer {
 				ds.setWidthIfGreater(x+(Minecraft.getMinecraft().fontRenderer.getStringWidth(d.getLabel().getFormattedText())));
 				lineSize = Math.max(lineSize, 8);
 			}
-			if (d.hasInventory() && d.getInventory().size() > 1) {
+			if (d.hasInventory() && ((!d.hasBar() && !d.hasLabel()) || d.getInventory().size() > 1)) {
 				y += lineSize+2;
-				int perRow = d.getInventory().size() == 9 ? 3 : 5;
-				int lines = d.getInventory().size()/perRow;
-				if (d.getInventory().size()%perRow != 0) {
-					lines++;
+				if (d.getInventory().size() == 9) {
+					ds.setWidthIfGreater(18*3);
+					lineSize = 18*3;
+				} else {
+					slots += d.getInventory().size();
 				}
-				lineSize = lines*18;
-				ds.setWidthIfGreater(Math.min(perRow, d.getInventory().size())*18);
 			}
 			y += lineSize;
 			x = 0;
 		}
 		ds.setWidthIfGreater(x);
 		ds.setHeightIfGreater(y);
+		int slotsPerRow = Math.min(9, maxWidth/18);
+		ds.setWidthIfGreater(x+(slots/slotsPerRow)*18);
+		ds.addHeight((slots/slotsPerRow)*18);
+		if (slots % slotsPerRow > 0) {
+			ds.addHeight(18);
+		}
 		return ds;
 	}
 	
@@ -320,8 +323,8 @@ public class FruitRenderer {
 		return Math.min(((float)canvasWidth)/((float)dataWidth), ((float)canvasHeight)/((float)dataHeight));
 	}
 	
-	public static void render(List<IProbeData> data, int width, int height, boolean glasses) {
-		DataSize preferred = calculatePreferredDataSize(data, width, height);
+	public static void render(List<IProbeData> data, int width, int height, int maxWidth, int maxHeight, boolean glasses) {
+		DataSize preferred = calculatePreferredDataSize(data, width, height, maxWidth, maxHeight);
 		render(data, width, height, glasses, preferred);
 	}
 		
@@ -343,22 +346,22 @@ public class FruitRenderer {
 		
 		int x = 0;
 		int y = 0;
-		boolean first = true;
 		for (IProbeData d : data) {
 			int lineSize = 0;
 			int textPosY = y+2;
-			if (first) {
-				first = false;
-			} else {
-				y += 2;
-			}
+			y += 2;
 			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
 				if (glasses) RenderHelper.enableGUIStandardItemLighting();
-				if (d.getInventory().size() == 1) {
-					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y);
+				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
+					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y-2);
+					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, d.getInventory().get(0), x, y-2, "");
 					x += 20;
-					textPosY += 2;
+					if (d.hasBar()) {
+						textPosY -= 2;
+					} else {
+						textPosY += 2;
+					}
 					lineSize = Math.max(lineSize, 16);
 				}
 				RenderHelper.disableStandardItemLighting();
@@ -378,9 +381,14 @@ public class FruitRenderer {
 				
 				if (startX < x+1) {
 					startX = x+1;
+				} else if (startX > actualWidth-1) {
+					startX = actualWidth-1;
 				}
+				
 				if (endX > actualWidth-1) {
 					endX = actualWidth-1;
+				} else if (endX < x+1) {
+					endX = x+1;
 				}
 				
 				int color = d.getBarUnit() == null ? 0xFFAAAAAA : d.getBarUnit().getBarColor()|0xFF000000;
@@ -426,12 +434,12 @@ public class FruitRenderer {
 				Minecraft.getMinecraft().fontRenderer.drawString(d.getLabel().getFormattedText(), x, textPosY, -1, false);
 				lineSize = Math.max(lineSize, 8);
 			}
-			if (d.hasInventory() && d.getInventory().size() > 1) {
+			if (d.hasInventory() && ((!d.hasBar() && !d.hasLabel()) || d.getInventory().size() > 1)) {
 				y += lineSize+2;
 				lineSize = 0;
 				GlStateManager.enableBlend();
 				GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-				int perRow = d.getInventory().size() == 9 ? 3 : actualWidth/18;
+				int perRow = d.getInventory().size() == 9 ? 3 : Math.min(9, actualWidth/18);
 				int i = 0;
 				for (ItemStack is : d.getInventory()) {
 					if (is == null) is = ItemStack.EMPTY;
@@ -439,9 +447,19 @@ public class FruitRenderer {
 					GlStateManager.color(1, 1, 1);
 					Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, 18, 18, 18, 18);
 					if (glasses) RenderHelper.enableGUIStandardItemLighting();
+					int count = is.getCount();
 					Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(is, x+1, y+1);
-					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, null);
+					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, count >= 100 ? "" : null);
 					RenderHelper.disableStandardItemLighting();
+					if (count >= 100) {
+						GlStateManager.pushMatrix(); {
+							GlStateManager.scale(0.5f, 0.5f, 1);
+							GlStateManager.translate(0, 0, 400);
+							String str = DUMMY_UNIT.format(count);
+							FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+							fr.drawStringWithShadow(str, ((x*2)+34)-fr.getStringWidth(str), ((y*2)+34)-fr.FONT_HEIGHT, -1);
+						} GlStateManager.popMatrix();
+					}
 					x += 18;
 					i++;
 					if (i >= perRow) {
@@ -449,6 +467,9 @@ public class FruitRenderer {
 						x = 0;
 						y += 18;
 					}
+				}
+				if (i > 0) {
+					lineSize = 18;
 				}
 			}
 			y += lineSize;
