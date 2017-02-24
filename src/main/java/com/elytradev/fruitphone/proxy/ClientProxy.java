@@ -29,8 +29,10 @@ import org.lwjgl.opengl.GL11;
 
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitRenderer;
+import com.elytradev.fruitphone.Gravity;
 import com.elytradev.fruitphone.FruitRenderer.DataSize;
 import com.elytradev.fruitphone.FruitRenderer.MultiDataSize;
+import com.elytradev.fruitphone.client.gui.ScreenConfigureGlasses;
 import com.elytradev.fruitphone.client.render.LayerFruitGlass;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.item.ItemFruit;
@@ -141,6 +143,11 @@ public class ClientProxy extends Proxy {
 			}
 		}
 	}
+	
+	@Override
+	public void configureGlasses() {
+		Minecraft.getMinecraft().displayGuiScreen(new ScreenConfigureGlasses());
+	}
 
 	@SubscribeEvent
 	public void onRenderTick(RenderTickEvent e) {
@@ -171,6 +178,9 @@ public class ClientProxy extends Proxy {
 	@SubscribeEvent
 	public void onRenderHud(RenderGameOverlayEvent.Post e) {
 		if (e.getType() == ElementType.ALL) {
+			if (Minecraft.getMinecraft().currentScreen instanceof ScreenConfigureGlasses) {
+				return;
+			}
 			// check if any of the following are true:
 			// 1. optional mode is enabled
 			// 2. the fruitphone:alwaysOn gamerule is set to true
@@ -194,8 +204,16 @@ public class ClientProxy extends Proxy {
 						color = item.getColor(glasses);
 					}
 				}
+				
+				Gravity g = FruitPhone.inst.glassesGravity;
+				int xOfs = FruitPhone.inst.glassesXOffset;
+				int yOfs = FruitPhone.inst.glassesYOffset;
+				float confScale = FruitPhone.inst.glassesScale;
+				int maxWidth = (int)(e.getResolution().getScaledWidth() * FruitPhone.inst.maxGlassesWidth);
+				int maxHeight = (int)(e.getResolution().getScaledHeight() * FruitPhone.inst.maxGlassesHeight);
+				
 				GlStateManager.pushMatrix(); {
-					MultiDataSize mds = FruitRenderer.calculateAndSyncTarget(90, 50, e.getResolution().getScaledWidth()/3, (e.getResolution().getScaledHeight()/3)*2);
+					MultiDataSize mds = FruitRenderer.calculateAndSyncTarget(90, 50, maxWidth, maxHeight);
 					if (mds.clamped.getWidth() > 0 && mds.clamped.getHeight() > 0) {
 						float scale = FruitRenderer.getContainScale(mds.clamped.getWidth(), mds.clamped.getHeight(), mds.actual.getWidth(), mds.actual.getHeight());
 						float xScale = 1;
@@ -207,16 +225,30 @@ public class ClientProxy extends Proxy {
 						} else {
 							xScale = yScale = scale;
 						}
-						Gui.drawRect(10, 10, (int)(mds.clamped.getWidth()*xScale)+20, (int)(mds.clamped.getHeight()*yScale)+20, color);
-						Gui.drawRect(11, 11, (int)(mds.clamped.getWidth()*xScale)+19, (int)(mds.clamped.getHeight()*yScale)+19, 0xFF0C1935);
-						GlStateManager.translate(15f, 15f, 0f);
-						FruitRenderer.renderAndSyncTarget(mds.clamped.getWidth(), mds.clamped.getHeight(), true, mds.actual);
+						xScale *= confScale;
+						yScale *= confScale;
+						
+						int objWidth = (int)(mds.clamped.getWidth()*xScale)+10;
+						int objHeight = (int)(mds.clamped.getHeight()*yScale)+10;
+						
+						int x = g.resolveX(xOfs, e.getResolution().getScaledWidth(), objWidth);
+						int y = g.resolveY(yOfs, e.getResolution().getScaledHeight(), objHeight);
+						
+						GlStateManager.pushMatrix(); {
+							GlStateManager.translate(x, y, 0);
+
+							Gui.drawRect(0, 0, objWidth, objHeight, color);
+							Gui.drawRect(1, 1, objWidth-1, objHeight-1, 0xFF0C1935);
+							GlStateManager.translate(5f, 5f, 40f);
+							GlStateManager.scale(confScale, confScale, 1);
+							FruitRenderer.renderAndSyncTarget(mds.clamped.getWidth(), mds.clamped.getHeight(), true, mds.actual);
+						} GlStateManager.popMatrix();
 					}
 				} GlStateManager.popMatrix();
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void onRenderHand(RenderSpecificHandEvent e) {
 		if (FruitPhone.inst.optionalMode) return;
@@ -263,7 +295,7 @@ public class ClientProxy extends Proxy {
 			GlStateManager.enableRescaleNormal();
 
 			GlStateManager.pushMatrix();
-				DataSize ds = FruitRenderer.calculateAndSyncTargetUnbounded(50, 50);
+				DataSize ds = FruitRenderer.calculateAndSyncTargetUnclamped(50, 50, 90, 90);
 				boolean portraitMode = false;
 				if (((float)ds.getHeight())/((float)ds.getWidth()) > 1.25f) {
 					portraitMode = true;

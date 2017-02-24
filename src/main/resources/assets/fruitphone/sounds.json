@@ -1,0 +1,11 @@
+{
+	"drill": {
+		"category": "neutral",
+		"sounds": [
+			"fruitphone:drill1",
+			"fruitphone:drill2",
+			"fruitphone:drill3"
+		],
+		"subtitle": "subtitles.fruitphone.drill"
+	}
+}

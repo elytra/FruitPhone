@@ -25,6 +25,7 @@
 package com.elytradev.fruitphone;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -41,14 +42,12 @@ import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Proxy;
 import com.elytradev.fruitphone.recipe.FruitRecipes;
 import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
+import com.elytradev.fruitphone.vanilla.VanillaProviders;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import com.elytradev.concrete.NetworkContext;
-import com.elytradev.concrete.reflect.accessor.Accessor;
-import com.elytradev.concrete.reflect.accessor.Accessors;
-
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
 import com.elytradev.probe.api.IUnit;
@@ -61,7 +60,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -143,6 +141,18 @@ public class FruitPhone {
 	@Instance
 	public static FruitPhone inst;
 	
+	public Configuration config;
+	
+	public Gravity glassesGravity;
+	
+	public int glassesXOffset;
+	public int glassesYOffset;
+	
+	public float maxGlassesWidth;
+	public float maxGlassesHeight;
+	
+	public float glassesScale;
+	
 	public boolean optionalMode;
 	
 	@CapabilityInject(FruitEquipmentCapability.class)
@@ -151,14 +161,9 @@ public class FruitPhone {
 	public static Capability<IProbeDataProvider> CAPABILITY_PROBE;
 	public NetworkContext NETWORK;
 	
-	private Accessor<Integer> cookTime = Accessors.findField(TileEntityFurnace.class, "field_174906_k", "cookTime", "k");
-	private Accessor<Integer> totalCookTime = Accessors.findField(TileEntityFurnace.class, "field_174905_l", "totalCookTime", "l");
-	private Accessor<Integer> furnaceBurnTime = Accessors.findField(TileEntityFurnace.class, "field_145956_a", "furnaceBurnTime", "a");
-	private Accessor<Integer> currentItemBurnTime = Accessors.findField(TileEntityFurnace.class, "field_145963_i", "currentItemBurnTime", "i");
-	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
-		Configuration config = new Configuration(e.getSuggestedConfigurationFile());
+		config = new Configuration(e.getSuggestedConfigurationFile());
 		
 		optionalMode = config.getBoolean("optional", "General", false,
 				"Don't register any items or blocks. If set to true on a server,\n"
@@ -176,6 +181,22 @@ public class FruitPhone {
 				+ "If you just want to have the mod pretend you're wearing Fruit\n"
 				+ "Glass at all times, use /gamerule fruitphone:alwaysOn true\n"
 				+ "\n");
+	
+		Gravity[] grav = Gravity.values();
+		String[] valid = new String[grav.length];
+		
+		for (int i = 0; i < valid.length; i++) {
+			valid[i] = grav[i].toString();
+		}
+		
+		glassesGravity = Gravity.valueOf(config.getString("gravity", "Glasses", "north_west", "The gravity for the glasses overlay.", valid).toUpperCase(Locale.ROOT));
+		glassesXOffset = config.getInt("xOffset", "Glasses", 10, 0, 65535, "The X offset for the glasses overlay, dependent on gravity");
+		glassesYOffset = config.getInt("yOffset", "Glasses", 10, 0, 65535, "The Y offset for the glasses overlay, dependent on gravity");
+		maxGlassesWidth = config.getFloat("maxWidth", "Glasses", 100/3f, 0, 100, "The maximum width for the glasses overlay, as a percentage of the screen width")/100f;
+		maxGlassesHeight = config.getFloat("maxHeight", "Glasses", 200/3f, 0, 100, "The maximum height for the glasses overlay, as a percentage of the screen height")/100f;
+		glassesScale = config.getFloat("scale", "Glasses", 100, 0, 100000, "The scale for the glasses overlay, as a percentage of the default")/100f;
+		
+		config.setCategoryComment("Glasses", "Configuration for the glasses overlay. This can be configured ingame much more easily with the Power Drill.");
 		
 		config.save();
 		
@@ -184,6 +205,7 @@ public class FruitPhone {
 			
 			FruitItems.register();
 			FruitRecipes.register();
+			FruitSounds.register();
 			
 			CapabilityManager.INSTANCE.register(FruitEquipmentCapability.class, new FruitEquipmentStorage(), FruitEquipmentCapability::new);
 			
@@ -197,6 +219,19 @@ public class FruitPhone {
 		
 		MinecraftForge.EVENT_BUS.register(proxy);
 		MinecraftForge.EVENT_BUS.register(this);
+	}
+	
+	public void saveConfig() {
+		config.get("Glasses", "gravity", "north_west").set(glassesGravity.toString());
+		config.get("Glasses", "xOffset", 10).set(glassesXOffset);
+		config.get("Glasses", "yOffset", 10).set(glassesYOffset);
+		config.get("Glasses", "maxWidth", 100/3f).set(maxGlassesWidth*100f);
+		config.get("Glasses", "maxHeight", 200/3f).set(maxGlassesHeight*100f);
+		config.get("Glasses", "scale", 100f).set(glassesScale*100f);
+		
+		config.get("General", "optional", false).set(optionalMode);
+		
+		config.save();
 	}
 	
 	@EventHandler
@@ -268,16 +303,7 @@ public class FruitPhone {
 					} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
 						te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
 					} else {
-						if (te instanceof TileEntityFurnace) {
-							TileEntityFurnace tef = (TileEntityFurnace)te;
-							list.add(new ProbeData()
-									.withLabel("Fuel")
-									.withBar(0, furnaceBurnTime.get(tef), currentItemBurnTime.get(tef), null));
-							float curCook = cookTime.get(tef);
-							float maxCook = totalCookTime.get(tef);
-							list.add(new ProbeData()
-									.withBar(0, maxCook == 0 ? 0 : (curCook/maxCook)*100, 100, UnitDictionary.PERCENT));
-						}
+						VanillaProviders.provideProbeData(te, list);
 						
 						IEnergyStorage energy = null;
 						if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {

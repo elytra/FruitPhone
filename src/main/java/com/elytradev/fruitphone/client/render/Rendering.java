@@ -48,6 +48,19 @@ public class Rendering {
 		Gui.drawRect(left, top, right, bottom, color);
 	}
 	
+	public static void color3(int color) {
+		color4(color | 0xFF000000);
+	}
+	
+	public static void color4(int color) {
+		float a = (color >> 24 & 255) / 255f;
+		float r = (color >> 16 & 255) / 255f;
+		float g = (color >> 8 & 255) / 255f;
+		float b = (color & 255) / 255f;
+		
+		GlStateManager.color(r, g, b, a);
+	}
+	
 	public static void drawRect(double left, double top, double right, double bottom, int color) {
 		if (left < right) {
 			double swap = left;
@@ -61,10 +74,6 @@ public class Rendering {
 			bottom = swap;
 		}
 
-		float a = (color >> 24 & 255) / 255F;
-		float r = (color >> 16 & 255) / 255F;
-		float g = (color >> 8 & 255) / 255F;
-		float b = (color & 255) / 255F;
 		Tessellator tessellator = Tessellator.getInstance();
 		VertexBuffer vertexbuffer = tessellator.getBuffer();
 		GlStateManager.enableBlend();
@@ -74,7 +83,7 @@ public class Rendering {
 				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
 				GlStateManager.SourceFactor.ONE,
 				GlStateManager.DestFactor.ZERO);
-		GlStateManager.color(r, g, b, a);
+		color4(color);
 		vertexbuffer.begin(7, DefaultVertexFormats.POSITION);
 		vertexbuffer.pos(left, bottom, 0).endVertex();
 		vertexbuffer.pos(right, bottom, 0).endVertex();

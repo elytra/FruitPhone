@@ -34,4 +34,8 @@ public class Proxy {
 		
 	}
 
+	public void configureGlasses() {
+		
+	}
+
 }
