@@ -32,8 +32,15 @@ import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import mcp.mobius.waila.api.IWailaDataProvider;
+import mcp.mobius.waila.api.impl.ConfigHandler;
+import mcp.mobius.waila.api.impl.DataAccessorCommon;
+import mcp.mobius.waila.api.impl.ModuleRegistrar;
+
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
+import com.elytradev.probe.api.impl.ProbeData;
 import com.elytradev.probe.api.impl.SIUnit;
 import com.elytradev.probe.api.impl.Unit;
 import net.minecraft.block.state.IBlockState;
@@ -48,6 +55,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -234,9 +242,53 @@ public class FruitRenderer {
 		ident.withInventory(ImmutableList.of(pickblock));
 		ident.withLabel(pickblock.getDisplayName());
 		newData.add(ident);
+		List<String> wailaHead = Lists.newArrayList();
+		List<String> wailaBody = Lists.newArrayList();
+		List<String> wailaTail = Lists.newArrayList();
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		DataAccessorCommon dac = null;
 		boolean first = true;
 		for (IProbeData ipd : data) {
-			if (first && ipd.hasBar() && !ident.hasBar() && (ipd.hasLabel() ? ipd.getBarUnit() == null : false) && !ipd.hasInventory()) {
+			if (ipd instanceof WailaProbeData) {
+				if (dac == null) {
+					dac = new DataAccessorCommon();
+					Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
+					Vec3d look = player.getLook(ClientProxy.partialTicks);
+					double dist = 4;
+					Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+					RayTraceResult rtr = player.world.rayTraceBlocks(eyes, max, false, false, false);
+					dac.set(Minecraft.getMinecraft().world, player, rtr);
+				}
+				TileEntity te = Minecraft.getMinecraft().world.getTileEntity(src);
+				if (ModuleRegistrar.instance().hasStackProviders(te)) {
+					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getStackProviders(te).values()) {
+						for (IWailaDataProvider iwdp : li) {
+							ident.withInventory(ImmutableList.of(iwdp.getWailaStack(dac, ConfigHandler.instance())));
+						}
+					}
+				}
+				if (ModuleRegistrar.instance().hasHeadProviders(te)) {
+					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getHeadProviders(te).values()) {
+						for (IWailaDataProvider iwdp : li) {
+							wailaHead = iwdp.getWailaHead(ident.getInventory().get(0), wailaHead, dac, ConfigHandler.instance());
+						}
+					}
+				}
+				if (ModuleRegistrar.instance().hasBodyProviders(te)) {
+					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getBodyProviders(te).values()) {
+						for (IWailaDataProvider iwdp : li) {
+							wailaBody = iwdp.getWailaHead(ident.getInventory().get(0), wailaBody, dac, ConfigHandler.instance());
+						}
+					}
+				}
+				if (ModuleRegistrar.instance().hasTailProviders(te)) {
+					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getTailProviders(te).values()) {
+						for (IWailaDataProvider iwdp : li) {
+							wailaTail = iwdp.getWailaTail(ident.getInventory().get(0), wailaTail, dac, ConfigHandler.instance());
+						}
+					}
+				}
+			} else if (first && ipd.hasBar() && !ident.hasBar() && (ipd.hasLabel() ? ipd.getBarUnit() == null : false) && !ipd.hasInventory()) {
 				FruitProbeData nw = new FruitProbeData();
 				ident.withBar(ipd.getBarMinimum(), ipd.getBarCurrent(), ipd.getBarMaximum(), ipd.getBarUnit());
 				if (ipd.hasLabel()) {
@@ -254,6 +306,18 @@ public class FruitRenderer {
 				newData.add(ipd);
 			}
 			first = false;
+		}
+		if (!wailaHead.isEmpty()) {
+			int idx = 1;
+			for (String s : wailaHead) {
+				newData.add(idx++, new ProbeData(s));
+			}
+			for (String s : wailaBody) {
+				newData.add(idx++, new ProbeData(s));
+			}
+			for (String s : wailaTail) {
+				newData.add(new ProbeData(s));
+			}
 		}
 		return newData;
 	}
