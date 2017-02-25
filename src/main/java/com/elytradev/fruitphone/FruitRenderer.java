@@ -26,23 +26,21 @@ package com.elytradev.fruitphone;
 
 import java.util.Collections;
 import java.util.List;
-
 import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import mcp.mobius.waila.api.IWailaDataProvider;
-import mcp.mobius.waila.api.impl.ConfigHandler;
 import mcp.mobius.waila.api.impl.DataAccessorCommon;
-import mcp.mobius.waila.api.impl.ModuleRegistrar;
-
+import mcp.mobius.waila.api.impl.MetaDataProvider;
+import mcp.mobius.waila.api.impl.TipList;
+import mcp.mobius.waila.cbcore.Layout;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 import com.elytradev.probe.api.impl.SIUnit;
 import com.elytradev.probe.api.impl.Unit;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -55,7 +53,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -141,8 +139,11 @@ public class FruitRenderer {
 	public static BlockPos currentDataPos;
 	public static List<IProbeData> currentFormattedData;
 	public static List<IProbeData> currentRawData;
+	private static NBTTagCompound wailaData;
 	
 	private static final Unit DUMMY_UNIT = new SIUnit("", "", 0, Unit.FORMAT_STANDARD, false);
+	
+	private static final MetaDataProvider mdp = new MetaDataProvider();
 	
 	public static void renderAndSyncTarget(int width, int height, boolean lit) {
 		DataSize preferred = calculateAndSyncTargetUnclamped(width, height, width, height);
@@ -242,52 +243,11 @@ public class FruitRenderer {
 		ident.withInventory(ImmutableList.of(pickblock));
 		ident.withLabel(pickblock.getDisplayName());
 		newData.add(ident);
-		List<String> wailaHead = Lists.newArrayList();
-		List<String> wailaBody = Lists.newArrayList();
-		List<String> wailaTail = Lists.newArrayList();
-		EntityPlayer player = Minecraft.getMinecraft().player;
-		DataAccessorCommon dac = null;
+		wailaData = null;
 		boolean first = true;
 		for (IProbeData ipd : data) {
 			if (ipd instanceof WailaProbeData) {
-				if (dac == null) {
-					dac = new DataAccessorCommon();
-					Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
-					Vec3d look = player.getLook(ClientProxy.partialTicks);
-					double dist = 4;
-					Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
-					RayTraceResult rtr = player.world.rayTraceBlocks(eyes, max, false, false, false);
-					dac.set(Minecraft.getMinecraft().world, player, rtr);
-				}
-				TileEntity te = Minecraft.getMinecraft().world.getTileEntity(src);
-				if (ModuleRegistrar.instance().hasStackProviders(te)) {
-					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getStackProviders(te).values()) {
-						for (IWailaDataProvider iwdp : li) {
-							ident.withInventory(ImmutableList.of(iwdp.getWailaStack(dac, ConfigHandler.instance())));
-						}
-					}
-				}
-				if (ModuleRegistrar.instance().hasHeadProviders(te)) {
-					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getHeadProviders(te).values()) {
-						for (IWailaDataProvider iwdp : li) {
-							wailaHead = iwdp.getWailaHead(ident.getInventory().get(0), wailaHead, dac, ConfigHandler.instance());
-						}
-					}
-				}
-				if (ModuleRegistrar.instance().hasBodyProviders(te)) {
-					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getBodyProviders(te).values()) {
-						for (IWailaDataProvider iwdp : li) {
-							wailaBody = iwdp.getWailaHead(ident.getInventory().get(0), wailaBody, dac, ConfigHandler.instance());
-						}
-					}
-				}
-				if (ModuleRegistrar.instance().hasTailProviders(te)) {
-					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getTailProviders(te).values()) {
-						for (IWailaDataProvider iwdp : li) {
-							wailaTail = iwdp.getWailaTail(ident.getInventory().get(0), wailaTail, dac, ConfigHandler.instance());
-						}
-					}
-				}
+				wailaData = ((WailaProbeData) ipd).data;
 			} else if (first && ipd.hasBar() && !ident.hasBar() && (ipd.hasLabel() ? ipd.getBarUnit() == null : false) && !ipd.hasInventory()) {
 				FruitProbeData nw = new FruitProbeData();
 				ident.withBar(ipd.getBarMinimum(), ipd.getBarCurrent(), ipd.getBarMaximum(), ipd.getBarUnit());
@@ -306,18 +266,6 @@ public class FruitRenderer {
 				newData.add(ipd);
 			}
 			first = false;
-		}
-		if (!wailaHead.isEmpty()) {
-			int idx = 1;
-			for (String s : wailaHead) {
-				newData.add(idx++, new ProbeData(s));
-			}
-			for (String s : wailaBody) {
-				newData.add(idx++, new ProbeData(s));
-			}
-			for (String s : wailaTail) {
-				newData.add(new ProbeData(s));
-			}
 		}
 		return newData;
 	}
@@ -397,6 +345,41 @@ public class FruitRenderer {
 	}
 		
 	public static void render(List<IProbeData> data, int width, int height, boolean glasses, DataSize preferred) {
+		data = Lists.newArrayList(data);
+		
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		DataAccessorCommon dac = DataAccessorCommon.instance;
+		RayTraceResult rtr = Minecraft.getMinecraft().objectMouseOver;
+		World world = Minecraft.getMinecraft().world;
+		
+		dac.set(world, player, rtr, null, ClientProxy.partialTicks);
+		dac.setNBTData(wailaData);
+
+		ItemStack stack = mdp.identifyBlockHighlight(world, player, rtr, dac);
+		if (stack == null) {
+			stack = data.get(0).getInventory().get(0);
+		} else {
+			((ProbeData)data.get(0))
+				.withInventory(ImmutableList.of(stack))
+				.withLabel(stack.getDisplayName());
+		}
+		
+		List<String> wailaHead = mdp.handleBlockTextData(stack, world, player, rtr, dac, new TipList<String, String>(), Layout.HEADER);
+		List<String> wailaBody = mdp.handleBlockTextData(stack, world, player, rtr, dac, new TipList<String, String>(), Layout.BODY);
+		List<String> wailaTail = mdp.handleBlockTextData(stack, world, player, rtr, dac, new TipList<String, String>(), Layout.FOOTER);
+		
+		int idx = 1;
+		for (String s : wailaHead) {
+			data.add(idx++, new ProbeData(s));
+		}
+		for (String s : wailaBody) {
+			data.add(idx++, new ProbeData(s));
+		}
+		for (String s : wailaTail) {
+			data.add(new ProbeData(s));
+		}
+		
+		
 		GlStateManager.pushMatrix();
 		float contain = getContainScale(width, height, preferred.width, preferred.height);
 		

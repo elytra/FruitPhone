@@ -24,6 +24,7 @@
 
 package com.elytradev.fruitphone;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -48,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import mcp.mobius.waila.api.IWailaDataProvider;
+import mcp.mobius.waila.api.IWailaRegistrar;
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
 
 import com.elytradev.concrete.NetworkContext;
@@ -91,6 +93,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -245,6 +248,35 @@ public class FruitPhone {
 		proxy.postInit();
 	}
 	
+	@EventHandler
+	public void onLoadComplete(FMLLoadCompleteEvent ev) {
+		for (Map.Entry<String, String> en : ModuleRegistrar.instance().IMCRequests.entrySet()) {
+			String method = en.getKey();
+			String modname = en.getValue();
+			
+			String[] splitName = method.split("\\.");
+			String methodName = splitName[splitName.length - 1];
+			String className = method.substring(0, method.length() - methodName.length() - 1);
+
+			log.info("Trying to reflect Waila plugin {}::{}", className, methodName);
+
+			try {
+				Class<?> reflectClass = Class.forName(className);
+				Method reflectMethod = reflectClass.getDeclaredMethod(methodName, IWailaRegistrar.class);
+				reflectMethod.invoke(null, (IWailaRegistrar) ModuleRegistrar.instance());
+
+				log.info("Successfully registered Waila plugin {}", modname);
+
+			} catch (ClassNotFoundException e) {
+				log.warn("Could not find class {} for Waila", className);
+			} catch (NoSuchMethodException e) {
+				log.warn("Could not find method {} for Waila", methodName);
+			} catch (Exception e) {
+				log.warn("Exception while trying to register Waila plugin", e);
+			}
+		}
+	}
+	
 	@NetworkCheckHandler
 	public boolean onConnectionOffered(Map<String, String> mods, Side offerer) {
 		if (optionalMode) {
@@ -305,8 +337,8 @@ public class FruitPhone {
 				BlockPos pos = rtr.getBlockPos();
 				TileEntity te = e.player.world.getTileEntity(pos);
 				if (te != null) {
-					generateProbeData(e.player, te, rtr.sideHit, list);
-					ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
+					NBTTagCompound tag = generateProbeData(e.player, te, rtr.sideHit, list);
+					ProbeDataPacket pkt = new ProbeDataPacket(pos, list, tag);
 					if (!Objects.equal(pkt, lastData.get(e.player))) {
 						pkt.sendTo(e.player);
 					}
@@ -318,16 +350,16 @@ public class FruitPhone {
 		}
 	}
 	
-	public void generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
+	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
+		NBTTagCompound tag = null;
 		if (player instanceof EntityPlayerMP) {
 			if (ModuleRegistrar.instance().hasNBTProviders(te)) {
-				NBTTagCompound tag = new NBTTagCompound();
+				if (tag == null) tag = new NBTTagCompound();
 				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
 					for (IWailaDataProvider iwdp : li) {
 						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
 					}
 				}
-				list.add(new WailaProbeData(tag));
 			}
 		}
 		if (te.hasCapability(CAPABILITY_PROBE, sideHit)) {
@@ -388,6 +420,7 @@ public class FruitPhone {
 						.withInventory(ImmutableList.copyOf(is)));
 			}
 		}
+		return tag;
 	}
 
 	@SubscribeEvent

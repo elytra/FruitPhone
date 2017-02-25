@@ -25,9 +25,11 @@
 package com.elytradev.fruitphone.early;
 
 import com.elytradev.fruitphone.FruitPhone;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
-import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.event.FMLInterModComms;
 import net.minecraftforge.fml.common.event.FMLInterModComms.IMCMessage;
 
@@ -37,12 +39,12 @@ public class WailaDummyModContainer extends FruitPhoneDummyModContainer {
 	}
 	
 	@Override
-	public Object getMod() {
-		return this;
+	public boolean registerBus(EventBus bus, LoadController controller) {
+		bus.register(this);
+		return true;
 	}
-	
 
-	@EventHandler
+	@Subscribe
 	public void processIMC(FMLInterModComms.IMCEvent event) {
 		System.out.println("process imc");
 		for (IMCMessage imc : event.getMessages()) {
@@ -50,7 +52,7 @@ public class WailaDummyModContainer extends FruitPhoneDummyModContainer {
 				continue;
 			
 			if (imc.key.equalsIgnoreCase("register")) {
-				FruitPhone.log.info("Receiving legacy Waila registration request for {}::{}", imc.getSender(), imc.getStringValue());
+				FruitPhone.log.info("Receiving legacy Waila registration request for {} from {}", imc.getStringValue(), imc.getSender());
 				ModuleRegistrar.instance().addIMCRequest(imc.getStringValue(), imc.getSender());
 			}
 		}
