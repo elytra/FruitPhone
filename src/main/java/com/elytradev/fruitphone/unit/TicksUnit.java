@@ -16,6 +16,7 @@ public class TicksUnit extends Unit {
 	@Override
 	public String format(double ticks) {
 		ticks -= ClientProxy.partialTicks;
+		if (ticks < 0) ticks = 0;
 		int millisrem = (int)((ticks*50D)%1000D);
 		long sec = (long)(ticks/20D);
 		int secrem = (int)(sec%60L);

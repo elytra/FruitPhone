@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
+import com.elytradev.probe.api.impl.SIUnit;
 import com.elytradev.probe.api.impl.Unit;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -133,7 +134,7 @@ public class FruitRenderer {
 	public static List<IProbeData> currentFormattedData;
 	public static List<IProbeData> currentRawData;
 	
-	private static final Unit DUMMY_UNIT = new Unit("", "", 0, Unit.FORMAT_STANDARD, false);
+	private static final Unit DUMMY_UNIT = new SIUnit("", "", 0, Unit.FORMAT_STANDARD, false);
 	
 	public static void renderAndSyncTarget(int width, int height, boolean lit) {
 		DataSize preferred = calculateAndSyncTargetUnclamped(width, height, width, height);
@@ -309,8 +310,8 @@ public class FruitRenderer {
 		ds.setWidthIfGreater(x);
 		ds.setHeightIfGreater(y);
 		int slotsPerRow = Math.min(9, maxWidth/18);
-		ds.setWidthIfGreater(x+(slots/slotsPerRow)*18);
-		ds.addHeight((slots/slotsPerRow)*18);
+		ds.setWidthIfGreater(x + (slots >= slotsPerRow ? 18*slotsPerRow : 18*slots));
+		ds.addHeight(2+(slots/slotsPerRow)*18);
 		if (slots % slotsPerRow > 0) {
 			ds.addHeight(18);
 		}
@@ -332,17 +333,23 @@ public class FruitRenderer {
 		GlStateManager.pushMatrix();
 		float contain = getContainScale(width, height, preferred.width, preferred.height);
 		
-		/*
-		Gui.drawRect(0, 0, width, height, 0xFF00FF00);
-		GlStateManager.translate(0, 0, 40);
-		*/
+		if (!glasses) {
+			preferred = calculatePreferredDataSize(data, (int)(width/contain), (int)(height/contain), (int)(width/contain), (int)(height/contain));
+			contain = getContainScale(width, height, preferred.width, preferred.height);
+		}
+		
+		if (Minecraft.getMinecraft().gameSettings.showDebugInfo) {
+			Gui.drawRect(0, 0, width, height, 0xFF00FF00);
+			GlStateManager.translate(0, 0, 40);
+		}
 		GlStateManager.scale(contain, contain, 1);
-		/*
-		Gui.drawRect(0, 0, preferred.width, preferred.height, 0xAAFF0000);
-		GlStateManager.translate(0, 0, 40);
-		*/
+		if (Minecraft.getMinecraft().gameSettings.showDebugInfo) {
+			Gui.drawRect(0, 0, preferred.width, preferred.height, 0xAAFF0000);
+			GlStateManager.translate(0, 0, 40);
+		}
 		
 		int actualWidth = glasses ? width : (int) (width/contain);
+		
 		
 		int x = 0;
 		int y = 0;

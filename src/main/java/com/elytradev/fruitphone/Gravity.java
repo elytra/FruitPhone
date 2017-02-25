@@ -63,19 +63,123 @@ public enum Gravity {
 		this.yObjMult = yObjMult;
 	}
 	
-	public Gravity opposite() {
+	public boolean isCorner() {
+		switch (this) {
+			case CENTER:
+			case EAST:
+			case NORTH:
+			case WEST:
+			case SOUTH:
+				return false;
+			case NORTH_EAST:
+			case NORTH_WEST:
+			case SOUTH_EAST:
+			case SOUTH_WEST:
+				return true;
+		}
+		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public Gravity getHorizontalCenter() {
 		switch (this) {
 			case CENTER: return CENTER;
+			case EAST: return CENTER;
+			case NORTH: return NORTH;
+			case NORTH_EAST: return NORTH;
+			case NORTH_WEST: return NORTH;
+			case SOUTH: return SOUTH;
+			case SOUTH_EAST: return SOUTH;
+			case SOUTH_WEST: return SOUTH;
+			case WEST: return CENTER;
+		}
+		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public boolean isHorizontalCenter() {
+		return getHorizontalCenter() == this;
+	}
+	
+	public Gravity getVerticalCenter() {
+		switch (this) {
+			case CENTER: return CENTER;
+			case EAST: return EAST;
+			case NORTH: return CENTER;
+			case NORTH_EAST: return EAST;
+			case NORTH_WEST: return WEST;
+			case SOUTH: return CENTER;
+			case SOUTH_EAST: return EAST;
+			case SOUTH_WEST: return WEST;
+			case WEST: return WEST;
+		}
+		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public boolean isVerticalCenter() {
+		return getVerticalCenter() == this;
+	}
+	
+	public Gravity westmost() {
+		switch (this) {
+			case CENTER: return WEST;
 			case EAST: return WEST;
-			case NORTH: return SOUTH;
-			case NORTH_EAST: return SOUTH_WEST;
-			case NORTH_WEST: return SOUTH_EAST;
-			case SOUTH: return NORTH;
-			case SOUTH_EAST: return NORTH_WEST;
-			case SOUTH_WEST: return NORTH_EAST;
+			case NORTH: return NORTH_WEST;
+			case NORTH_EAST: return NORTH_WEST;
+			case NORTH_WEST: return NORTH_WEST;
+			case SOUTH: return SOUTH_WEST;
+			case SOUTH_EAST: return SOUTH_WEST;
+			case SOUTH_WEST: return SOUTH_WEST;
+			case WEST: return WEST;
+		}
+		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public Gravity eastmost() {
+		switch (this) {
+			case CENTER: return EAST;
+			case EAST: return EAST;
+			case NORTH: return NORTH_EAST;
+			case NORTH_EAST: return NORTH_EAST;
+			case NORTH_WEST: return NORTH_EAST;
+			case SOUTH: return SOUTH_EAST;
+			case SOUTH_EAST: return SOUTH_EAST;
+			case SOUTH_WEST: return SOUTH_EAST;
 			case WEST: return EAST;
 		}
 		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public Gravity northmost() {
+		switch (this) {
+			case CENTER: return NORTH;
+			case EAST: return NORTH_EAST;
+			case NORTH: return NORTH;
+			case NORTH_EAST: return NORTH_EAST;
+			case NORTH_WEST: return NORTH_WEST;
+			case SOUTH: return NORTH_WEST;
+			case SOUTH_EAST: return NORTH_WEST;
+			case SOUTH_WEST: return NORTH_WEST;
+			case WEST: return NORTH_WEST;
+		}
+		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public Gravity southmost() {
+		switch (this) {
+			case CENTER: return SOUTH;
+			case EAST: return SOUTH_EAST;
+			case NORTH: return SOUTH_EAST;
+			case NORTH_EAST: return SOUTH_EAST;
+			case NORTH_WEST: return SOUTH_EAST;
+			case SOUTH: return SOUTH_EAST;
+			case SOUTH_EAST: return SOUTH_EAST;
+			case SOUTH_WEST: return SOUTH_EAST;
+			case WEST: return SOUTH_WEST;
+		}
+		throw new AssertionError("Missing case for "+this);
+	}
+	
+	public Gravity opposite() {
+		return flipHorizontal().flipVertical();
 	}
 	
 	public Gravity flipHorizontal() {
