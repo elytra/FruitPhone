@@ -263,9 +263,12 @@ public class FruitRenderer {
 		int x = 0;
 		int y = 0;
 		int slots = 0;
+		boolean onlyOne = data.size() == 1;
 		for (IProbeData d : data) {
 			int lineSize = 0;
-			y += 2;
+			if (!onlyOne) {
+				y += 2;
+			}
 			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {

@@ -232,6 +232,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		} else if (button.id == 3) {
 			probeDataSupplier = this::grassData;
 		} else if (button.id == 4) {
+			Arrays.fill(chestData, ItemStack.EMPTY);
 			probeDataSupplier = this::chestData;
 		} else if (button.id == 5) {
 			probeDataSupplier = this::furnaceData;
