@@ -52,6 +52,7 @@ public class SetAlwaysOnPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
+		FruitPhone.log.info("Always-on mode {}abled", this.alwaysOn ? "en" : "dis");
 		((ClientProxy)FruitPhone.proxy).alwaysOn = this.alwaysOn;
 	}
 

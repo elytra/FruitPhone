@@ -47,6 +47,9 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import mcp.mobius.waila.api.IWailaDataProvider;
+import mcp.mobius.waila.api.impl.ModuleRegistrar;
+
 import com.elytradev.concrete.NetworkContext;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
@@ -55,11 +58,14 @@ import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -270,12 +276,13 @@ public class FruitPhone {
 		}
 		World world = e.getWorld();
 		GameRulePoller.forBooleanRule("fruitphone:alwaysOn", world, (newValue) -> {
+			log.info("Always-on mode {}abled", newValue ? "en" : "dis");
 			new SetAlwaysOnPacket(newValue).sendToAllIn(world);
 		});
 	}
 	
 	@SubscribeEvent
-	public void onCapabilityAttachEntity(AttachCapabilitiesEvent.Entity e) {
+	public void onCapabilityAttachEntity(AttachCapabilitiesEvent<Entity> e) {
 		if (optionalMode) return;
 		if (e.getObject() instanceof EntityPlayer) {
 			e.addCapability(new ResourceLocation(MODID, "equipment"), new FruitEquipmentCapability());
@@ -298,64 +305,7 @@ public class FruitPhone {
 				BlockPos pos = rtr.getBlockPos();
 				TileEntity te = e.player.world.getTileEntity(pos);
 				if (te != null) {
-					if (te.hasCapability(CAPABILITY_PROBE, rtr.sideHit)) {
-						te.getCapability(CAPABILITY_PROBE, rtr.sideHit).provideProbeData(list);
-					} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
-						te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
-					} else {
-						VanillaProviders.provideProbeData(te, list);
-						
-						IEnergyStorage energy = null;
-						if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {
-							energy = te.getCapability(CapabilityEnergy.ENERGY, null);
-						} else if (te.hasCapability(CapabilityEnergy.ENERGY, rtr.sideHit)) {
-							energy = te.getCapability(CapabilityEnergy.ENERGY, rtr.sideHit);
-						}
-						
-						IFluidHandler fluid = null;
-						if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
-							fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
-						} else if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, rtr.sideHit)) {
-							fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, rtr.sideHit);
-						}
-						
-						IItemHandler item = null;
-						if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
-							item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-						} else if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, rtr.sideHit)) {
-							item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, rtr.sideHit);
-						} else if (te instanceof IInventory) {
-							item = new InvWrapper((IInventory)te);
-						}
-						
-						if (energy != null) {
-							list.add(new ProbeData()
-									.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), UnitDictionary.FORGE_ENERGY));
-						}
-						if (fluid != null) {
-							for (IFluidTankProperties tank : fluid.getTankProperties()) {
-								IUnit unit;
-								int amt;
-								if (tank.getContents() == null) {
-									unit = UnitDictionary.BUCKETS_ANY;
-									amt = 0;
-								} else {
-									unit = UnitDictionary.getInstance().getUnit(tank.getContents().getFluid());
-									amt = tank.getContents().amount;
-								}
-								list.add(new ProbeData()
-										.withBar(0, amt/1000D, tank.getCapacity()/1000D, unit));
-							}
-						}
-						if (item != null) {
-							List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
-							for (int i = 0; i < item.getSlots(); i++) {
-								is.add(item.getStackInSlot(i).copy());
-							}
-							list.add(new ProbeData()
-									.withInventory(ImmutableList.copyOf(is)));
-						}
-					}
+					generateProbeData(e.player, te, rtr.sideHit, list);
 					ProbeDataPacket pkt = new ProbeDataPacket(pos, list);
 					if (!Objects.equal(pkt, lastData.get(e.player))) {
 						pkt.sendTo(e.player);
@@ -368,6 +318,78 @@ public class FruitPhone {
 		}
 	}
 	
+	public void generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
+		if (player instanceof EntityPlayerMP) {
+			if (ModuleRegistrar.instance().hasNBTProviders(te)) {
+				NBTTagCompound tag = new NBTTagCompound();
+				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
+					for (IWailaDataProvider iwdp : li) {
+						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
+					}
+				}
+				list.add(new WailaProbeData(tag));
+			}
+		}
+		if (te.hasCapability(CAPABILITY_PROBE, sideHit)) {
+			te.getCapability(CAPABILITY_PROBE, sideHit).provideProbeData(list);
+		} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
+			te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
+		} else {
+			VanillaProviders.provideProbeData(te, list);
+			
+			IEnergyStorage energy = null;
+			if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {
+				energy = te.getCapability(CapabilityEnergy.ENERGY, null);
+			} else if (te.hasCapability(CapabilityEnergy.ENERGY, sideHit)) {
+				energy = te.getCapability(CapabilityEnergy.ENERGY, sideHit);
+			}
+			
+			IFluidHandler fluid = null;
+			if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
+				fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+			} else if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit)) {
+				fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit);
+			}
+			
+			IItemHandler item = null;
+			if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
+				item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
+			} else if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit)) {
+				item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit);
+			} else if (te instanceof IInventory) {
+				item = new InvWrapper((IInventory)te);
+			}
+			
+			if (energy != null) {
+				list.add(new ProbeData()
+						.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), UnitDictionary.FORGE_ENERGY));
+			}
+			if (fluid != null) {
+				for (IFluidTankProperties tank : fluid.getTankProperties()) {
+					IUnit unit;
+					int amt;
+					if (tank.getContents() == null) {
+						unit = UnitDictionary.BUCKETS_ANY;
+						amt = 0;
+					} else {
+						unit = UnitDictionary.getInstance().getUnit(tank.getContents().getFluid());
+						amt = tank.getContents().amount;
+					}
+					list.add(new ProbeData()
+							.withBar(0, amt/1000D, tank.getCapacity()/1000D, unit));
+				}
+			}
+			if (item != null) {
+				List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
+				for (int i = 0; i < item.getSlots(); i++) {
+					is.add(item.getStackInSlot(i).copy());
+				}
+				list.add(new ProbeData()
+						.withInventory(ImmutableList.copyOf(is)));
+			}
+		}
+	}
+
 	@SubscribeEvent
 	public void onDrops(PlayerDropsEvent e) {
 		if (optionalMode) return;
