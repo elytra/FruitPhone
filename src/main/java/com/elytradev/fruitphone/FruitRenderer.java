@@ -312,7 +312,7 @@ public class FruitRenderer {
 		}
 		ds.setWidthIfGreater(x);
 		ds.setHeightIfGreater(y);
-		int slotsPerRow = Math.min(9, maxWidth/18);
+		int slotsPerRow = Math.max(Math.min(9, maxWidth/18), 1);
 		ds.setWidthIfGreater(x + (slots >= slotsPerRow ? 18*slotsPerRow : 18*slots));
 		ds.addHeight(2+(slots/slotsPerRow)*18);
 		if (slots % slotsPerRow > 0) {
