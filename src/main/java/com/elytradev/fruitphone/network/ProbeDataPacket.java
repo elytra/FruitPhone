@@ -4,13 +4,16 @@ import java.util.List;
 
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitRenderer;
+import com.elytradev.fruitphone.WailaProbeData;
 import com.elytradev.concrete.Message;
 import com.elytradev.concrete.NetworkContext;
 import com.elytradev.concrete.annotation.field.MarshalledAs;
+import com.elytradev.concrete.annotation.field.Optional;
 import com.elytradev.concrete.annotation.type.Asynchronous;
 import com.elytradev.concrete.annotation.type.ReceivedOn;
 import com.elytradev.probe.api.IProbeData;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -22,20 +25,26 @@ public class ProbeDataPacket extends Message {
 	@MarshalledAs(ProbeDataListMarshaller.NAME)
 	private List<IProbeData> data;
 	private BlockPos pos;
+	@Optional
+	private NBTTagCompound wailaData;
 	
 	public ProbeDataPacket(NetworkContext ctx) {
 		super(ctx);
 	}
 	
-	public ProbeDataPacket(BlockPos pos, List<IProbeData> data) {
+	public ProbeDataPacket(BlockPos pos, List<IProbeData> data, NBTTagCompound wailaData) {
 		super(FruitPhone.inst.NETWORK);
 		this.pos = pos;
 		this.data = data;
+		this.wailaData = wailaData;
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
+		if (wailaData != null) {
+			data.add(0, new WailaProbeData(wailaData));
+		}
 		FruitRenderer.currentDataPos = pos;
 		FruitRenderer.currentRawData = data;
 	}
