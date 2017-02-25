@@ -39,6 +39,8 @@ import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 import com.google.common.base.Objects;
 
+import mcp.mobius.waila.Waila;
+
 import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.concrete.reflect.invoker.Invoker;
@@ -173,6 +175,7 @@ public class ClientProxy extends Proxy {
 	@SubscribeEvent
 	public void onClientConnectedToServer(ClientConnectedToServerEvent e) {
 		isServerVanilla = !e.getConnectionType().equals("MODDED");
+		Waila.instance.serverPresent = (!FruitPhone.inst.optionalMode && !isServerVanilla);
 	}
 	
 	@SubscribeEvent

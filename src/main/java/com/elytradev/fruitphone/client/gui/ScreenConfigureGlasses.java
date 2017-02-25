@@ -526,20 +526,44 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
 		if (clickedMouseButton == 0) {
 			if (dragTarget == DragTarget.OVERLAY_SIZE) {
-				int xDist = mouseX-lastMouseX;
-				int yDist = mouseY-lastMouseY;
+				int xOfs = FruitPhone.inst.glassesXOffset-5;
+				int yOfs = FruitPhone.inst.glassesYOffset-5;
+				
 				Gravity g = FruitPhone.inst.glassesGravity;
-				xDist = g.resolveX(xDist, 0, 0);
-				yDist = g.resolveY(yDist, 0, 0);
-				int dist;
-				if (Math.abs(xDist) > Math.abs(yDist)) {
-					dist = xDist;
-				} else {
-					dist = yDist;
+				int resolvedX = g.resolveX(mouseX, 0, 0);
+				int resolvedY = g.resolveY(mouseY, 0, 0);
+				
+				if (g.isHorizontalCenter()) {
+					resolvedX = mouseX;
 				}
-				float max = ((width*FruitPhone.inst.maxGlassesWidth))/(90+(10/FruitPhone.inst.glassesScale));
+				if (g.isVerticalCenter()) {
+					resolvedY = mouseY;
+				}
+				
+				if (resolvedX < 0) {
+					resolvedX = width+resolvedX;
+				}
+				if (resolvedY < 0) {
+					resolvedY = height+resolvedY;
+				}
+				
+				List<IProbeData> probeData = probeDataSupplier.get();
+				int maxWidth = (int)(width * FruitPhone.inst.maxGlassesWidth);
+				int maxHeight = (int)(height * FruitPhone.inst.maxGlassesHeight);
+				DataSize actual = FruitRenderer.calculatePreferredDataSize(probeData, 90, 50, maxWidth, maxHeight);
+				
+				int w = Math.min(maxWidth, actual.getWidth())+10;
+				int h = Math.min(maxHeight, actual.getHeight())+10;
+				
+				float max = ((width*FruitPhone.inst.maxGlassesWidth))/w;
 				float min = 1f/res.getScaleFactor();
-				float scale = FruitPhone.inst.glassesScale+(dist/(float)objWidth);
+				
+				int normalHandleX = xOfs+w;
+				int normalHandleY = yOfs+h;
+				
+				int dist = Math.max(resolvedX-normalHandleX, resolvedY-normalHandleY);
+				
+				float scale = 1+(dist/(float)w);
 				dragSnapped = false;
 				if (snapToGuides) {
 					int round = (int)scale;
@@ -561,10 +585,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					scale = max;
 					dragSnapped = true;
 				}
-				if (!dragSnapped) {
-					lastMouseX = mouseX;
-					lastMouseY = mouseY;
-				}
+				System.out.println(scale);
 				FruitPhone.inst.glassesScale = scale;
 			} else if (dragTarget == DragTarget.CLAMP_REGION_SIZE) {
 				int xOfs = FruitPhone.inst.glassesXOffset-5;
