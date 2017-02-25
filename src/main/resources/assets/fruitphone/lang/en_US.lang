@@ -60,6 +60,7 @@ fruitphone.furnace.progress=Progress
 
 fruitphone.gui.snapToGuides=Snap to Guides
 fruitphone.gui.clampRegion=Clamp Region
+fruitphone.gui.restoreDefaults=Restore Defaults
 
 subtitles.fruitphone.drill=Drill whirrs
 
