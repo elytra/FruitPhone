@@ -114,7 +114,7 @@ public class FruitPhone {
 	public static final String MODID = "fruitphone";
 	public static final String NAME = "Fruit Phone";
 	public static final String VERSION = "@VERSION@";
-	public static final String DEPENDENCIES = "required-after:probedataproviderapi;after:waila";
+	public static final String DEPENDENCIES = "required-after:probedataprovider;after:waila";
 	
 	public static final Logger log = LogManager.getLogger("FruitPhone");
 
