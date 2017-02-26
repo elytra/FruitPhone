@@ -224,6 +224,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			FruitPhone.inst.glassesYOffset = 10;
 			FruitPhone.inst.maxGlassesHeight = 2/3f;
 			FruitPhone.inst.maxGlassesWidth = 1/3f;
+			initGui();
 		} else if (button.id == 1) {
 			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(FruitSounds.DRILL, 0.875f+(rand.nextFloat()*0.25f)));
 			mc.displayGuiScreen(null);

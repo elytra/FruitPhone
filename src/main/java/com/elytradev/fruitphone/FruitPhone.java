@@ -24,7 +24,6 @@
 
 package com.elytradev.fruitphone;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -35,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 import com.elytradev.fruitphone.capability.FruitEquipmentStorage;
+import com.elytradev.fruitphone.compat.waila.WailaCompat;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
 import com.elytradev.fruitphone.network.ProbeDataPacket;
@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import mcp.mobius.waila.api.IWailaDataProvider;
-import mcp.mobius.waila.api.IWailaRegistrar;
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
 
 import com.elytradev.concrete.NetworkContext;
@@ -89,11 +88,11 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -163,6 +162,7 @@ public class FruitPhone {
 	public float glassesScale;
 	
 	public boolean optionalMode;
+	public boolean overwriteWaila;
 	
 	@CapabilityInject(FruitEquipmentCapability.class)
 	public static Capability<FruitEquipmentCapability> CAPABILITY_EQUIPMENT;
@@ -190,6 +190,10 @@ public class FruitPhone {
 				+ "If you just want to have the mod pretend you're wearing Fruit\n"
 				+ "Glass at all times, use /gamerule fruitphone:alwaysOn true\n"
 				+ "\n");
+		
+		overwriteWaila = config.getBoolean("overwriteWaila", "General", true,
+				"If true and Waila is installed, Fruit Phone will disable it and\n"
+				+ "claim all Waila requests.");
 	
 		Gravity[] grav = Gravity.values();
 		String[] valid = new String[grav.length];
@@ -206,6 +210,10 @@ public class FruitPhone {
 		glassesScale = config.getFloat("scale", "Glasses", 100, 0, 100000, "The scale for the glasses overlay, as a percentage of the default")/100f;
 		
 		config.setCategoryComment("Glasses", "Configuration for the glasses overlay. This can be configured ingame much more easily with the Power Drill.");
+		
+		if (!Loader.isModLoaded("waila")) {
+			overwriteWaila = false;
+		}
 		
 		config.save();
 		
@@ -246,34 +254,8 @@ public class FruitPhone {
 	@EventHandler
 	public void onPostInit(FMLPostInitializationEvent e) {
 		proxy.postInit();
-	}
-	
-	@EventHandler
-	public void onLoadComplete(FMLLoadCompleteEvent ev) {
-		for (Map.Entry<String, String> en : ModuleRegistrar.instance().IMCRequests.entrySet()) {
-			String method = en.getKey();
-			String modname = en.getValue();
-			
-			String[] splitName = method.split("\\.");
-			String methodName = splitName[splitName.length - 1];
-			String className = method.substring(0, method.length() - methodName.length() - 1);
-
-			log.info("Trying to reflect Waila plugin {}::{}", className, methodName);
-
-			try {
-				Class<?> reflectClass = Class.forName(className);
-				Method reflectMethod = reflectClass.getDeclaredMethod(methodName, IWailaRegistrar.class);
-				reflectMethod.invoke(null, (IWailaRegistrar) ModuleRegistrar.instance());
-
-				log.info("Successfully registered Waila plugin {}", modname);
-
-			} catch (ClassNotFoundException e) {
-				log.warn("Could not find class {} for Waila", className);
-			} catch (NoSuchMethodException e) {
-				log.warn("Could not find method {} for Waila", methodName);
-			} catch (Exception e) {
-				log.warn("Exception while trying to register Waila plugin", e);
-			}
+		if (overwriteWaila) {
+			WailaCompat.init();
 		}
 	}
 	
@@ -352,7 +334,7 @@ public class FruitPhone {
 	
 	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
 		NBTTagCompound tag = null;
-		if (player instanceof EntityPlayerMP) {
+		if (player instanceof EntityPlayerMP && overwriteWaila) {
 			if (ModuleRegistrar.instance().hasNBTProviders(te)) {
 				if (tag == null) tag = new NBTTagCompound();
 				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {

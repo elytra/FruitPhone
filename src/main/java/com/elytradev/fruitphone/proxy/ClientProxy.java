@@ -39,8 +39,6 @@ import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 import com.google.common.base.Objects;
 
-import mcp.mobius.waila.Waila;
-
 import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.concrete.reflect.invoker.Invoker;
@@ -175,7 +173,6 @@ public class ClientProxy extends Proxy {
 	@SubscribeEvent
 	public void onClientConnectedToServer(ClientConnectedToServerEvent e) {
 		isServerVanilla = !e.getConnectionType().equals("MODDED");
-		Waila.instance.serverPresent = (!FruitPhone.inst.optionalMode && !isServerVanilla);
 	}
 	
 	@SubscribeEvent
@@ -298,10 +295,21 @@ public class ClientProxy extends Proxy {
 			GlStateManager.enableRescaleNormal();
 
 			GlStateManager.pushMatrix();
-				DataSize ds = FruitRenderer.calculateAndSyncTargetUnclamped(50, 50, 90, 90);
+				DataSize ds;
+				
+				DataSize portraitSize = FruitRenderer.calculateAndSyncTargetUnclamped(50, 90, 50, 90);
+				DataSize landscapeSize = FruitRenderer.calculateAndSyncTargetUnclamped(90, 50, 90, 50);
+				
+				float portraitContain = FruitRenderer.getContainScale(50, 90, portraitSize.getWidth(), portraitSize.getHeight());
+				float landscapeContain = FruitRenderer.getContainScale(90, 50, landscapeSize.getWidth(), landscapeSize.getHeight());
+				
 				boolean portraitMode = false;
-				if (((float)ds.getHeight())/((float)ds.getWidth()) > 1.25f) {
+				// if it's bigger (and therefore easier to see) in portrait, then use portrait
+				if (portraitContain > landscapeContain) {
 					portraitMode = true;
+					ds = portraitSize;
+				} else {
+					ds = landscapeSize;
 				}
 				
 				float screenAspect = ((float)mc.displayHeight)/((float)mc.displayWidth);
