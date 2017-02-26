@@ -94,6 +94,37 @@ public class Rendering {
 		GlStateManager.disableBlend();
 	}
 	
+	public static void drawTexturedRect(double left, double top, double right, double bottom, float minU, float minV, float maxU, float maxV, int color) {
+		if (left < right) {
+			double swap = left;
+			left = right;
+			right = swap;
+		}
+
+		if (top < bottom) {
+			double swap = top;
+			top = bottom;
+			bottom = swap;
+		}
+
+		Tessellator tessellator = Tessellator.getInstance();
+		VertexBuffer vertexbuffer = tessellator.getBuffer();
+		GlStateManager.enableBlend();
+		GlStateManager.tryBlendFuncSeparate(
+				GlStateManager.SourceFactor.SRC_ALPHA,
+				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+				GlStateManager.SourceFactor.ONE,
+				GlStateManager.DestFactor.ZERO);
+		color4(color);
+		vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+		vertexbuffer.pos(left, bottom, 0).tex(minU, maxV).endVertex();
+		vertexbuffer.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
+		vertexbuffer.pos(right, top, 0).tex(maxU, minV).endVertex();
+		vertexbuffer.pos(left, top, 0).tex(minU, minV).endVertex();
+		tessellator.draw();
+		GlStateManager.disableBlend();
+	}
+	
 	public static void drawTexturedRect(double left, double top, double right, double bottom, TextureAtlasSprite textureSprite) {
 		if (left < right) {
 			double swap = left;

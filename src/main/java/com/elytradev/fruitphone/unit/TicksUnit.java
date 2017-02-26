@@ -1,7 +1,8 @@
 package com.elytradev.fruitphone.unit;
 
-import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.probe.api.impl.Unit;
+
+import net.minecraft.client.Minecraft;
 
 public class TicksUnit extends Unit {
 
@@ -15,7 +16,7 @@ public class TicksUnit extends Unit {
 	
 	@Override
 	public String format(double ticks) {
-		ticks -= ClientProxy.partialTicks;
+		ticks -= Minecraft.getMinecraft().getRenderPartialTicks();
 		if (ticks < 0) ticks = 0;
 		int millisrem = (int)((ticks*50D)%1000D);
 		long sec = (long)(ticks/20D);
