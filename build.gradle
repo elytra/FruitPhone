@@ -60,6 +60,10 @@ repositories {
 		name = 'jei'
 		url = "http://dvs1.progwml6.com/files/maven"
 	}
+	maven {
+		name = 'hwyla'
+		url "http://tehnut.info/maven"
+	}
 }
 
 configurations {
@@ -97,13 +101,15 @@ dependencies {
 	deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
 	
 	compile project(':ProbeDataProviderAPI')
-	compile fileTree(dir: 'libs', include: '*.jar')
 	
 	shadow 'com.elytradev:concrete:0.1.0'
 	compile 'com.elytradev:concrete:0.1.0'
 	
 	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
 	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'
+	
+	compile 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
+	runtime 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
 }
 
 minecraft {
@@ -154,22 +160,4 @@ uploadArchives {
 			authentication(userName: priv.sftpUser, privateKey: file(priv.sftpKey))
 		}
 	}
-}
-
-/**
- * Generate classpath files for use with atom-autocomplete-java
- */
-task atom << {
-	File f = file(".classpath");
-	StringBuilder classpath = new StringBuilder();
-	def addToClasspath = {
-		classpath.append(it.getAbsolutePath());
-		classpath.append(File.pathSeparator);
-	};
-	configurations.compile.files.each addToClasspath
-	configurations.compile.files.each addToClasspath
-	configurations.forgeGradleMc.files.each addToClasspath
-	configurations.forgeGradleMcDeps.files.each addToClasspath
-	configurations.provided.files.each addToClasspath
-	f.text = classpath.toString();
 }
