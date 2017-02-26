@@ -132,7 +132,7 @@ public class FruitRecipes {
 		// Sky Blue
 		colorRecipe(0x00BAFF, "dustGlowstone", "dyeCyan");
 		// Brilliant Verdant
-		colorRecipe(0x09FF97, "dustGlowstone", "dyeLime");
+		colorRecipe(0x00FFCC, "dustGlowstone", "dyeLime");
 		Item misc = Item.getByNameOrId("correlated:misc");
 		if (misc == null) {
 			// try the legacy modid
@@ -140,9 +140,9 @@ public class FruitRecipes {
 		}
 		if (misc != null) {
 			ItemStack lum = new ItemStack(misc, 1, 3);
-			colorRecipe(0x09FF97, lum);
+			colorRecipe(0x00FFCC, lum);
 		} else {
-			colorRecipe(0x09FF97, "dustGlowstone", "enderpearl");
+			colorRecipe(0x00FFCC, "dustGlowstone", "enderpearl");
 		}
 		// Mean Green
 		colorRecipe(0x8BFF00, "dustGlowstone", "dyeGreen");
