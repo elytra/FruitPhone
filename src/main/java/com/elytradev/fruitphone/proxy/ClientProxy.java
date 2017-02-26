@@ -371,7 +371,6 @@ public class ClientProxy extends Proxy {
 					// using a framebuffer fixes z-fighting and lighting
 					int size = (int)(Math.max(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight)*0.3);
 					if (fb == null || fb.framebufferWidth != size) {
-						System.out.println("Reallocating framebuffer");
 						if (fb != null) fb.deleteFramebuffer();
 						fb = new Framebuffer(size, size, true);
 						fb.setFramebufferFilter(GL11.GL_LINEAR);
