@@ -319,8 +319,8 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		int maxHeight = (int)((height * FruitPhone.inst.maxGlassesHeight)/confScale);
 		
 		if (dragTarget != DragTarget.OVERLAY_POSITION) {
-			int regionWidth = Math.min(width, maxWidth);
-			int regionHeight = Math.min(height, maxHeight);
+			int regionWidth = (int)Math.min(width, maxWidth*confScale);
+			int regionHeight = (int)Math.min(height, maxHeight*confScale);
 			
 			int regionX = g.resolveX(xOfs, width, regionWidth);
 			int regionY = g.resolveY(yOfs, height, regionHeight);
@@ -609,7 +609,6 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					scale = max;
 					dragSnapped = true;
 				}
-				System.out.println(scale);
 				FruitPhone.inst.glassesScale = scale;
 			} else if (dragTarget == DragTarget.CLAMP_REGION_SIZE) {
 				int xOfs = FruitPhone.inst.glassesXOffset-5;
