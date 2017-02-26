@@ -34,6 +34,7 @@ import com.elytradev.fruitphone.FruitRenderer.DataSize;
 import com.elytradev.fruitphone.FruitRenderer.MultiDataSize;
 import com.elytradev.fruitphone.client.gui.ScreenConfigureGlasses;
 import com.elytradev.fruitphone.client.render.LayerFruitGlass;
+import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
@@ -57,6 +58,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
@@ -97,6 +99,8 @@ public class ClientProxy extends Proxy {
 	
 	private final Invoker applyBobbing;
 	private final Invoker hurtCameraEffect;
+	
+	private Framebuffer fb;
 	
 	public ClientProxy() {
 		equippedProgressMainHand = Accessors.findField(ItemRenderer.class, "field_187469_f", "equippedProgressMainHand", "f");
@@ -209,8 +213,8 @@ public class ClientProxy extends Proxy {
 				int xOfs = FruitPhone.inst.glassesXOffset;
 				int yOfs = FruitPhone.inst.glassesYOffset;
 				float confScale = FruitPhone.inst.glassesScale;
-				int maxWidth = (int)(e.getResolution().getScaledWidth() * FruitPhone.inst.maxGlassesWidth);
-				int maxHeight = (int)(e.getResolution().getScaledHeight() * FruitPhone.inst.maxGlassesHeight);
+				int maxWidth = (int)((e.getResolution().getScaledWidth() * FruitPhone.inst.maxGlassesWidth)/confScale);
+				int maxHeight = (int)((e.getResolution().getScaledHeight() * FruitPhone.inst.maxGlassesHeight)/confScale);
 				
 				GlStateManager.pushMatrix(); {
 					MultiDataSize mds = FruitRenderer.calculateAndSyncTarget(90, 50, maxWidth, maxHeight);
@@ -349,11 +353,9 @@ public class ClientProxy extends Proxy {
 				float oldLightmapX = OpenGlHelper.lastBrightnessX;
 				float oldLightmapY = OpenGlHelper.lastBrightnessY;
 				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-				// intentionally desyncing the state manager to force lighting off
-				GlStateManager.enableLighting();
-				GL11.glDisable(GL11.GL_LIGHTING);
-				GlStateManager.enableBlend();
 				GlStateManager.disableAlpha();
+				GlStateManager.disableLighting();
+				GlStateManager.enableBlend();
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 				// now that all that is over, we can do what was super easy in 1.7... render stuff ON the item.
 				// M U H  I M M E R S H U N
@@ -362,6 +364,44 @@ public class ClientProxy extends Proxy {
 				
 				GlStateManager.translate(5, 5, 40);
 				if (ds.getWidth() > 0 && ds.getWidth() > 0) {
+					GlStateManager.matrixMode(GL11.GL_PROJECTION);
+					GlStateManager.pushMatrix();
+					GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+					GlStateManager.pushMatrix();
+					// using a framebuffer fixes z-fighting and lighting
+					int size = (int)(Math.max(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight)*0.3);
+					if (fb == null || fb.framebufferWidth != size) {
+						System.out.println("Reallocating framebuffer");
+						if (fb != null) fb.deleteFramebuffer();
+						fb = new Framebuffer(size, size, true);
+						fb.setFramebufferFilter(GL11.GL_LINEAR);
+					} else {
+						fb.bindFramebuffer(true);
+					}
+					GlStateManager.clearColor(0, 0, 0, 0);
+					GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+					GlStateManager.matrixMode(GL11.GL_PROJECTION);
+			        GlStateManager.loadIdentity();
+			        GlStateManager.ortho(0, 90, 90, 0, 1000, 3000);
+			        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+			        GlStateManager.loadIdentity();
+			        GlStateManager.translate(0, 0, -2000);
+					if (portraitMode) {
+						FruitRenderer.renderAndSyncTarget(50, 90, false, ds);
+					} else {
+						FruitRenderer.renderAndSyncTarget(90, 50, false, ds);
+					}
+					
+					Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
+					GlStateManager.enableBlend();
+					GlStateManager.matrixMode(GL11.GL_PROJECTION);
+					GlStateManager.popMatrix();
+					GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+					GlStateManager.popMatrix();
+					GlStateManager.enableBlend();
+					GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+					fb.bindFramebufferTexture();
+					
 					if (portraitMode) {
 						if (handSide == EnumHandSide.RIGHT) {
 							GlStateManager.rotate(90f, 0, 0, 1);
@@ -370,10 +410,8 @@ public class ClientProxy extends Proxy {
 							GlStateManager.rotate(-90f, 0, 0, 1);
 							GlStateManager.translate(-50, 0, 0);
 						}
-						FruitRenderer.renderAndSyncTarget(50, 90, false, ds);
-					} else {
-						FruitRenderer.renderAndSyncTarget(90, 50, false, ds);
 					}
+					Rendering.drawTexturedRect(0, 0, 90, 90, 1, 0, 0, 1, -1);
 				}
 				
 				GL11.glEnable(GL11.GL_LIGHTING);

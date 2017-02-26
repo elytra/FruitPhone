@@ -27,6 +27,7 @@ package com.elytradev.fruitphone;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
 import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.google.common.base.Objects;
@@ -153,6 +154,7 @@ public class FruitRenderer {
 		renderAndSyncTarget(width, height, lit, preferred);
 	}
 	public static void renderAndSyncTarget(int width, int height, boolean lit, DataSize preferred) {
+		GlStateManager.pushMatrix();
 		EntityPlayer player = Minecraft.getMinecraft().player;
 		World world = Minecraft.getMinecraft().world;
 		
@@ -173,13 +175,18 @@ public class FruitRenderer {
 				currentRawData = Collections.emptyList();
 			} else {
 				render(format(Collections.emptyList(), pos), width, height, lit, preferred);
+				GlStateManager.disableBlend();
 				GlStateManager.enableBlend();
+				GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+				GlStateManager.disableDepth();
+				GlStateManager.enableDepth();
 				GlStateManager.color(1, 1, 1);
 				GlStateManager.translate(0, 0, 500);
 				renderSpinner(0, 0);
 				GlStateManager.translate(0, 0, -500);
 				GlStateManager.disableBlend();
+				GlStateManager.popMatrix();
 				return;
 			}
 		}
@@ -188,6 +195,7 @@ public class FruitRenderer {
 			currentRawData = null;
 		}
 		render(currentFormattedData, width, height, lit, preferred);
+		GlStateManager.popMatrix();
 	}
 	
 	public static MultiDataSize calculateAndSyncTarget(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
@@ -351,7 +359,6 @@ public class FruitRenderer {
 		data = injectWailaData(data);
 		
 		
-		GlStateManager.pushMatrix();
 		float contain = getContainScale(width, height, preferred.width, preferred.height);
 		
 		if (!glasses) {
@@ -380,7 +387,7 @@ public class FruitRenderer {
 			y += 2;
 			boolean renderLabel = true;
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
-				if (glasses) RenderHelper.enableGUIStandardItemLighting();
+				RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
 					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y-2);
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, d.getInventory().get(0), x, y-2, "");
@@ -474,7 +481,7 @@ public class FruitRenderer {
 					Rendering.bindTexture(SLOT);
 					GlStateManager.color(1, 1, 1);
 					Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, 18, 18, 18, 18);
-					if (glasses) RenderHelper.enableGUIStandardItemLighting();
+					RenderHelper.enableGUIStandardItemLighting();
 					int count = is.getCount();
 					Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(is, x+1, y+1);
 					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, is, x+1, y+1, count >= 100 ? "" : null);
@@ -503,7 +510,6 @@ public class FruitRenderer {
 			y += lineSize;
 			x = 0;
 		}
-		GlStateManager.popMatrix();
 	}
 
 	private static List<IProbeData> injectWailaData(List<IProbeData> data) {
@@ -576,7 +582,7 @@ public class FruitRenderer {
 	public static void renderSpinner(int x, int y) {
 		Rendering.bindTexture(SPINNER);
 		int tocks = (int)(ClientProxy.ticksConsiderPaused/2);
-		Gui.drawModalRectWithCustomSizedTexture(x, y, 16*tocks, 0, 16, 16, 96, 16);
+		Gui.drawModalRectWithCustomSizedTexture(x, y, 16*tocks, 0, 15, 16, 96, 16);
 	}
 
 	
