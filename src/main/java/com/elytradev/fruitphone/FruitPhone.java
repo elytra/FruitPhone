@@ -108,12 +108,13 @@ import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraftforge.oredict.RecipeSorter;
 import net.minecraftforge.oredict.RecipeSorter.Category;
 
-@Mod(modid=FruitPhone.MODID, name=FruitPhone.NAME, version=FruitPhone.VERSION)
+@Mod(modid=FruitPhone.MODID, name=FruitPhone.NAME, version=FruitPhone.VERSION, dependencies=FruitPhone.DEPENDENCIES)
 public class FruitPhone {
 	
 	public static final String MODID = "fruitphone";
 	public static final String NAME = "Fruit Phone";
 	public static final String VERSION = "@VERSION@";
+	public static final String DEPENDENCIES = "required-after:probedataproviderapi;after:waila";
 	
 	public static final Logger log = LogManager.getLogger("FruitPhone");
 

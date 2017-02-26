@@ -72,13 +72,6 @@ configurations {
 
 jar {
 	classifier = 'slim'
-	manifest {
-		attributes (
-			'FMLCorePlugin': 'com.elytradev.fruitphone.early.FruitPhoneLoadingPlugin',
-			'FMLCorePluginContainsFMLMod': 'true',
-			'ForceLoadAsMod': 'true',
-		)
-	}
 }
 
 shadowJar {
