@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
-import com.elytradev.fruitphone.StagingUnits;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
@@ -23,7 +22,7 @@ public class FurnaceDataProvider implements VanillaDataProvider<TileEntityFurnac
 	public void provideProbeData(TileEntityFurnace te, List<IProbeData> li) {
 		li.add(new ProbeData()
 				.withLabel(new TextComponentTranslation("fruitphone.furnace.fuel"))
-				.withBar(0, furnaceBurnTime.get(te), currentItemBurnTime.get(te), StagingUnits.TICKS));
+				.withBar(0, furnaceBurnTime.get(te), currentItemBurnTime.get(te), UnitDictionary.TICKS));
 		float curCook = cookTime.get(te);
 		float maxCook = totalCookTime.get(te);
 		li.add(new ProbeData()
