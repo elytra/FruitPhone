@@ -36,7 +36,6 @@ import com.elytradev.fruitphone.FruitProbeData;
 import com.elytradev.fruitphone.FruitRenderer;
 import com.elytradev.fruitphone.FruitSounds;
 import com.elytradev.fruitphone.Gravity;
-import com.elytradev.fruitphone.StagingUnits;
 import com.elytradev.fruitphone.FruitRenderer.DataSize;
 import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
@@ -214,7 +213,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					.withLabel(new ItemStack(Blocks.FURNACE).getDisplayName()),
 				new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.furnace.fuel"))
-					.withBar(0, 1600-(ClientProxy.ticks%1600), 1600, StagingUnits.TICKS),
+					.withBar(0, 1600-(ClientProxy.ticks%1600), 1600, UnitDictionary.TICKS),
 				new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.furnace.progress"))
 					.withBar(0, (ClientProxy.ticks%200)/2, 100, UnitDictionary.PERCENT),
