@@ -24,8 +24,11 @@
 
 package com.elytradev.fruitphone.vanilla;
 
+import net.minecraft.block.BlockJukebox.TileEntityJukebox;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityBeacon;
 import net.minecraft.tileentity.TileEntityFurnace;
+import net.minecraft.tileentity.TileEntityNote;
 
 import java.util.List;
 import java.util.Map;
@@ -55,6 +58,9 @@ public class VanillaProviders {
 	
 	static {
 		map.put(TileEntityFurnace.class, new FurnaceDataProvider());
+		map.put(TileEntityJukebox.class, new JukeboxDataProvider());
+		map.put(TileEntityNote.class, new NoteBlockDataProvider());
+		map.put(TileEntityBeacon.class, new BeaconDataProvider());
 	}
 	
 }
