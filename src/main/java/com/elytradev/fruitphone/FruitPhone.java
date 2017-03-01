@@ -313,7 +313,7 @@ public class FruitPhone {
 	public void onPlayerTick(PlayerTickEvent e) {
 		if (e.phase == Phase.START) {
 			if (e.player.worldObj.isRemote) return;
-			Vec3d eyes = e.player.getPositionEyes(1);
+			Vec3d eyes = new Vec3d(e.player.posX, e.player.posY + e.player.getEyeHeight(), e.player.posZ);;
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
 			Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
