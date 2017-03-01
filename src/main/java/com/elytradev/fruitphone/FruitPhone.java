@@ -24,6 +24,7 @@
 
 package com.elytradev.fruitphone;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -100,6 +101,7 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -170,6 +172,8 @@ public class FruitPhone {
 	@CapabilityInject(IProbeDataProvider.class)
 	public static Capability<IProbeDataProvider> CAPABILITY_PROBE;
 	public NetworkContext NETWORK;
+	
+	private final Field classToNameMap = ReflectionHelper.findField(TileEntity.class, "field_145853_j", "classToNameMap", "g");
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
@@ -334,16 +338,42 @@ public class FruitPhone {
 	}
 	
 	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
-		NBTTagCompound tag = null;
+		NBTTagCompound tag = new NBTTagCompound();
 		if (player instanceof EntityPlayerMP && overwriteWaila) {
+			Map<Class<? extends TileEntity>, String> classToNameMap;
+			try {
+				classToNameMap = (Map<Class<? extends TileEntity>, String>) this.classToNameMap.get(null);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			boolean hasBlockOrTile = false;
+			if (ModuleRegistrar.instance().hasNBTProviders(te.getBlockType())) {
+				hasBlockOrTile = true;
+			}
 			if (ModuleRegistrar.instance().hasNBTProviders(te)) {
-				if (tag == null) tag = new NBTTagCompound();
+				hasBlockOrTile = true;
+			}
+			if (hasBlockOrTile) {
+				tag.setInteger("x", te.getPos().getX());
+				tag.setInteger("y", te.getPos().getY());
+				tag.setInteger("z", te.getPos().getZ());
+				tag.setString("id", classToNameMap.get(te.getClass()));
+				
+				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te.getBlockType()).values()) {
+					for (IWailaDataProvider iwdp : li) {
+						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
+					}
+				}
 				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
 					for (IWailaDataProvider iwdp : li) {
 						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
 					}
 				}
 			}
+			tag.setInteger("WailaX", te.getPos().getX());
+			tag.setInteger("WailaY", te.getPos().getY());
+			tag.setInteger("WailaZ", te.getPos().getZ());
+			tag.setString("WailaID", classToNameMap.get(te.getClass()));
 		}
 		if (te.hasCapability(CAPABILITY_PROBE, sideHit)) {
 			te.getCapability(CAPABILITY_PROBE, sideHit).provideProbeData(list);
