@@ -49,7 +49,6 @@ public class ProbeDataPacket extends Message {
 	@MarshalledAs(ProbeDataListMarshaller.NAME)
 	private List<IProbeData> data;
 	private BlockPos pos;
-	@Optional
 	private NBTTagCompound wailaData;
 	
 	public ProbeDataPacket(NetworkContext ctx) {
@@ -66,7 +65,7 @@ public class ProbeDataPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
-		if (wailaData != null) {
+		if (wailaData.getSize() > 0) {
 			data.add(0, new WailaProbeData(wailaData));
 		}
 		FruitRenderer.currentDataPos = pos;
