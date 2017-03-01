@@ -42,15 +42,20 @@ import net.minecraft.world.World;
 public class ItemFruitPassive extends ItemFruit {
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
-		ItemStack itemStackIn = playerIn.getHeldItem(hand);
+	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn, EnumHand hand) {
 		if (playerIn.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
 			FruitEquipmentCapability fec = playerIn.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null);
 			ItemStack oldGlasses = fec.glasses;
 			fec.glasses = itemStackIn;
 			playerIn.playSound(SoundEvents.ITEM_ARMOR_EQUIP_IRON, 1.0f, 2.0f);
 			EquipmentDataPacket.forEntity(playerIn).ifPresent((m) -> m.sendToAllWatching(playerIn));
-			return ActionResult.newResult(EnumActionResult.SUCCESS, oldGlasses);
+			if (oldGlasses != null) {
+				return ActionResult.newResult(EnumActionResult.SUCCESS, oldGlasses);
+			} else {
+				ItemStack copy = itemStackIn.copy();
+				copy.stackSize = 0;
+				return ActionResult.newResult(EnumActionResult.SUCCESS, copy);
+			}
 		}
 		return ActionResult.newResult(EnumActionResult.PASS, itemStackIn);
 	}

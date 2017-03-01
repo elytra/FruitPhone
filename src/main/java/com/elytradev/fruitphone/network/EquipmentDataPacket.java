@@ -29,10 +29,10 @@ import java.util.Optional;
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 
-import com.elytradev.concrete.Message;
-import com.elytradev.concrete.NetworkContext;
-import com.elytradev.concrete.annotation.field.MarshalledAs;
-import com.elytradev.concrete.annotation.type.ReceivedOn;
+import io.github.elytra.concrete.Message;
+import io.github.elytra.concrete.NetworkContext;
+import io.github.elytra.concrete.annotation.field.MarshalledAs;
+import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -60,7 +60,7 @@ public class EquipmentDataPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
-		Entity entity = sender.world.getEntityByID(entityId);
+		Entity entity = sender.worldObj.getEntityByID(entityId);
 		if (entity.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
 			entity.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).deserializeNBT(tag);
 		}

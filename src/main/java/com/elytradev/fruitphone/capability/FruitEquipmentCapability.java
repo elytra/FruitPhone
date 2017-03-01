@@ -36,7 +36,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class FruitEquipmentCapability implements ICapabilityProvider, INBTSerializable<NBTTagCompound> {
 
-	public ItemStack glasses = ItemStack.EMPTY;
+	public ItemStack glasses = null;
 	
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
@@ -56,7 +56,7 @@ public class FruitEquipmentCapability implements ICapabilityProvider, INBTSerial
 	@Override
 	public NBTTagCompound serializeNBT() {
 		NBTTagCompound tag = new NBTTagCompound();
-		if (!glasses.isEmpty()) {
+		if (glasses != null) {
 			tag.setTag("Glasses", glasses.serializeNBT());
 		}
 		return tag;
@@ -65,9 +65,9 @@ public class FruitEquipmentCapability implements ICapabilityProvider, INBTSerial
 	@Override
 	public void deserializeNBT(NBTTagCompound nbt) {
 		if (nbt.hasKey("Glasses", NBT.TAG_COMPOUND)) {
-			glasses = new ItemStack(nbt.getCompoundTag("Glasses"));
+			glasses = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag("Glasses"));
 		} else {
-			glasses = ItemStack.EMPTY;
+			glasses = null;
 		}
 	}
 

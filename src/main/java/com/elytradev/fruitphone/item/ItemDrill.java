@@ -43,14 +43,13 @@ import net.minecraft.world.World;
 public class ItemDrill extends Item {
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
-		ItemStack itemStackIn = playerIn.getHeldItem(hand);
+	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn, EnumHand hand) {
 		if (playerIn.isSneaking()) {
 			if (playerIn.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
 				FruitEquipmentCapability fec = playerIn.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null);
 				ItemStack oldGlasses = fec.glasses;
-				fec.glasses = ItemStack.EMPTY;
-				if (!oldGlasses.isEmpty()) {
+				fec.glasses = null;
+				if (oldGlasses != null) {
 					playerIn.playSound(FruitSounds.DRILL, 0.33f, 0.875f+(itemRand.nextFloat()*0.25f));
 					EquipmentDataPacket.forEntity(playerIn).ifPresent((m) -> m.sendToAllWatching(playerIn));
 					if (!playerIn.inventory.addItemStackToInventory(oldGlasses)) {
