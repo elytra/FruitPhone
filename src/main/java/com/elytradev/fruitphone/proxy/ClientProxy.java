@@ -40,10 +40,10 @@ import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 import com.google.common.base.Objects;
 
-import com.elytradev.concrete.reflect.accessor.Accessor;
-import com.elytradev.concrete.reflect.accessor.Accessors;
-import com.elytradev.concrete.reflect.invoker.Invoker;
-import com.elytradev.concrete.reflect.invoker.Invokers;
+import io.github.elytra.concrete.accessor.Accessor;
+import io.github.elytra.concrete.accessor.Accessors;
+import io.github.elytra.concrete.invoker.Invoker;
+import io.github.elytra.concrete.invoker.Invokers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.Gui;
@@ -114,7 +114,7 @@ public class ClientProxy extends Proxy {
 		transformFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187453_a", "transformFirstPerson", "a"}, EnumHandSide.class, float.class);
 		rotateArm = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187458_c", "rotateArm", "c"}, float.class);
 		
-		applyBobbing = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78475_f", "applyBobbing", "e"}, float.class);
+		applyBobbing = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78475_f", "setupViewBobbing", "e"}, float.class);
 		hurtCameraEffect = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78482_e", "hurtCameraEffect", "d"}, float.class);
 	}
 	
@@ -198,8 +198,8 @@ public class ClientProxy extends Proxy {
 				Item.REGISTRY.getNameForObject(FruitItems.PASSIVE) == null ||
 				isServerVanilla ||
 				(
-					Minecraft.getMinecraft().player.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null) &&
-					!(glasses = Minecraft.getMinecraft().player.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses).isEmpty()
+					Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null) &&
+					(glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses) != null
 				)) {
 				int color = -1;
 				if (glasses != null) {
@@ -266,7 +266,7 @@ public class ClientProxy extends Proxy {
 			// bring back the hurt effect
 			hurtCameraEffect.invoke(mc.entityRenderer, partialTicks);
 			
-			AbstractClientPlayer p = mc.player;
+			AbstractClientPlayer p = mc.thePlayer;
 			EnumHand hand = e.getHand();
 			ItemRenderer ir = mc.getItemRenderer();
 			
@@ -336,10 +336,10 @@ public class ClientProxy extends Proxy {
 				
 				TransformType transform = (handSide == EnumHandSide.RIGHT ? TransformType.FIRST_PERSON_RIGHT_HAND : TransformType.FIRST_PERSON_LEFT_HAND);
 				
-				IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(is, mc.world, p);
+				IBakedModel model = mc.getRenderItem().getItemModelWithOverrides(is, mc.theWorld, p);
 			
-				float f = -0.4F * MathHelper.sin(MathHelper.sqrt(swing) * (float) Math.PI);
-				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt(swing) * ((float) Math.PI * 2F));
+				float f = -0.4F * MathHelper.sin(MathHelper.sqrt_float(swing) * (float) Math.PI);
+				float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt_float(swing) * ((float) Math.PI * 2F));
 				float f2 = -0.2F * MathHelper.sin(swing * (float) Math.PI);
 				int i = isMain ? 1 : -1;
 				GlStateManager.translate(i * f, f1, f2);

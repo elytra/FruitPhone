@@ -26,6 +26,7 @@ package com.elytradev.fruitphone.client.gui;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -45,7 +46,6 @@ import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 import com.elytradev.probe.api.impl.Unit;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -61,7 +61,6 @@ import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -140,7 +139,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	private Random rand = new Random();
 	
 	public ScreenConfigureGlasses() {
-		Arrays.fill(chestData, ItemStack.EMPTY);
+		Arrays.fill(chestData, null);
 	}
 	
 	@Override
@@ -170,46 +169,46 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	}
 	
 	private List<IProbeData> magicBoxData() {
-		return ImmutableList.of(
+		return Arrays.asList(
 				new ProbeData()
 					.withLabel("Magic Box")
-					.withInventory(ImmutableList.of(new ItemStack(Blocks.IRON_BLOCK)))
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.IRON_BLOCK)))
 					.withBar(0, (int)(ClientProxy.ticks%200)/2, 100, UnitDictionary.PERCENT),
 				new ProbeData()
 					.withBar(0, energy, Long.MAX_VALUE, UnitDictionary.DANKS),
 				new ProbeData()
-					.withInventory(ImmutableList.of(
-							iron,
-							gold,
-							coal,
-							diamond,
-							cobble
+					.withInventory(Arrays.asList(
+							iron.stackSize == 0 ? null : iron,
+							gold.stackSize == 0 ? null : gold,
+							coal.stackSize == 0 ? null : coal,
+							diamond.stackSize == 0 ? null : diamond,
+							cobble.stackSize == 0 ? null : cobble
 							))
 			);
 	}
 	
 	private List<IProbeData> grassData() {
-		return ImmutableList.of(
+		return Arrays.asList(
 				new ProbeData()
 					.withLabel(new ItemStack(Blocks.GRASS).getDisplayName())
-					.withInventory(ImmutableList.of(new ItemStack(Blocks.GRASS)))
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.GRASS)))
 			);
 	}
 	
 	private List<IProbeData> chestData() {
-		return ImmutableList.of(
+		return Arrays.asList(
 				new ProbeData()
 					.withLabel(new ItemStack(Blocks.CHEST).getDisplayName())
-					.withInventory(ImmutableList.of(new ItemStack(Blocks.CHEST))),
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.CHEST))),
 				new ProbeData()
-					.withInventory(ImmutableList.copyOf(chestData))
+					.withInventory(Arrays.asList(chestData))
 			);
 	}
 	
 	private List<IProbeData> furnaceData() {
-		return ImmutableList.of(
+		return Arrays.asList(
 				new FruitProbeData()
-					.withInventory(ImmutableList.of(new ItemStack(Blocks.FURNACE)))
+					.withInventory(Arrays.asList(new ItemStack(Blocks.FURNACE)))
 					.withLabel(new ItemStack(Blocks.FURNACE).getDisplayName()),
 				new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.furnace.fuel"))
@@ -218,19 +217,19 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					.withLabel(new TextComponentTranslation("fruitphone.furnace.progress"))
 					.withBar(0, (ClientProxy.ticks%200)/2, 100, UnitDictionary.PERCENT),
 				new ProbeData()
-					.withInventory(ImmutableList.of(
-							furnaceCobble,
-							furnaceCoal,
-							furnaceStone
+					.withInventory(Arrays.asList(
+							furnaceCobble.stackSize == 0 ? null : furnaceCobble,
+							furnaceCoal.stackSize == 0 ? null : furnaceCoal,
+							furnaceStone.stackSize == 0 ? null : furnaceStone
 							))
 			);
 	}
 	
 	private List<IProbeData> tankData() {
-		return ImmutableList.of(
+		return Arrays.asList(
 				new ProbeData()
 					.withLabel("Tank")
-					.withInventory(ImmutableList.of(new ItemStack(Blocks.GLASS))),
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.GLASS))),
 				new ProbeData()
 					.withBar(0, (ClientProxy.ticks%4000)/1000D, 4, UnitDictionary.getInstance().getUnit(FluidRegistry.LAVA)),
 				new ProbeData()
@@ -256,7 +255,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		} else if (button.id == 3) {
 			probeDataSupplier = this::grassData;
 		} else if (button.id == 4) {
-			Arrays.fill(chestData, ItemStack.EMPTY);
+			Arrays.fill(chestData, null);
 			probeDataSupplier = this::chestData;
 		} else if (button.id == 5) {
 			probeDataSupplier = this::furnaceData;
@@ -276,7 +275,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		
 		int checkboxTextCol = -1;
 		int v = 10;
-		if (mouseX >= checkboxX && mouseX <= checkboxX+10+fontRenderer.getStringWidth(checkboxStr)+2 && mouseY >= checkboxY && mouseY <= checkboxY+10) {
+		if (mouseX >= checkboxX && mouseX <= checkboxX+10+fontRendererObj.getStringWidth(checkboxStr)+2 && mouseY >= checkboxY && mouseY <= checkboxY+10) {
 			v = 20;
 			checkboxTextCol = 0xFFFFFFA0;
 		}
@@ -296,15 +295,15 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			drawModalRectWithCustomSizedTexture(checkboxX, checkboxY, 10, v, 10, 10, 20, 30);
 		}
 		int checkboxTextX = checkboxX+12;
-		int checkboxTextW = fontRenderer.getStringWidth(checkboxStr);
+		int checkboxTextW = fontRendererObj.getStringWidth(checkboxStr);
 		if (checkboxTextX+checkboxTextW >= width) {
 			checkboxTextX = checkboxX-checkboxTextW-2;
 		}
-		fontRenderer.drawStringWithShadow(checkboxStr, checkboxTextX, checkboxY+1, checkboxTextCol);
+		fontRendererObj.drawStringWithShadow(checkboxStr, checkboxTextX, checkboxY+1, checkboxTextCol);
 		
 		int color = -1;
-		if (Minecraft.getMinecraft().player.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null)) {
-			ItemStack glasses = Minecraft.getMinecraft().player.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses;
+		if (Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null)) {
+			ItemStack glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses;
 			if (glasses.getItem() instanceof ItemFruitPassive) {
 				ItemFruitPassive item = (ItemFruitPassive)glasses.getItem();
 				color = item.getColor(glasses);
@@ -331,7 +330,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			clampHandleY = regionY+g.opposite().resolveY(0, regionHeight, 10);
 			
 			String clampStr = I18n.format("fruitphone.gui.clampRegion");
-			fontRenderer.drawString(clampStr, regionX+g.opposite().resolveX(12, regionWidth, fontRenderer.getStringWidth(clampStr)), regionY+g.opposite().resolveY(1, regionHeight, 8), -1);
+			fontRendererObj.drawString(clampStr, regionX+g.opposite().resolveX(12, regionWidth, fontRendererObj.getStringWidth(clampStr)), regionY+g.opposite().resolveY(1, regionHeight, 8), -1);
 		}
 		if (snapToGuides) {
 			if (dragTarget == DragTarget.CLAMP_REGION_SIZE) {
@@ -481,32 +480,32 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		energy -= 300;
 		if (((int)ClientProxy.ticks)%200 == 0) {
 			energy -= 1000000L;
-			cobble.setCount(cobble.getCount()+(rand.nextInt(100)+1));
+			cobble.stackSize += rand.nextInt(100)+1;
 			if (rand.nextInt(4) == 0) {
-				coal.setCount(coal.getCount()+1);
+				coal.stackSize++;
 			}
 			if (rand.nextInt(8) == 0) {
-				iron.setCount(iron.getCount()+1);
+				iron.stackSize++;
 			}
 			if (rand.nextInt(12) == 0) {
-				gold.setCount(gold.getCount()+1);
+				gold.stackSize++;
 			}
 			if (rand.nextInt(24) == 0) {
-				diamond.setCount(diamond.getCount()+1);
+				diamond.stackSize++;
 			}
 			
-			furnaceCobble.setCount(furnaceCobble.getCount()-1);
-			furnaceStone.setCount(furnaceStone.getCount()+1);
+			furnaceCobble.stackSize--;
+			furnaceStone.stackSize++;
 		}
 		if (((int)ClientProxy.ticks)%1600 == 0) {
-			furnaceCoal.setCount(furnaceCoal.getCount()-1);
+			furnaceCoal.stackSize--;
 		}
 		int idx = rand.nextInt(54);
 		ItemStack is = chestData[idx];
-		if (is.isEmpty()) {
+		if (is == null) {
 			Item item;
 			while (!(item = Item.REGISTRY.getRandomObject(rand)).getRegistryName().getResourceDomain().equals("minecraft")) {}
-			NonNullList<ItemStack> nnl = NonNullList.create();
+			List<ItemStack> nnl = Lists.newArrayList();
 			item.getSubItems(item, item.getCreativeTab(), nnl);
 			is = nnl.get(rand.nextInt(nnl.size()));
 			if (item.isDamageable()) {
@@ -514,7 +513,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			}
 			chestData[idx] = is;
 		} else if (is.isStackable()) {
-			is.setCount(is.getCount()+1);
+			is.stackSize++;
 		}
 	}
 	
@@ -523,7 +522,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 		String str = I18n.format("fruitphone.gui.snapToCenter");
 		if (mouseButton == 0) {
-			if (mouseX >= checkboxX && mouseX <= checkboxX+10+fontRenderer.getStringWidth(str)+2 && mouseY >= checkboxY && mouseY <= checkboxY+10) {
+			if (mouseX >= checkboxX && mouseX <= checkboxX+10+fontRendererObj.getStringWidth(str)+2 && mouseY >= checkboxY && mouseY <= checkboxY+10) {
 				mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1));
 				snapToGuides = !snapToGuides;
 			} else if (mouseX >= overlayHandleX && mouseY >= overlayHandleY && mouseX <= overlayHandleX+10 && mouseY <= overlayHandleY+10) {

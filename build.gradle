@@ -49,8 +49,8 @@ repositories {
 		url = 'https://oss.sonatype.org/content/repositories/public/'
 	}
 	maven {
-		name = 'elytra'
-		url = 'http://repo.elytradev.com/'
+		name = 'unascribed'
+		url = 'http://unascribed.com/maven/releases'
 	}
 	jcenter()
 	ivy {
@@ -76,7 +76,7 @@ jar {
 
 shadowJar {
 	classifier = ''
-	relocate 'com.elytradev.concrete', 'com.elytradev.fruitphone.repackage.com.elytradev.concrete'
+	relocate 'io.github.elytra.concrete', 'com.elytradev.fruitphone.repackage.io.github.elytra.concrete'
 	configurations = [project.configurations.shadow]
 }
 
@@ -95,14 +95,14 @@ dependencies {
 	
 	compile project(':ProbeDataProviderAPI')
 	
-	shadow 'com.elytradev:concrete:0.1.0'
-	compile 'com.elytradev:concrete:0.1.0'
+	shadow 'io.github.elytra:concrete:0.0.9'
+	compile 'io.github.elytra:concrete:0.0.9'
 	
-	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
-	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'
+	compile 'mezz.jei:jei_1.10.2:3.9.7.260:api'
+	runtime 'mezz.jei:jei_1.10.2:3.9.7.260'
 	
-	compile 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
-	runtime 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
+	compile 'mcp.mobius.waila:Hwyla:1.8.10-B24_1.10.2'
+	runtime 'mcp.mobius.waila:Hwyla:1.8.10-B24_1.10.2'
 }
 
 minecraft {

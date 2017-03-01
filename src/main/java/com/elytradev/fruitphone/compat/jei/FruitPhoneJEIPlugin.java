@@ -28,6 +28,7 @@ import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.item.ItemFruit;
 
 import mezz.jei.api.BlankModPlugin;
+import mezz.jei.api.IModRegistry;
 import mezz.jei.api.ISubtypeRegistry;
 import mezz.jei.api.JEIPlugin;
 import mezz.jei.api.ISubtypeRegistry.ISubtypeInterpreter;
@@ -36,14 +37,16 @@ import net.minecraft.item.ItemStack;
 @JEIPlugin
 public class FruitPhoneJEIPlugin extends BlankModPlugin {
 	@Override
-	public void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
+	public void register(IModRegistry registry) {
+		ISubtypeRegistry subtypeRegistry = registry.getJeiHelpers().getSubtypeRegistry();
+		
 		ISubtypeInterpreter interpreter = new ISubtypeInterpreter() {
 			@Override
 			public String getSubtypeInfo(ItemStack itemStack) {
 				return itemStack.getItem().getRegistryName()+"~"+itemStack.getMetadata()+"~"+((ItemFruit)itemStack.getItem()).getColor(itemStack);
 			}
 		};
-		subtypeRegistry.registerSubtypeInterpreter(FruitItems.HANDHELD, interpreter);
-		subtypeRegistry.registerSubtypeInterpreter(FruitItems.PASSIVE, interpreter);
+		subtypeRegistry.registerNbtInterpreter(FruitItems.HANDHELD, interpreter);
+		subtypeRegistry.registerNbtInterpreter(FruitItems.PASSIVE, interpreter);
 	}
 }

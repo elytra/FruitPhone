@@ -45,13 +45,12 @@ import com.elytradev.fruitphone.recipe.FruitRecipes;
 import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
 import com.elytradev.fruitphone.vanilla.VanillaProviders;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import mcp.mobius.waila.api.IWailaDataProvider;
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
 
-import com.elytradev.concrete.NetworkContext;
+import io.github.elytra.concrete.NetworkContext;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
 import com.elytradev.probe.api.IUnit;
@@ -63,6 +62,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -138,8 +138,8 @@ public class FruitPhone {
 		}
 
 		@Override
-		public ItemStack getTabIconItem() {
-			return getIconItemStack();
+		public Item getTabIconItem() {
+			return FruitItems.HANDHELD;
 		}
 		
 	};
@@ -212,7 +212,7 @@ public class FruitPhone {
 		
 		config.setCategoryComment("Glasses", "Configuration for the glasses overlay. This can be configured ingame much more easily with the Power Drill.");
 		
-		if (!Loader.isModLoaded("waila")) {
+		if (!Loader.isModLoaded("Waila")) {
 			overwriteWaila = false;
 		}
 		
@@ -277,7 +277,7 @@ public class FruitPhone {
 	
 	@SubscribeEvent
 	public void onPlayerJoin(PlayerLoggedInEvent e) {
-		new SetAlwaysOnPacket(e.player.world.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
+		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
 		EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
 	}
 	
@@ -309,16 +309,16 @@ public class FruitPhone {
 	@SubscribeEvent
 	public void onPlayerTick(PlayerTickEvent e) {
 		if (e.phase == Phase.START) {
-			if (e.player.world.isRemote) return;
+			if (e.player.worldObj.isRemote) return;
 			Vec3d eyes = e.player.getPositionEyes(1);
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
 			Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
-			RayTraceResult rtr = e.player.world.rayTraceBlocks(eyes, max, false, false, false);
+			RayTraceResult rtr = e.player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
 			if (rtr != null && rtr.typeOfHit == Type.BLOCK) {
 				List<IProbeData> list = Lists.newArrayList();
 				BlockPos pos = rtr.getBlockPos();
-				TileEntity te = e.player.world.getTileEntity(pos);
+				TileEntity te = e.player.worldObj.getTileEntity(pos);
 				if (te != null) {
 					NBTTagCompound tag = generateProbeData(e.player, te, rtr.sideHit, list);
 					ProbeDataPacket pkt = new ProbeDataPacket(pos, list, tag);
@@ -340,7 +340,7 @@ public class FruitPhone {
 				if (tag == null) tag = new NBTTagCompound();
 				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
 					for (IWailaDataProvider iwdp : li) {
-						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
+						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.worldObj, te.getPos());
 					}
 				}
 			}
@@ -397,10 +397,11 @@ public class FruitPhone {
 			if (item != null) {
 				List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
 				for (int i = 0; i < item.getSlots(); i++) {
-					is.add(item.getStackInSlot(i).copy());
+					ItemStack stack = item.getStackInSlot(i);
+					is.add(stack == null ? null : stack.copy());
 				}
 				list.add(new ProbeData()
-						.withInventory(ImmutableList.copyOf(is)));
+						.withInventory(is));
 			}
 		}
 		return tag;
@@ -410,8 +411,8 @@ public class FruitPhone {
 	public void onDrops(PlayerDropsEvent e) {
 		if (optionalMode) return;
 		if (e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
-			ItemStack glasses = Minecraft.getMinecraft().player.getCapability(CAPABILITY_EQUIPMENT, null).glasses;
-			if (!glasses.isEmpty()) {
+			ItemStack glasses = Minecraft.getMinecraft().thePlayer.getCapability(CAPABILITY_EQUIPMENT, null).glasses;
+			if (glasses != null) {
 				e.getEntityPlayer().entityDropItem(glasses, 1.2f);
 			}
 		}

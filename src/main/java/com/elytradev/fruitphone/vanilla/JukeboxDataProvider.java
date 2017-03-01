@@ -24,14 +24,13 @@
 
 package com.elytradev.fruitphone.vanilla;
 
+import java.util.Collections;
 import java.util.List;
 
-import com.elytradev.concrete.reflect.accessor.Accessor;
-import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.impl.ProbeData;
-import com.google.common.collect.ImmutableList;
-
+import io.github.elytra.concrete.accessor.Accessor;
+import io.github.elytra.concrete.accessor.Accessors;
 import net.minecraft.block.BlockJukebox.TileEntityJukebox;
 import net.minecraft.item.ItemRecord;
 import net.minecraft.item.ItemStack;
@@ -44,7 +43,7 @@ public class JukeboxDataProvider implements VanillaDataProvider<TileEntityJukebo
 	@Override
 	public void provideProbeData(TileEntityJukebox te, List<IProbeData> li) {
 		ItemStack record = te.getRecord();
-		if (record.isEmpty()) {
+		if (record == null) {
 			li.add(new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.jukebox.noRecord")));
 			return;
@@ -60,7 +59,7 @@ public class JukeboxDataProvider implements VanillaDataProvider<TileEntityJukebo
 			song = record.getUnlocalizedName();
 		}
 		li.add(new ProbeData()
-				.withInventory(ImmutableList.of(record))
+				.withInventory(Collections.singletonList(record))
 				.withLabel(new TextComponentTranslation(song)));
 	}
 }

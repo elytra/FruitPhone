@@ -24,8 +24,11 @@
 
 package com.elytradev.fruitphone.network;
 
-import com.google.common.collect.ImmutableList;
-import com.elytradev.concrete.Marshaller;
+import io.github.elytra.concrete.Marshaller;
+
+import java.util.Arrays;
+import java.util.List;
+
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
@@ -76,14 +79,16 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 			ByteBufUtils.writeUTF8String(out, ITextComponent.Serializer.componentToJson(t.getLabel()));
 		}
 		if (inventory) {
-			ImmutableList<ItemStack> inv = t.getInventory();
+			List<ItemStack> inv = t.getInventory();
 			ByteBufUtils.writeVarInt(out, inv.size(), 5);
 			for (ItemStack is : inv) {
 				// I have seen people ASM writeItemStack before, so we write the
 				// extended stack size out-of-band, rather than serializing the
 				// stack ourselves
 				ByteBufUtils.writeItemStack(out, is);
-				ByteBufUtils.writeVarInt(out, is.getCount(), 5);
+				if (is != null) {
+					ByteBufUtils.writeVarInt(out, is.stackSize, 5);
+				}
 			}
 		}
 	}
@@ -113,10 +118,12 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 			ItemStack[] stacks = new ItemStack[size];
 			for (int i = 0; i < size; i++) {
 				ItemStack is = ByteBufUtils.readItemStack(in);
-				is.setCount(ByteBufUtils.readVarInt(in, 5));
+				if (is != null) {
+					is.stackSize = ByteBufUtils.readVarInt(in, 5);
+				}
 				stacks[i] = is;
 			}
-			pd.withInventory(ImmutableList.copyOf(stacks));
+			pd.withInventory(Arrays.asList(stacks));
 		}
 		return pd;
 	}
