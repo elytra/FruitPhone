@@ -315,12 +315,14 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		int xOfs = FruitPhone.inst.glassesXOffset;
 		int yOfs = FruitPhone.inst.glassesYOffset;
 		float confScale = FruitPhone.inst.glassesScale;
-		int maxWidth = (int)((width * FruitPhone.inst.maxGlassesWidth)/confScale);
-		int maxHeight = (int)((height * FruitPhone.inst.maxGlassesHeight)/confScale);
+		float maxWidthRaw = width * FruitPhone.inst.maxGlassesWidth;
+		float maxHeightRaw = height * FruitPhone.inst.maxGlassesHeight;
+		int maxWidth = (int)(maxWidthRaw/confScale);
+		int maxHeight = (int)(maxHeightRaw/confScale);
 		
 		if (dragTarget != DragTarget.OVERLAY_POSITION) {
-			int regionWidth = (int)Math.min(width, maxWidth*confScale);
-			int regionHeight = (int)Math.min(height, maxHeight*confScale);
+			int regionWidth = (int)Math.min(width, maxWidthRaw);
+			int regionHeight = (int)Math.min(height, maxHeightRaw);
 			
 			int regionX = g.resolveX(xOfs, width, regionWidth);
 			int regionY = g.resolveY(yOfs, height, regionHeight);
@@ -382,8 +384,8 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		GlStateManager.pushMatrix(); {
 			DataSize actual = FruitRenderer.calculatePreferredDataSize(probeData, 90, 50, maxWidth, maxHeight);
 			DataSize clamped = new DataSize();
-			clamped.setWidth(Math.min((int)(maxWidth/confScale), actual.getWidth()));
-			clamped.setHeight(Math.min((int)(maxHeight/confScale), actual.getHeight()));
+			clamped.setWidth(Math.min(maxWidth, actual.getWidth()));
+			clamped.setHeight(Math.min(maxHeight, actual.getHeight()));
 			if (clamped.getWidth() > 0 && clamped.getHeight() > 0) {
 				float scale = FruitRenderer.getContainScale(clamped.getWidth(), clamped.getHeight(), actual.getWidth(), actual.getHeight());
 				float xScale = 1;
