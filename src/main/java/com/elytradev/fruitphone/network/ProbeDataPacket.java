@@ -32,7 +32,6 @@ import com.elytradev.fruitphone.WailaProbeData;
 import io.github.elytra.concrete.Message;
 import io.github.elytra.concrete.NetworkContext;
 import io.github.elytra.concrete.annotation.field.MarshalledAs;
-import io.github.elytra.concrete.annotation.field.Optional;
 import io.github.elytra.concrete.annotation.type.Asynchronous;
 import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import com.elytradev.probe.api.IProbeData;
@@ -49,7 +48,6 @@ public class ProbeDataPacket extends Message {
 	@MarshalledAs(ProbeDataListMarshaller.NAME)
 	private List<IProbeData> data;
 	private BlockPos pos;
-	@Optional
 	private NBTTagCompound wailaData;
 	
 	public ProbeDataPacket(NetworkContext ctx) {
@@ -66,7 +64,7 @@ public class ProbeDataPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
-		if (wailaData != null) {
+		if (wailaData.getSize() > 0) {
 			data.add(0, new WailaProbeData(wailaData));
 		}
 		FruitRenderer.currentDataPos = pos;
