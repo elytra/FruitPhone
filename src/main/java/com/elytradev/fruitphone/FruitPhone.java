@@ -440,7 +440,7 @@ public class FruitPhone {
 	public void onDrops(PlayerDropsEvent e) {
 		if (optionalMode) return;
 		if (e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
-			ItemStack glasses = Minecraft.getMinecraft().player.getCapability(CAPABILITY_EQUIPMENT, null).glasses;
+			ItemStack glasses = e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).glasses;
 			if (!glasses.isEmpty()) {
 				e.getEntityPlayer().entityDropItem(glasses, 1.2f);
 			}
