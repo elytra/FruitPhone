@@ -58,7 +58,7 @@ public class LayerFruitGlass {
 		FruitEquipmentProperties props = (FruitEquipmentProperties)player.getExtendedProperties("fruitphone:equipment");
 		if (props == null) return;
 		ItemStack itemstack = props.glasses;
-		if (itemstack.getItem() instanceof ItemFruitPassive) {
+		if (itemstack != null && itemstack.getItem() instanceof ItemFruitPassive) {
 			ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
 			GL11.glPushMatrix();; {
 				GL11.glTranslatef(0f, 0.01f, 0f);
