@@ -24,7 +24,6 @@
 
 package com.elytradev.fruitphone;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -58,12 +57,12 @@ import com.elytradev.probe.api.IProbeDataProvider;
 import com.elytradev.probe.api.IUnit;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -72,6 +71,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules.ValueType;
 import net.minecraft.world.World;
@@ -101,12 +101,12 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
+import net.minecraftforge.items.wrapper.SidedInvWrapper;
 import net.minecraftforge.oredict.RecipeSorter;
 import net.minecraftforge.oredict.RecipeSorter.Category;
 
@@ -172,8 +172,6 @@ public class FruitPhone {
 	@CapabilityInject(IProbeDataProvider.class)
 	public static Capability<IProbeDataProvider> CAPABILITY_PROBE;
 	public NetworkContext NETWORK;
-	
-	private final Field classToNameMap = ReflectionHelper.findField(TileEntity.class, "field_145853_j", "classToNameMap", "g");
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
@@ -339,101 +337,187 @@ public class FruitPhone {
 	
 	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
 		NBTTagCompound tag = new NBTTagCompound();
-		if (player instanceof EntityPlayerMP && overwriteWaila) {
-			Map<Class<? extends TileEntity>, String> classToNameMap;
-			try {
-				classToNameMap = (Map<Class<? extends TileEntity>, String>) this.classToNameMap.get(null);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-			boolean hasBlockOrTile = false;
-			if (ModuleRegistrar.instance().hasNBTProviders(te.getBlockType())) {
-				hasBlockOrTile = true;
-			}
-			if (ModuleRegistrar.instance().hasNBTProviders(te)) {
-				hasBlockOrTile = true;
-			}
-			if (hasBlockOrTile) {
-				tag.setInteger("x", te.getPos().getX());
-				tag.setInteger("y", te.getPos().getY());
-				tag.setInteger("z", te.getPos().getZ());
-				tag.setString("id", classToNameMap.get(te.getClass()));
-				
-				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te.getBlockType()).values()) {
-					for (IWailaDataProvider iwdp : li) {
-						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
+		try {
+			if (player instanceof EntityPlayerMP && overwriteWaila) {
+				boolean hasBlockOrTile = false;
+				if (ModuleRegistrar.instance().hasNBTProviders(te.getBlockType())) {
+					hasBlockOrTile = true;
+				}
+				if (ModuleRegistrar.instance().hasNBTProviders(te)) {
+					hasBlockOrTile = true;
+				}
+				if (hasBlockOrTile) {
+					tag.setInteger("x", te.getPos().getX());
+					tag.setInteger("y", te.getPos().getY());
+					tag.setInteger("z", te.getPos().getZ());
+					tag.setString("id", TileEntity.getKey(te.getClass()).toString());
+					
+					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te.getBlockType()).values()) {
+						for (IWailaDataProvider iwdp : li) {
+							tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
+						}
+					}
+					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
+						for (IWailaDataProvider iwdp : li) {
+							tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
+						}
 					}
 				}
-				for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
-					for (IWailaDataProvider iwdp : li) {
-						tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.world, te.getPos());
-					}
-				}
+				tag.setInteger("WailaX", te.getPos().getX());
+				tag.setInteger("WailaY", te.getPos().getY());
+				tag.setInteger("WailaZ", te.getPos().getZ());
+				tag.setString("WailaID", TileEntity.getKey(te.getClass()).toString());
 			}
-			tag.setInteger("WailaX", te.getPos().getX());
-			tag.setInteger("WailaY", te.getPos().getY());
-			tag.setInteger("WailaZ", te.getPos().getZ());
-			tag.setString("WailaID", classToNameMap.get(te.getClass()));
+		} catch (Throwable t) {
+			log.warn("Exception thrown while building Waila data for {}, {}, {} in DIM{}",
+					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension());
+			tag = new NBTTagCompound();
+			list.add(new ProbeData()
+					.withLabel(new TextComponentTranslation("fruitphone.wailaError")));
 		}
-		if (te.hasCapability(CAPABILITY_PROBE, sideHit)) {
-			te.getCapability(CAPABILITY_PROBE, sideHit).provideProbeData(list);
-		} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
-			te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
-		} else {
+		
+		try {
+			if (te.hasCapability(CAPABILITY_PROBE, sideHit)) {
+				te.getCapability(CAPABILITY_PROBE, sideHit).provideProbeData(list);
+				return tag;
+			} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
+				te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
+				return tag;
+			}
+		} catch (Throwable t) {
+			log.warn("Exception thrown while building probe data for {}, {}, {} in DIM{}",
+					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension());
+			list.clear();
+			list.add(new ProbeData()
+					.withLabel(new TextComponentTranslation("fruitphone.probeError")));
+			return null;
+		}
+		
+		try {
 			VanillaProviders.provideProbeData(te, list);
 			
-			IEnergyStorage energy = null;
-			if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {
-				energy = te.getCapability(CapabilityEnergy.ENERGY, null);
-			} else if (te.hasCapability(CapabilityEnergy.ENERGY, sideHit)) {
-				energy = te.getCapability(CapabilityEnergy.ENERGY, sideHit);
+			// Be EXTREMELY careful when looking for sideless caps.
+			// Some modders don't know about, or at least don't test, sideless capabilities.
+			
+			IEnergyStorage sidelessEnergy = null;
+			try {
+				if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {
+					sidelessEnergy = te.getCapability(CapabilityEnergy.ENERGY, null);
+				}
+			} catch (Throwable t) {}
+			
+			IFluidHandler sidelessFluid = null;
+			try {
+				if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
+					sidelessFluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
+				}
+			} catch (Throwable t) {}
+			
+			IItemHandler sidelessItem = null;
+			try {
+				if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
+					sidelessItem = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
+				}
+			} catch (Throwable t) {}
+			if (sidelessItem == null && te instanceof IInventory) {
+				sidelessItem = new InvWrapper((IInventory)te);
 			}
 			
-			IFluidHandler fluid = null;
-			if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
-				fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
-			} else if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit)) {
-				fluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit);
+			
+			IEnergyStorage sidedEnergy = null;
+			if (te.hasCapability(CapabilityEnergy.ENERGY, sideHit)) {
+				sidedEnergy = te.getCapability(CapabilityEnergy.ENERGY, sideHit);
 			}
 			
-			IItemHandler item = null;
-			if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
-				item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-			} else if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit)) {
-				item = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit);
-			} else if (te instanceof IInventory) {
-				item = new InvWrapper((IInventory)te);
+			IFluidHandler sidedFluid = null;
+			if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit)) {
+				sidedFluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit);
 			}
 			
-			if (energy != null) {
-				list.add(new ProbeData()
-						.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), UnitDictionary.FORGE_ENERGY));
+			IItemHandler sidedItem = null;
+			if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit)) {
+				sidedItem = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit);
+			} else if (te instanceof ISidedInventory) {
+				sidedItem = new SidedInvWrapper((ISidedInventory)te, sideHit);
 			}
-			if (fluid != null) {
-				for (IFluidTankProperties tank : fluid.getTankProperties()) {
-					IUnit unit;
-					int amt;
-					if (tank.getContents() == null) {
-						unit = UnitDictionary.BUCKETS_ANY;
-						amt = 0;
-					} else {
-						unit = UnitDictionary.getInstance().getUnit(tank.getContents().getFluid());
-						amt = tank.getContents().amount;
+
+			// Again, be careful when attempting to use sideless caps. 
+			
+			if (sidelessEnergy != null) {
+				try {
+					addEnergyData(list, sidelessEnergy);
+				} catch (Throwable t) {
+					if (sidedEnergy != null) {
+						addEnergyData(list, sidedEnergy);
 					}
-					list.add(new ProbeData()
-							.withBar(0, amt/1000D, tank.getCapacity()/1000D, unit));
 				}
+			} else if (sidedEnergy != null) {
+				addEnergyData(list, sidedEnergy);
 			}
-			if (item != null) {
-				List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
-				for (int i = 0; i < item.getSlots(); i++) {
-					is.add(item.getStackInSlot(i).copy());
+			
+			if (sidelessFluid != null) {
+				try {
+					addFluidData(list, sidelessFluid);
+				} catch (Throwable t) {
+					if (sidedFluid != null) {
+						addFluidData(list, sidedFluid);
+					}
 				}
-				list.add(new ProbeData()
-						.withInventory(ImmutableList.copyOf(is)));
+			} else if (sidedFluid != null) {
+				addFluidData(list, sidedFluid);
 			}
+			
+			if (sidelessItem != null) {
+				try {
+					addItemData(list, sidelessItem);
+				} catch (Throwable t) {
+					if (sidedItem != null) {
+						addItemData(list, sidedItem);
+					}
+				}
+			} else if (sidedItem != null) {
+				addItemData(list, sidedItem);
+			}
+			
+			return tag;
+		} catch (Throwable t) {
+			log.warn("Exception thrown while building default probe data for {}, {}, {} in DIM{}",
+					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension());
+			list.clear();
+			list.add(new ProbeData()
+					.withLabel(new TextComponentTranslation("fruitphone.capError")));
+			return null;
 		}
-		return tag;
+	}
+
+	private void addItemData(List<IProbeData> list, IItemHandler item) {
+		List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
+		for (int i = 0; i < item.getSlots(); i++) {
+			is.add(item.getStackInSlot(i).copy());
+		}
+		list.add(new ProbeData()
+				.withInventory(ImmutableList.copyOf(is)));
+	}
+
+	private void addFluidData(List<IProbeData> list, IFluidHandler fluid) {
+		for (IFluidTankProperties tank : fluid.getTankProperties()) {
+			IUnit unit;
+			int amt;
+			if (tank.getContents() == null) {
+				unit = UnitDictionary.BUCKETS_ANY;
+				amt = 0;
+			} else {
+				unit = UnitDictionary.getInstance().getUnit(tank.getContents().getFluid());
+				amt = tank.getContents().amount;
+			}
+			list.add(new ProbeData()
+					.withBar(0, amt/1000D, tank.getCapacity()/1000D, unit));
+		}
+	}
+
+	private void addEnergyData(List<IProbeData> list, IEnergyStorage energy) {
+		list.add(new ProbeData()
+				.withBar(0, energy.getEnergyStored(), energy.getMaxEnergyStored(), UnitDictionary.FORGE_ENERGY));
 	}
 
 	@SubscribeEvent
