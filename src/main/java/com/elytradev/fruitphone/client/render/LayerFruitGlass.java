@@ -24,104 +24,96 @@
 
 package com.elytradev.fruitphone.client.render;
 
-import com.elytradev.fruitphone.FruitPhone;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
+import com.elytradev.fruitphone.FruitEquipmentProperties;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.model.ModelHumanoidHead;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.model.ModelSkeletonHead;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-public class LayerFruitGlass implements LayerRenderer<EntityPlayer> {
+public class LayerFruitGlass {
 
 	private static final ResourceLocation PASSIVE = new ResourceLocation("fruitphone", "textures/model/passive.png");
 	private static final ResourceLocation PASSIVE_OVERLAY = new ResourceLocation("fruitphone", "textures/model/passive_overlay.png");
 	
 	private ModelRenderer bipedHead;
-	private ModelBase humanoidHead = new ModelHumanoidHead();
+	private ModelBase humanoidHead = new ModelSkeletonHead(0, 0, 64, 64);
 	
 	public LayerFruitGlass(ModelRenderer bipedHead) {
 		this.bipedHead = bipedHead;
 	}
 
-	@Override
 	public void doRenderLayer(EntityPlayer player, float limbSwing,
 			float limbSwingAmount, float partialTicks, float ageInTicks,
 			float netHeadYaw, float headPitch, float scale) {
-		if (player.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
-			ItemStack itemstack = player.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).glasses;
+		FruitEquipmentProperties props = (FruitEquipmentProperties)player.getExtendedProperties("fruitphone:equipment");
+		if (props == null) return;
+		ItemStack itemstack = props.glasses;
+		if (itemstack.getItem() instanceof ItemFruitPassive) {
+			ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
+			GL11.glPushMatrix();; {
+				GL11.glTranslatef(0f, 0.01f, 0f);
+				if (player.isSneaking()) {
+					GL11.glTranslatef(0f, 0.2f, 0f);
+				}
 	
-			if (itemstack.getItem() instanceof ItemFruitPassive) {
-				ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
-				GlStateManager.pushMatrix(); {
-					GlStateManager.translate(0f, 0.01f, 0f);
-					if (player.isSneaking()) {
-						GlStateManager.translate(0f, 0.2f, 0f);
-					}
-		
-					if (player.isChild()) {
-						GlStateManager.translate(0f, 0.5f * scale, 0f);
-						GlStateManager.scale(0.7f, 0.7f, 0.7f);
-						GlStateManager.translate(0f, 16f * scale, 0f);
-					}
-		
-					bipedHead.postRender(0.0625f);
-					
-					int color = item.getColor(itemstack);
-					float r = ((color >> 16) & 0xFF)/255f;
-					float g = ((color >>  8) & 0xFF)/255f;
-					float b = ((color      ) & 0xFF)/255f;
-					
-					GlStateManager.color(r, g, b);
-		
-			        GlStateManager.scale(-1.03125f, 1.03125f, -1.03125f);
-			        
-			        GlStateManager.disableCull();
-			        GlStateManager.enableRescaleNormal();
-			        GlStateManager.enableAlpha();
+				if (player.isChild()) {
+					GL11.glTranslatef(0f, 0.5f * scale, 0f);
+					GL11.glScalef(0.7f, 0.7f, 0.7f);
+					GL11.glTranslatef(0f, 16f * scale, 0f);
+				}
+	
+				bipedHead.postRender(0.0625f);
+				
+				int color = item.getColor(itemstack);
+				float r = ((color >> 16) & 0xFF)/255f;
+				float g = ((color >>  8) & 0xFF)/255f;
+				float b = ((color      ) & 0xFF)/255f;
+				
+				GL11.glColor3f(r, g, b);
+	
+		        GL11.glScalef(-1.03125f, 1.03125f, -1.03125f);
+		        
+		        GL11.glDisable(GL11.GL_CULL_FACE);
+		        GL11.glEnable(GL12.GL_RESCALE_NORMAL);;
+		        GL11.glEnable(GL11.GL_ALPHA_TEST);
 
-			        ItemStack helmet = player.getItemStackFromSlot(EntityEquipmentSlot.HEAD);
-			        if (helmet != null && helmet.getItem() instanceof ItemSkull) {
-			        	if (helmet.getMetadata() == 4) {
-			        		GlStateManager.scale(1.2f, 1.2f, 1.2f);
-			        		GlStateManager.translate(0f, -0.11f, 0);
-			        	} else if (helmet.getMetadata() == 5) {
-			        		GlStateManager.scale(1.75f, 1.75f, 1.75f);
-			        		GlStateManager.translate(0f, -0.125f, 0.075f);
-			        	} else {
-			        		GlStateManager.scale(1.2f, 1.2f, 1.2f);
-			        	}
-			        }
-			        Minecraft.getMinecraft().getTextureManager().bindTexture(PASSIVE);
-			        render(limbSwing);
-			        Minecraft.getMinecraft().getTextureManager().bindTexture(PASSIVE_OVERLAY);
-			        GlStateManager.scale(1.03125f, 1.03125f, 1.03125f);
-			        GlStateManager.translate(-0.015f, 0.025f, 0.015f);
-			        render(limbSwing);
-			        
-				} GlStateManager.popMatrix();
-			}
+		        ItemStack helmet = player.getCurrentArmor(3);
+		        if (helmet != null && helmet.getItem() instanceof ItemSkull) {
+		        	if (helmet.getMetadata() == 4) {
+		        		GL11.glScalef(1.2f, 1.2f, 1.2f);
+		        		GL11.glTranslatef(0f, -0.11f, 0);
+		        	} else if (helmet.getMetadata() == 5) {
+		        		GL11.glScalef(1.75f, 1.75f, 1.75f);
+		        		GL11.glTranslatef(0f, -0.125f, 0.075f);
+		        	} else {
+		        		GL11.glScalef(1.2f, 1.2f, 1.2f);
+		        	}
+		        }
+		        Minecraft.getMinecraft().getTextureManager().bindTexture(PASSIVE);
+		        render(limbSwing);
+		        Minecraft.getMinecraft().getTextureManager().bindTexture(PASSIVE_OVERLAY);
+		        GL11.glScalef(1.03125f, 1.03125f, 1.03125f);
+		        GL11.glTranslatef(-0.015f, 0.025f, 0.015f);
+		        render(limbSwing);
+		        
+			} GL11.glPopMatrix();
 		}
 	}
 
 	private void render(float limbSwing) {
-		GlStateManager.pushMatrix(); {
+		GL11.glPushMatrix(); {
 	        humanoidHead.render((Entity)null, limbSwing, 0f, 0f, 180f, 0f, 0.0625f);
-        } GlStateManager.popMatrix();
-	}
-
-	@Override
-	public boolean shouldCombineTextures() {
-		// TODO Auto-generated method stub
-		return false;
+		} GL11.glPopMatrix();
 	}
 
 }

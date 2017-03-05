@@ -3,9 +3,11 @@ itemGroup.fruitphone=Fruit Phone
 item.fruitphone.handheld.name=Fruit Pad
 item.fruitphone.handheld_mini.name=Fruit Phone
 item.fruitphone.passive.name=Fruit Glass
-item.fruitphone.passive.hint=Does not use your helmet slot, right-click while holding to equip.
+item.fruitphone.passive.hint.0=Does not use your helmet slot.
+item.fruitphone.passive.hint.1=Right-click while holding to equip.
 item.fruitphone.remover.name=Power Drill
-item.fruitphone.remover.hint=Removes or configures glasses. Right-click to configure, sneak right-click to remove;
+item.fruitphone.remover.hint.0=Removes or configures glasses.
+item.fruitphone.remover.hint.1=Right-click to configure, sneak right-click to remove;
 
 tile.fruitphone.reader=Fruit Book
 

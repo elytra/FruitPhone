@@ -33,8 +33,6 @@ import java.util.WeakHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
-import com.elytradev.fruitphone.capability.FruitEquipmentStorage;
 import com.elytradev.fruitphone.compat.waila.WailaCompat;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
@@ -44,70 +42,65 @@ import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Proxy;
 import com.elytradev.fruitphone.recipe.FruitRecipes;
 import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.NetworkContext;
 import com.elytradev.fruitphone.vanilla.VanillaProviders;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
+import cofh.api.energy.IEnergyStorage;
 import mcp.mobius.waila.api.IWailaDataProvider;
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
-import io.github.elytra.concrete.NetworkContext;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
 import com.elytradev.probe.api.IUnit;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
+import com.elytradev.probe.api.impl.SIUnit;
+import com.elytradev.probe.api.impl.Unit;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockChest;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.RayTraceResult.Type;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameRules.ValueType;
+import net.minecraft.tileentity.TileEntityChest;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.energy.CapabilityEnergy;
-import net.minecraftforge.energy.IEnergyStorage;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidTankProperties;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
-import net.minecraftforge.fml.common.network.NetworkCheckHandler;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.wrapper.InvWrapper;
-import net.minecraftforge.items.wrapper.SidedInvWrapper;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidHandler;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.Mod.Instance;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import cpw.mods.fml.common.network.NetworkCheckHandler;
+import cpw.mods.fml.relauncher.ReflectionHelper;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.RecipeSorter;
 import net.minecraftforge.oredict.RecipeSorter.Category;
 
@@ -117,7 +110,7 @@ public class FruitPhone {
 	public static final String MODID = "fruitphone";
 	public static final String NAME = "Fruit Phone";
 	public static final String VERSION = "@VERSION@";
-	public static final String DEPENDENCIES = "required-after:probedataprovider;after:waila";
+	public static final String DEPENDENCIES = "after:Waila";
 	
 	public static final Logger log = LogManager.getLogger("FruitPhone");
 
@@ -168,10 +161,6 @@ public class FruitPhone {
 	public boolean optionalMode;
 	public boolean overwriteWaila;
 	
-	@CapabilityInject(FruitEquipmentCapability.class)
-	public static Capability<FruitEquipmentCapability> CAPABILITY_EQUIPMENT;
-	@CapabilityInject(IProbeDataProvider.class)
-	public static Capability<IProbeDataProvider> CAPABILITY_PROBE;
 	public NetworkContext NETWORK;
 	
 	private final Field classToNameMap = ReflectionHelper.findField(TileEntity.class, "field_145853_j", "classToNameMap", "g");
@@ -228,9 +217,6 @@ public class FruitPhone {
 			
 			FruitItems.register();
 			FruitRecipes.register();
-			FruitSounds.register();
-			
-			CapabilityManager.INSTANCE.register(FruitEquipmentCapability.class, new FruitEquipmentStorage(), FruitEquipmentCapability::new);
 			
 			proxy.preInit();
 		}
@@ -240,6 +226,8 @@ public class FruitPhone {
 				.register(SetAlwaysOnPacket.class)
 				.register(ProbeDataPacket.class);
 		
+		FMLCommonHandler.instance().bus().register(proxy);
+		FMLCommonHandler.instance().bus().register(this);
 		MinecraftForge.EVENT_BUS.register(proxy);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
@@ -259,6 +247,11 @@ public class FruitPhone {
 	
 	@EventHandler
 	public void onPostInit(FMLPostInitializationEvent e) {
+		UnitDictionary dict = UnitDictionary.getInstance();
+		for(Fluid fluid : FluidRegistry.getRegisteredFluids().values()) {
+			Unit fluidUnit = new SIUnit("buckets_"+fluid.getName(), "B", fluid.getColor());
+			dict.register(fluidUnit, fluid);
+		}
 		proxy.postInit();
 		if (overwriteWaila) {
 			WailaCompat.init();
@@ -276,37 +269,37 @@ public class FruitPhone {
 	}
 	
 	@SubscribeEvent
+	public void onConstruct(EntityConstructing e) {
+		if (optionalMode) return;
+		if (e.entity instanceof EntityPlayer) {
+			e.entity.registerExtendedProperties("fruitphone:equipment", new FruitEquipmentProperties());
+		}
+	}
+	
+	@SubscribeEvent
 	public void onStartTracking(PlayerEvent.StartTracking e) {
-		EquipmentDataPacket.forEntity(e.getTarget()).ifPresent((m) -> m.sendTo(e.getEntityPlayer()));
+		EquipmentDataPacket.forEntity(e.target).transform((m) -> {m.sendTo(e.entityPlayer); return Void.TYPE;});
 	}
 	
 	@SubscribeEvent
 	public void onPlayerJoin(PlayerLoggedInEvent e) {
-		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
-		EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
+		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getGameRuleBooleanValue("fruitphone:alwaysOn")).sendTo(e.player);
+		EquipmentDataPacket.forEntity(e.player).transform((m) -> {m.sendTo(e.player); return Void.TYPE;});
 	}
 	
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load e) {
-		if (!e.getWorld().getGameRules().getBoolean("fruitphone:alwaysOn")) {
+		if (!e.world.getGameRules().getGameRuleBooleanValue("fruitphone:alwaysOn")) {
 			// boolean rules default to false, so if it's false then we can set it to false
 			// this has no effect if the gamerule already existed, and adds it to tabcomplete if it didn't
 			// the important part is it won't overwrite an already-true gamerule
-			e.getWorld().getGameRules().addGameRule("fruitphone:alwaysOn", "false", ValueType.BOOLEAN_VALUE);
+			e.world.getGameRules().addGameRule("fruitphone:alwaysOn", "false");
 		}
-		World world = e.getWorld();
+		World world = e.world;
 		GameRulePoller.forBooleanRule("fruitphone:alwaysOn", world, (newValue) -> {
 			log.info("Always-on mode {}abled", newValue ? "en" : "dis");
 			new SetAlwaysOnPacket(newValue).sendToAllIn(world);
 		});
-	}
-	
-	@SubscribeEvent
-	public void onCapabilityAttachEntity(AttachCapabilitiesEvent<Entity> e) {
-		if (optionalMode) return;
-		if (e.getObject() instanceof EntityPlayer) {
-			e.addCapability(new ResourceLocation(MODID, "equipment"), new FruitEquipmentCapability());
-		}
 	}
 	
 	private Map<EntityPlayer, ProbeDataPacket> lastData = new WeakHashMap<>();
@@ -315,18 +308,20 @@ public class FruitPhone {
 	public void onPlayerTick(PlayerTickEvent e) {
 		if (e.phase == Phase.START) {
 			if (e.player.worldObj.isRemote) return;
-			Vec3d eyes = new Vec3d(e.player.posX, e.player.posY + e.player.getEyeHeight(), e.player.posZ);;
-			Vec3d look = e.player.getLookVec();
+			Vec3 eyes = Vec3.createVectorHelper(e.player.posX, e.player.posY + e.player.getEyeHeight(), e.player.posZ);;
+			Vec3 look = e.player.getLookVec();
 			double dist = 4;
-			Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
-			RayTraceResult rtr = e.player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
-			if (rtr != null && rtr.typeOfHit == Type.BLOCK) {
+			Vec3 max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+			MovingObjectPosition rtr = e.player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
+			if (rtr != null && rtr.typeOfHit == MovingObjectType.BLOCK) {
 				List<IProbeData> list = Lists.newArrayList();
-				BlockPos pos = rtr.getBlockPos();
-				TileEntity te = e.player.worldObj.getTileEntity(pos);
+				int x = rtr.blockX;
+				int y = rtr.blockY;
+				int z = rtr.blockZ;
+				TileEntity te = e.player.worldObj.getTileEntity(x, y, z);
 				if (te != null) {
-					NBTTagCompound tag = generateProbeData(e.player, te, rtr.sideHit, list);
-					ProbeDataPacket pkt = new ProbeDataPacket(pos, list, tag);
+					NBTTagCompound tag = generateProbeData(e.player, te, ForgeDirection.getOrientation(rtr.sideHit), list);
+					ProbeDataPacket pkt = new ProbeDataPacket(x, y, z, list, tag);
 					if (!Objects.equal(pkt, lastData.get(e.player))) {
 						pkt.sendTo(e.player);
 					}
@@ -338,7 +333,7 @@ public class FruitPhone {
 		}
 	}
 	
-	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
+	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, ForgeDirection sideHit, List<IProbeData> list) {
 		NBTTagCompound tag = new NBTTagCompound();
 		try {
 			if (player instanceof EntityPlayerMP && overwriteWaila) {
@@ -356,152 +351,85 @@ public class FruitPhone {
 					hasBlockOrTile = true;
 				}
 				if (hasBlockOrTile) {
-					tag.setInteger("x", te.getPos().getX());
-					tag.setInteger("y", te.getPos().getY());
-					tag.setInteger("z", te.getPos().getZ());
+					tag.setInteger("x", te.xCoord);
+					tag.setInteger("y", te.yCoord);
+					tag.setInteger("z", te.zCoord);
 					tag.setString("id", classToNameMap.get(te.getClass()));
 					
 					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te.getBlockType()).values()) {
 						for (IWailaDataProvider iwdp : li) {
-							tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.worldObj, te.getPos());
+							tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.worldObj, te.xCoord, te.yCoord, te.zCoord);
 						}
 					}
 					for (List<IWailaDataProvider> li : ModuleRegistrar.instance().getNBTProviders(te).values()) {
 						for (IWailaDataProvider iwdp : li) {
-							tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.worldObj, te.getPos());
+							tag = iwdp.getNBTData((EntityPlayerMP)player, te, tag, player.worldObj, te.xCoord, te.yCoord, te.zCoord);
 						}
 					}
 				}
-				tag.setInteger("WailaX", te.getPos().getX());
-				tag.setInteger("WailaY", te.getPos().getY());
-				tag.setInteger("WailaZ", te.getPos().getZ());
+				tag.setInteger("WailaX", te.xCoord);
+				tag.setInteger("WailaY", te.yCoord);
+				tag.setInteger("WailaZ", te.zCoord);
 				tag.setString("WailaID", classToNameMap.get(te.getClass()));
 			}
 		} catch (Throwable t) {
 			log.warn("Exception thrown while building Waila data for {}, {}, {} in DIM{}",
-					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension(), t);
+					te.xCoord, te.yCoord, te.zCoord, te.getWorld().provider.dimensionId, t);
 			tag = new NBTTagCompound();
 			list.add(new ProbeData()
-					.withLabel(new TextComponentTranslation("fruitphone.wailaError")));
+					.withLabel(new ChatComponentTranslation("fruitphone.wailaError")));
 		}
 		
 		try {
-			if (te.hasCapability(CAPABILITY_PROBE, sideHit)) {
-				te.getCapability(CAPABILITY_PROBE, sideHit).provideProbeData(list);
-				return tag;
-			} else if (te.hasCapability(CAPABILITY_PROBE, null)) {
-				te.getCapability(CAPABILITY_PROBE, null).provideProbeData(list);
+			if (te instanceof IProbeDataProvider) {
+				((IProbeDataProvider)te).provideProbeData(list);
 				return tag;
 			}
 		} catch (Throwable t) {
 			log.warn("Exception thrown while building probe data for {}, {}, {} in DIM{}",
-					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension(), t);
+					te.xCoord, te.yCoord, te.zCoord, te.getWorld().provider.dimensionId, t);
 			list.clear();
 			list.add(new ProbeData()
-					.withLabel(new TextComponentTranslation("fruitphone.probeError")));
+					.withLabel(new ChatComponentTranslation("fruitphone.probeError")));
 			return new NBTTagCompound();
 		}
 		
 		try {
 			VanillaProviders.provideProbeData(te, list);
 			
-			// Be EXTREMELY careful when looking for sideless caps.
-			// Some modders don't know about, or at least don't test, sideless capabilities.
-			
-			IEnergyStorage sidelessEnergy = null;
-			try {
-				if (te.hasCapability(CapabilityEnergy.ENERGY, null)) {
-					sidelessEnergy = te.getCapability(CapabilityEnergy.ENERGY, null);
+			if (te instanceof TileEntityChest) {
+				TileEntityChest c = ((TileEntityChest)te);
+				Block b = te.getBlockType();
+				if (b instanceof BlockChest) {
+					c.checkForAdjacentChests();
+					addItemData(list, ((BlockChest)b).getInventory(te.getWorld(), te.xCoord, te.yCoord, te.zCoord));
+				} else {
+					addItemData(list, (IInventory)te);
 				}
-			} catch (Throwable t) {}
-			
-			IFluidHandler sidelessFluid = null;
-			try {
-				if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
-					sidelessFluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
-				}
-			} catch (Throwable t) {}
-			
-			IItemHandler sidelessItem = null;
-			try {
-				if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
-					sidelessItem = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-				}
-			} catch (Throwable t) {}
-			if (sidelessItem == null && te instanceof IInventory) {
-				sidelessItem = new InvWrapper((IInventory)te);
+			} else if (te instanceof IInventory) {
+				addItemData(list, (IInventory)te);
 			}
-			
-			
-			IEnergyStorage sidedEnergy = null;
-			if (te.hasCapability(CapabilityEnergy.ENERGY, sideHit)) {
-				sidedEnergy = te.getCapability(CapabilityEnergy.ENERGY, sideHit);
+			if (te instanceof IEnergyStorage) {
+				addEnergyData(list, (IEnergyStorage)te);
 			}
-			
-			IFluidHandler sidedFluid = null;
-			if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit)) {
-				sidedFluid = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, sideHit);
-			}
-			
-			IItemHandler sidedItem = null;
-			if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit)) {
-				sidedItem = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, sideHit);
-			} else if (te instanceof ISidedInventory) {
-				sidedItem = new SidedInvWrapper((ISidedInventory)te, sideHit);
-			}
-
-			// Again, be careful when attempting to use sideless caps. 
-			
-			if (sidelessEnergy != null) {
-				try {
-					addEnergyData(list, sidelessEnergy);
-				} catch (Throwable t) {
-					if (sidedEnergy != null) {
-						addEnergyData(list, sidedEnergy);
-					}
-				}
-			} else if (sidedEnergy != null) {
-				addEnergyData(list, sidedEnergy);
-			}
-			
-			if (sidelessFluid != null) {
-				try {
-					addFluidData(list, sidelessFluid);
-				} catch (Throwable t) {
-					if (sidedFluid != null) {
-						addFluidData(list, sidedFluid);
-					}
-				}
-			} else if (sidedFluid != null) {
-				addFluidData(list, sidedFluid);
-			}
-			
-			if (sidelessItem != null) {
-				try {
-					addItemData(list, sidelessItem);
-				} catch (Throwable t) {
-					if (sidedItem != null) {
-						addItemData(list, sidedItem);
-					}
-				}
-			} else if (sidedItem != null) {
-				addItemData(list, sidedItem);
+			if (te instanceof IFluidHandler) {
+				addFluidData(list, (IFluidHandler)te);
 			}
 			
 			return tag;
 		} catch (Throwable t) {
 			log.warn("Exception thrown while building default probe data for {}, {}, {} in DIM{}",
-					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension(), t);
+					te.xCoord, te.yCoord, te.zCoord, te.getWorld().provider.dimensionId, t);
 			list.clear();
 			list.add(new ProbeData()
-					.withLabel(new TextComponentTranslation("fruitphone.capError")));
+					.withLabel(new ChatComponentTranslation("fruitphone.capError")));
 			return new NBTTagCompound();
 		}
 	}
 
-	private void addItemData(List<IProbeData> list, IItemHandler item) {
-		List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSlots());
-		for (int i = 0; i < item.getSlots(); i++) {
+	private void addItemData(List<IProbeData> list, IInventory item) {
+		List<ItemStack> is = Lists.newArrayListWithCapacity(item.getSizeInventory());
+		for (int i = 0; i < item.getSizeInventory(); i++) {
 			ItemStack stack = item.getStackInSlot(i);
 			is.add(stack == null ? null : stack.copy());
 		}
@@ -510,18 +438,18 @@ public class FruitPhone {
 	}
 
 	private void addFluidData(List<IProbeData> list, IFluidHandler fluid) {
-		for (IFluidTankProperties tank : fluid.getTankProperties()) {
+		for (FluidTankInfo tank : fluid.getTankInfo(ForgeDirection.UNKNOWN)) {
 			IUnit unit;
 			int amt;
-			if (tank.getContents() == null) {
+			if (tank.fluid == null) {
 				unit = UnitDictionary.BUCKETS_ANY;
 				amt = 0;
 			} else {
-				unit = UnitDictionary.getInstance().getUnit(tank.getContents().getFluid());
-				amt = tank.getContents().amount;
+				unit = UnitDictionary.getInstance().getUnit(tank.fluid.getFluid());
+				amt = tank.fluid.amount;
 			}
 			list.add(new ProbeData()
-					.withBar(0, amt/1000D, tank.getCapacity()/1000D, unit));
+					.withBar(0, amt/1000D, tank.capacity/1000D, unit));
 		}
 	}
 
@@ -533,11 +461,10 @@ public class FruitPhone {
 	@SubscribeEvent
 	public void onDrops(PlayerDropsEvent e) {
 		if (optionalMode) return;
-		if (e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
-			ItemStack glasses = e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).glasses;
-			if (glasses != null) {
-				e.getEntityPlayer().entityDropItem(glasses, 1.2f);
-			}
+		FruitEquipmentProperties props = (FruitEquipmentProperties)e.entityPlayer.getExtendedProperties("fruitphone:equipment");
+		ItemStack glasses = props.glasses;
+		if (glasses != null) {
+			e.entityPlayer.entityDropItem(glasses, 1.2f);
 		}
 	}
 }

@@ -24,18 +24,17 @@
 
 package com.elytradev.fruitphone.network;
 
-import io.github.elytra.concrete.Marshaller;
-
 import java.util.Arrays;
 import java.util.List;
 
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.Marshaller;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraft.util.IChatComponent;
+import cpw.mods.fml.common.network.ByteBufUtils;
 
 public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 	
@@ -76,7 +75,7 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 			}
 		}
 		if (label) {
-			ByteBufUtils.writeUTF8String(out, ITextComponent.Serializer.componentToJson(t.getLabel()));
+			ByteBufUtils.writeUTF8String(out, IChatComponent.Serializer.componentToJson(t.getLabel()));
 		}
 		if (inventory) {
 			List<ItemStack> inv = t.getInventory();
@@ -111,7 +110,7 @@ public class ProbeDataMarshaller implements Marshaller<IProbeData> {
 					barHasUnit ? UnitDictionary.getInstance().getUnit(ByteBufUtils.readUTF8String(in)) : null);
 		}
 		if (label) {
-			pd.withLabel(ITextComponent.Serializer.jsonToComponent(ByteBufUtils.readUTF8String(in)));
+			pd.withLabel(IChatComponent.Serializer.jsonToComponent(ByteBufUtils.readUTF8String(in)));
 		}
 		if (inventory) {
 			int size = ByteBufUtils.readVarInt(in, 5);

@@ -24,20 +24,19 @@
 
 package com.elytradev.fruitphone.network;
 
-import java.util.Optional;
-
+import com.elytradev.fruitphone.FruitEquipmentProperties;
 import com.elytradev.fruitphone.FruitPhone;
-import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.Message;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.NetworkContext;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.annotation.field.MarshalledAs;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.annotation.type.ReceivedOn;
+import com.google.common.base.Optional;
 
-import io.github.elytra.concrete.Message;
-import io.github.elytra.concrete.NetworkContext;
-import io.github.elytra.concrete.annotation.field.MarshalledAs;
-import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 @ReceivedOn(Side.CLIENT)
 public class EquipmentDataPacket extends Message {
@@ -61,18 +60,16 @@ public class EquipmentDataPacket extends Message {
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
 		Entity entity = sender.worldObj.getEntityByID(entityId);
-		if (entity.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
-			entity.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null).deserializeNBT(tag);
-		}
+		FruitEquipmentProperties props = (FruitEquipmentProperties)entity.getExtendedProperties("fruitphone:equipment");
+		props.loadNBTData(tag);
 	}
 	
 	public static Optional<EquipmentDataPacket> forEntity(Entity e) {
-		if (e.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
-			FruitEquipmentCapability fec = e.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null);
-			return Optional.of(new EquipmentDataPacket(e.getEntityId(), fec.serializeNBT()));
-		} else {
-			return Optional.empty();
-		}
+		FruitEquipmentProperties props = (FruitEquipmentProperties)e.getExtendedProperties("fruitphone:equipment");
+		if (props == null) return Optional.absent();
+		NBTTagCompound tag = new NBTTagCompound();
+		props.saveNBTData(tag);
+		return Optional.of(new EquipmentDataPacket(e.getEntityId(), tag));
 	}
 
 }

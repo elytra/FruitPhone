@@ -24,18 +24,21 @@
 
 package com.elytradev.fruitphone.client.gui;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
+import com.elytradev.fruitphone.FruitEquipmentProperties;
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitProbeData;
 import com.elytradev.fruitphone.FruitRenderer;
-import com.elytradev.fruitphone.FruitSounds;
 import com.elytradev.fruitphone.Gravity;
 import com.elytradev.fruitphone.FruitRenderer.DataSize;
 import com.elytradev.fruitphone.client.render.Rendering;
@@ -47,24 +50,23 @@ import com.elytradev.probe.api.impl.ProbeData;
 import com.elytradev.probe.api.impl.Unit;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
-import net.minecraft.client.Minecraft;
+
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fml.client.config.GuiButtonExt;
+import cpw.mods.fml.client.config.GuiButtonExt;
 
 public class ScreenConfigureGlasses extends GuiScreen {
 
@@ -120,15 +122,15 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	
 	private ScaledResolution res;
 	
-	private ItemStack iron = new ItemStack(Blocks.IRON_ORE, 0);
-	private ItemStack gold = new ItemStack(Blocks.GOLD_ORE, 0);
-	private ItemStack coal = new ItemStack(Items.COAL, 0);
-	private ItemStack diamond = new ItemStack(Items.DIAMOND, 0);
-	private ItemStack cobble = new ItemStack(Blocks.COBBLESTONE, 0);
+	private ItemStack iron = new ItemStack(Blocks.iron_ore, 0);
+	private ItemStack gold = new ItemStack(Blocks.gold_ore, 0);
+	private ItemStack coal = new ItemStack(Items.coal, 0);
+	private ItemStack diamond = new ItemStack(Items.diamond, 0);
+	private ItemStack cobble = new ItemStack(Blocks.cobblestone, 0);
 	
-	private ItemStack furnaceCoal = new ItemStack(Items.COAL, Integer.MAX_VALUE);
-	private ItemStack furnaceCobble = new ItemStack(Blocks.COBBLESTONE, Integer.MAX_VALUE);
-	private ItemStack furnaceStone = new ItemStack(Blocks.STONE, 0);
+	private ItemStack furnaceCoal = new ItemStack(Items.coal, Integer.MAX_VALUE);
+	private ItemStack furnaceCobble = new ItemStack(Blocks.cobblestone, Integer.MAX_VALUE);
+	private ItemStack furnaceStone = new ItemStack(Blocks.stone, 0);
 	
 	private long energy = Long.MAX_VALUE;
 	
@@ -156,23 +158,23 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		buttonList.clear();
 		int confX = g.resolveX(10, width, 108);
 		int confY = g.resolveY(10, height, 64);
-		addButton(new GuiButtonExt(0, confX, confY+22, 108, 20, I18n.format("fruitphone.gui.restoreDefaults")));
-		addButton(new GuiButtonExt(1, confX, confY+44, 108, 20, I18n.format("gui.done")));
-		addButton(new GuiButtonExt(2, confX, confY, 20, 20, ""));
-		addButton(new GuiButtonExt(3, confX+22, confY, 20, 20, ""));
-		addButton(new GuiButtonExt(4, confX+44, confY, 20, 20, ""));
-		addButton(new GuiButtonExt(5, confX+66, confY, 20, 20, ""));
-		addButton(new GuiButtonExt(6, confX+88, confY, 20, 20, ""));
+		buttonList.add(new GuiButtonExt(0, confX, confY+22, 108, 20, I18n.format("fruitphone.gui.restoreDefaults")));
+		buttonList.add(new GuiButtonExt(1, confX, confY+44, 108, 20, I18n.format("gui.done")));
+		buttonList.add(new GuiButtonExt(2, confX, confY, 20, 20, ""));
+		buttonList.add(new GuiButtonExt(3, confX+22, confY, 20, 20, ""));
+		buttonList.add(new GuiButtonExt(4, confX+44, confY, 20, 20, ""));
+		buttonList.add(new GuiButtonExt(5, confX+66, confY, 20, 20, ""));
+		buttonList.add(new GuiButtonExt(6, confX+88, confY, 20, 20, ""));
 		checkboxX = g.flipVertical().resolveX(10, width, 10);
 		checkboxY = g.flipVertical().resolveY(10, height, 10);
-		res = new ScaledResolution(Minecraft.getMinecraft());
+		res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 	}
 	
 	private List<IProbeData> magicBoxData() {
 		return Arrays.asList(
 				new ProbeData()
 					.withLabel("Magic Box")
-					.withInventory(Collections.singletonList(new ItemStack(Blocks.IRON_BLOCK)))
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.iron_block)))
 					.withBar(0, (int)(ClientProxy.ticks%200)/2, 100, UnitDictionary.PERCENT),
 				new ProbeData()
 					.withBar(0, energy, Long.MAX_VALUE, UnitDictionary.DANKS),
@@ -190,16 +192,16 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	private List<IProbeData> grassData() {
 		return Arrays.asList(
 				new ProbeData()
-					.withLabel(new ItemStack(Blocks.GRASS).getDisplayName())
-					.withInventory(Collections.singletonList(new ItemStack(Blocks.GRASS)))
+					.withLabel(new ItemStack(Blocks.grass).getDisplayName())
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.grass)))
 			);
 	}
 	
 	private List<IProbeData> chestData() {
 		return Arrays.asList(
 				new ProbeData()
-					.withLabel(new ItemStack(Blocks.CHEST).getDisplayName())
-					.withInventory(Collections.singletonList(new ItemStack(Blocks.CHEST))),
+					.withLabel(new ItemStack(Blocks.chest).getDisplayName())
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.chest))),
 				new ProbeData()
 					.withInventory(Arrays.asList(chestData))
 			);
@@ -208,13 +210,13 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	private List<IProbeData> furnaceData() {
 		return Arrays.asList(
 				new FruitProbeData()
-					.withInventory(Arrays.asList(new ItemStack(Blocks.FURNACE)))
-					.withLabel(new ItemStack(Blocks.FURNACE).getDisplayName()),
+					.withInventory(Arrays.asList(new ItemStack(Blocks.furnace)))
+					.withLabel(new ItemStack(Blocks.furnace).getDisplayName()),
 				new ProbeData()
-					.withLabel(new TextComponentTranslation("fruitphone.furnace.fuel"))
+					.withLabel(new ChatComponentTranslation("fruitphone.furnace.fuel"))
 					.withBar(0, 1600-(ClientProxy.ticks%1600), 1600, UnitDictionary.TICKS),
 				new ProbeData()
-					.withLabel(new TextComponentTranslation("fruitphone.furnace.progress"))
+					.withLabel(new ChatComponentTranslation("fruitphone.furnace.progress"))
 					.withBar(0, (ClientProxy.ticks%200)/2, 100, UnitDictionary.PERCENT),
 				new ProbeData()
 					.withInventory(Arrays.asList(
@@ -229,7 +231,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		return Arrays.asList(
 				new ProbeData()
 					.withLabel("Tank")
-					.withInventory(Collections.singletonList(new ItemStack(Blocks.GLASS))),
+					.withInventory(Collections.singletonList(new ItemStack(Blocks.glass))),
 				new ProbeData()
 					.withBar(0, (ClientProxy.ticks%4000)/1000D, 4, UnitDictionary.getInstance().getUnit(FluidRegistry.LAVA)),
 				new ProbeData()
@@ -238,7 +240,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	}
 	
 	@Override
-	protected void actionPerformed(GuiButton button) throws IOException {
+	protected void actionPerformed(GuiButton button) {
 		if (button.id == 0) {
 			FruitPhone.inst.glassesGravity = Gravity.NORTH_WEST;
 			FruitPhone.inst.glassesScale = 1;
@@ -248,7 +250,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			FruitPhone.inst.maxGlassesWidth = 1/3f;
 			initGui();
 		} else if (button.id == 1) {
-			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(FruitSounds.DRILL, 0.875f+(rand.nextFloat()*0.25f)));
+			mc.getSoundHandler().playSound(PositionedSoundRecord.createPositionedSoundRecord(new ResourceLocation("fruitphone", "drill"), 0.875f+(rand.nextFloat()*0.25f)));
 			mc.displayGuiScreen(null);
 		} else if (button.id == 2) {
 			probeDataSupplier = this::magicBoxData;
@@ -281,14 +283,14 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		}
 		
 		RenderHelper.enableGUIStandardItemLighting();
-		drawButtonIcon(buttonList.get(2), new ItemStack(Blocks.IRON_BLOCK));
-		drawButtonIcon(buttonList.get(3), new ItemStack(Blocks.GRASS));
-		drawButtonIcon(buttonList.get(4), new ItemStack(Blocks.CHEST));
-		drawButtonIcon(buttonList.get(5), new ItemStack(Blocks.FURNACE));
-		drawButtonIcon(buttonList.get(6), new ItemStack(Blocks.GLASS));
+		drawButtonIcon((GuiButton)buttonList.get(2), new ItemStack(Blocks.iron_block));
+		drawButtonIcon((GuiButton)buttonList.get(3), new ItemStack(Blocks.grass));
+		drawButtonIcon((GuiButton)buttonList.get(4), new ItemStack(Blocks.chest));
+		drawButtonIcon((GuiButton)buttonList.get(5), new ItemStack(Blocks.furnace));
+		drawButtonIcon((GuiButton)buttonList.get(6), new ItemStack(Blocks.glass));
 		RenderHelper.disableStandardItemLighting();
 		
-		GlStateManager.color(1, 1, 1);
+		GL11.glColor3f(1, 1, 1);
 		Rendering.bindTexture(CHECKBOX);
 		drawModalRectWithCustomSizedTexture(checkboxX, checkboxY, 0, v, 10, 10, 20, 30);
 		if (snapToGuides) {
@@ -302,12 +304,11 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		fontRendererObj.drawStringWithShadow(checkboxStr, checkboxTextX, checkboxY+1, checkboxTextCol);
 		
 		int color = -1;
-		if (Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null)) {
-			ItemStack glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses;
-			if (glasses != null && glasses.getItem() instanceof ItemFruitPassive) {
-				ItemFruitPassive item = (ItemFruitPassive)glasses.getItem();
-				color = item.getColor(glasses);
-			}
+		FruitEquipmentProperties props = (FruitEquipmentProperties)mc.thePlayer.getExtendedProperties("fruitphone:equipment");
+		ItemStack glasses = props == null ? null : props.glasses;
+		if (glasses != null && glasses.getItem() instanceof ItemFruitPassive) {
+			ItemFruitPassive item = (ItemFruitPassive)glasses.getItem();
+			color = item.getColor(glasses);
 		}
 		
 		Gravity g = FruitPhone.inst.glassesGravity;
@@ -352,9 +353,9 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					drawVerticalLine(g.resolveX(10, width, 1), 0, height, 0x55FFFFA0);
 				}
 				if (g.isCorner()) {
-					GlStateManager.pushMatrix(); {
+					GL11.glPushMatrix(); {
 						float ang;
-						GlStateManager.translate(g.resolveX(0, width, 0), g.resolveY(0, height, 0), 0);
+						GL11.glTranslatef(g.resolveX(0, width, 0), g.resolveY(0, height, 0), 0);
 						switch (g) {
 							case NORTH_WEST:
 								ang = 45;
@@ -371,16 +372,16 @@ public class ScreenConfigureGlasses extends GuiScreen {
 							default:
 								throw new AssertionError("Missing case for "+g);
 						}
-						GlStateManager.rotate(ang, 0, 0, 1);
+						GL11.glRotatef(ang, 0, 0, 1);
 						drawHorizontalLine(0, (int)(Math.min(width, height)*SQRT2), 0, 0x55FFFFA0);
-					} GlStateManager.popMatrix();
+					} GL11.glPopMatrix();
 				}
 			}
 		}
 		
 		List<IProbeData> probeData = probeDataSupplier.get();
 		
-		GlStateManager.pushMatrix(); {
+		GL11.glPushMatrix(); {
 			DataSize actual = FruitRenderer.calculatePreferredDataSize(probeData, 90, 50, maxWidth, maxHeight);
 			DataSize clamped = new DataSize();
 			clamped.setWidth(Math.min(maxWidth, actual.getWidth()));
@@ -408,15 +409,15 @@ public class ScreenConfigureGlasses extends GuiScreen {
 				overlayHandleX = x+g.opposite().resolveX(0, objWidth, 10);
 				overlayHandleY = y+g.opposite().resolveY(0, objHeight, 10);
 				
-				GlStateManager.pushMatrix(); {
-					GlStateManager.translate(x, y, 0);
+				GL11.glPushMatrix(); {
+					GL11.glTranslatef(x, y, 0);
 
 					Gui.drawRect(0, 0, objWidth, objHeight, color);
 					Gui.drawRect(1, 1, objWidth-1, objHeight-1, 0xFF0C1935);
-					GlStateManager.translate(5f, 5f, 40f);
-					GlStateManager.scale(confScale, confScale, 1);
+					GL11.glTranslatef(5f, 5f, 40f);
+					GL11.glScalef(confScale, confScale, 1);
 					FruitRenderer.render(probeData, clamped.getWidth(), clamped.getHeight(), true, actual);
-				} GlStateManager.popMatrix();
+				} GL11.glPopMatrix();
 				
 				int overlayHandleColor = 0x55FFFFFF;
 				int clampHandleColor = 0x55FFFFFF;
@@ -436,7 +437,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					}
 				}
 				
-				GlStateManager.translate(0, 0, 400f);
+				GL11.glTranslatef(0, 0, 400f);
 				Rendering.bindTexture(HANDLE);
 				int handleU = (g.opposite().ordinal()%3)*10;
 				int handleV = (g.opposite().ordinal()/3)*10;
@@ -461,12 +462,16 @@ public class ScreenConfigureGlasses extends GuiScreen {
 					drawHoveringText(tt, mouseX, mouseY);
 				}
 			}
-		} GlStateManager.popMatrix();
+		} GL11.glPopMatrix();
 		
 	}
 	
 	private void drawButtonIcon(GuiButton button, ItemStack is) {
-		Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(is, button.xPosition+2, button.yPosition+2);
+		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+		RenderHelper.enableGUIStandardItemLighting();
+		RenderItem.getInstance().renderItemAndEffectIntoGUI(mc.fontRendererObj, mc.renderEngine, is, button.xPosition+2, button.yPosition+2);
+		RenderHelper.disableStandardItemLighting();
+		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 	}
 
 	@Override
@@ -505,27 +510,39 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		int idx = rand.nextInt(54);
 		ItemStack is = chestData[idx];
 		if (is == null) {
-			Item item;
-			while (!(item = Item.REGISTRY.getRandomObject(rand)).getRegistryName().getResourceDomain().equals("minecraft")) {}
+			Iterator<Item> iter = Item.itemRegistry.iterator();
+			Item item = iter.next();
+			int seen = 1;
+			while (iter.hasNext()) {
+				seen++;
+				int j = rand.nextInt(seen);
+				if (j == 0) {
+					item = iter.next();
+				} else {
+					iter.next();
+				}
+			}
 			List<ItemStack> nnl = Lists.newArrayList();
 			item.getSubItems(item, item.getCreativeTab(), nnl);
-			is = nnl.get(rand.nextInt(nnl.size()));
-			if (item.isDamageable()) {
-				is.setItemDamage(rand.nextInt(is.getMaxDamage()));
+			if (!nnl.isEmpty()) {
+				is = nnl.get(rand.nextInt(nnl.size()));
+				if (item.isDamageable()) {
+					is.setMetadata(rand.nextInt(is.getMaxDurability()));
+				}
+				chestData[idx] = is;
 			}
-			chestData[idx] = is;
 		} else if (is.isStackable()) {
 			is.stackSize++;
 		}
 	}
 	
 	@Override
-	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 		String str = I18n.format("fruitphone.gui.snapToCenter");
 		if (mouseButton == 0) {
 			if (mouseX >= checkboxX && mouseX <= checkboxX+10+fontRendererObj.getStringWidth(str)+2 && mouseY >= checkboxY && mouseY <= checkboxY+10) {
-				mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1));
+				mc.getSoundHandler().playSound(PositionedSoundRecord.createPositionedSoundRecord(new ResourceLocation("gui.button.press"), 1));
 				snapToGuides = !snapToGuides;
 			} else if (mouseX >= overlayHandleX && mouseY >= overlayHandleY && mouseX <= overlayHandleX+10 && mouseY <= overlayHandleY+10) {
 				dragTarget = DragTarget.OVERLAY_SIZE;

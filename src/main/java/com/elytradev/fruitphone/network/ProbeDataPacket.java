@@ -29,34 +29,38 @@ import java.util.List;
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitRenderer;
 import com.elytradev.fruitphone.WailaProbeData;
-import io.github.elytra.concrete.Message;
-import io.github.elytra.concrete.NetworkContext;
-import io.github.elytra.concrete.annotation.field.MarshalledAs;
-import io.github.elytra.concrete.annotation.type.Asynchronous;
-import io.github.elytra.concrete.annotation.type.ReceivedOn;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.Message;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.NetworkContext;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.annotation.field.MarshalledAs;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.annotation.type.ReceivedOn;
 import com.elytradev.probe.api.IProbeData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 @ReceivedOn(Side.CLIENT)
-@Asynchronous
 public class ProbeDataPacket extends Message {
 
 	@MarshalledAs(ProbeDataListMarshaller.NAME)
 	private List<IProbeData> data;
-	private BlockPos pos;
+	@MarshalledAs("i32")
+	private int x;
+	@MarshalledAs("u8")
+	private int y;
+	@MarshalledAs("i32")
+	private int z;
 	private NBTTagCompound wailaData;
 	
 	public ProbeDataPacket(NetworkContext ctx) {
 		super(ctx);
 	}
 	
-	public ProbeDataPacket(BlockPos pos, List<IProbeData> data, NBTTagCompound wailaData) {
+	public ProbeDataPacket(int x, int y, int z, List<IProbeData> data, NBTTagCompound wailaData) {
 		super(FruitPhone.inst.NETWORK);
-		this.pos = pos;
+		this.x = x;
+		this.y = y;
+		this.z = z;
 		this.data = data;
 		this.wailaData = wailaData;
 	}
@@ -64,10 +68,13 @@ public class ProbeDataPacket extends Message {
 	@Override
 	@SideOnly(Side.CLIENT)
 	protected void handle(EntityPlayer sender) {
-		if (wailaData.getSize() > 0) {
+		if (wailaData.getKeySet().size() > 0) {
 			data.add(0, new WailaProbeData(wailaData));
 		}
-		FruitRenderer.currentDataPos = pos;
+		FruitRenderer.hasData = true;
+		FruitRenderer.currentDataPosX = x;
+		FruitRenderer.currentDataPosY = y;
+		FruitRenderer.currentDataPosZ = z;
 		FruitRenderer.currentRawData = data;
 	}
 
@@ -76,7 +83,9 @@ public class ProbeDataPacket extends Message {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((data == null) ? 0 : data.hashCode());
-		result = prime * result + ((pos == null) ? 0 : pos.hashCode());
+		result = prime * result + x;
+		result = prime * result + y;
+		result = prime * result + z;
 		return result;
 	}
 
@@ -99,13 +108,9 @@ public class ProbeDataPacket extends Message {
 		} else if (!data.equals(other.data)) {
 			return false;
 		}
-		if (pos == null) {
-			if (other.pos != null) {
-				return false;
-			}
-		} else if (!pos.equals(other.pos)) {
-			return false;
-		}
+		if (x != other.x) return false;
+		if (y != other.y) return false;
+		if (z != other.z) return false;
 		return true;
 	}
 	

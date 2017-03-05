@@ -31,10 +31,9 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 
@@ -43,12 +42,13 @@ public class FruitRecipes {
 	public static List<Integer> craftableColors = Lists.newArrayList();
 	
 	public static void register() {
-		OreDictionary.registerOre("blockObsidian", Blocks.OBSIDIAN);
-		OreDictionary.registerOre("clay", Items.CLAY_BALL);
+		OreDictionary.registerOre("blockObsidian", Blocks.obsidian);
+		OreDictionary.registerOre("clay", Items.clay_ball);
+		OreDictionary.registerOre("enderpearl", Items.ender_pearl);
 		// using the (broken) listAllfruit name for Pam's HarvestCraft compat
-		OreDictionary.registerOre("listAllfruit", Items.APPLE);
-		OreDictionary.registerOre("listAllfruit", Items.MELON);
-		OreDictionary.registerOre("listAllfruit", Items.CHORUS_FRUIT);
+		OreDictionary.registerOre("listAllfruit", Items.apple);
+		OreDictionary.registerOre("listAllfruit", Items.melon);
+		
 		
 		GameRegistry.addRecipe(new ShapelessOreRecipe(FruitItems.HANDHELD,
 				"ingotIron", "listAllfruit"));
@@ -133,17 +133,7 @@ public class FruitRecipes {
 		colorRecipe(0x00BAFF, "dustGlowstone", "dyeCyan");
 		// Brilliant Verdant
 		colorRecipe(0x00FFCC, "dustGlowstone", "dyeLime");
-		Item misc = Item.getByNameOrId("correlated:misc");
-		if (misc == null) {
-			// try the legacy modid
-			misc = Item.getByNameOrId("correlatedpotentialistics:misc");
-		}
-		if (misc != null) {
-			ItemStack lum = new ItemStack(misc, 1, 3);
-			colorRecipe(0x00FFCC, lum);
-		} else {
-			colorRecipe(0x00FFCC, "dustGlowstone", "enderpearl");
-		}
+		colorRecipe(0x00FFCC, "dustGlowstone", "enderpearl");
 		// Mean Green
 		colorRecipe(0x8BFF00, "dustGlowstone", "dyeGreen");
 		// Electric Green
@@ -216,9 +206,9 @@ public class FruitRecipes {
 		ItemStack handheldMini = new ItemStack(FruitItems.HANDHELD, 1, 1);
 		ItemStack passive = new ItemStack(FruitItems.PASSIVE);
 		
-		handheld.setTagCompound(tag.copy());
-		handheldMini.setTagCompound(tag.copy());
-		passive.setTagCompound(tag.copy());
+		handheld.setTagCompound((NBTTagCompound)tag.copy());
+		handheldMini.setTagCompound((NBTTagCompound)tag.copy());
+		passive.setTagCompound((NBTTagCompound)tag.copy());
 		
 		Object[] handheldIngredients = new Object[ingredients.length+1];
 		Object[] handheldMiniIngredients = new Object[ingredients.length+1];
@@ -247,4 +237,5 @@ public class FruitRecipes {
 	}
 
 }
+
 

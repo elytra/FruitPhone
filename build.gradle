@@ -12,17 +12,16 @@ buildscript {
 		}
 	}
 	dependencies {
-		classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+		classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
 		classpath 'me.tatarka:gradle-retrolambda:3.2.0'
 	}
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'net.minecrell.licenser' version '0.3'
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'forge'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'maven'
 
@@ -38,6 +37,11 @@ version = config.version
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+license {
+	exclude '**/cofh/**'
+	exclude '**/concrete/**'
+}
+
 retrolambda {
 	javaVersion JavaVersion.VERSION_1_6
 	defaultMethods true
@@ -49,60 +53,33 @@ repositories {
 		url = 'https://oss.sonatype.org/content/repositories/public/'
 	}
 	maven {
-		name = 'unascribed'
-		url = 'http://unascribed.com/maven/releases'
+		name = 'elytra'
+		url = 'http://repo.elytradev.com'
 	}
 	jcenter()
 	ivy {
 		artifactPattern "http://unascribed.com/jars/[organisation]/[module].[ext]"
 	}
-	maven {
-		name = 'jei'
-		url = "http://dvs1.progwml6.com/files/maven"
-	}
-	maven {
-		name = 'hwyla'
-		url "http://tehnut.info/maven"
-	}
 }
 
 configurations {
 	deploy
-}
-
-jar {
-	classifier = 'slim'
-}
-
-shadowJar {
-	classifier = ''
-	relocate 'io.github.elytra.concrete', 'com.elytradev.fruitphone.repackage.io.github.elytra.concrete'
-	configurations = [project.configurations.shadow]
-}
-
-reobf {
-	shadowJar { mappingType = 'SEARGE' }
-}
-
-tasks.build.dependsOn reobfShadowJar
-
-artifacts {
-	archives shadowJar
+	shade
+	compile.extendsFrom shade
 }
 
 dependencies {
 	deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
 	
-	compile project(':ProbeDataProviderAPI')
-	
-	shadow 'io.github.elytra:concrete:0.0.9'
-	compile 'io.github.elytra:concrete:0.0.9'
-	
-	compile 'mezz.jei:jei_1.10.2:3.9.7.260:api'
-	runtime 'mezz.jei:jei_1.10.2:3.9.7.260'
-	
-	compile 'mcp.mobius.waila:Hwyla:1.8.10-B24_1.10.2'
-	runtime 'mcp.mobius.waila:Hwyla:1.8.10-B24_1.10.2'
+	compile files('libs/Waila-1.5.10_1.7.10-deobf.jar')
+}
+
+jar {
+	configurations.shade.each { dep ->
+		from(project.zipTree(dep)){
+			exclude 'META-INF', 'META-INF/**'
+		}
+	}
 }
 
 minecraft {

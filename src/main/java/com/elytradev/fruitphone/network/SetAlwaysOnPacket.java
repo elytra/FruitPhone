@@ -26,13 +26,13 @@ package com.elytradev.fruitphone.network;
 
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.proxy.ClientProxy;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.Message;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.NetworkContext;
+import com.elytradev.fruitphone.repackage.com.elytradev.concrete.annotation.type.ReceivedOn;
 
-import io.github.elytra.concrete.Message;
-import io.github.elytra.concrete.NetworkContext;
-import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 @ReceivedOn(Side.CLIENT)
 public class SetAlwaysOnPacket extends Message {

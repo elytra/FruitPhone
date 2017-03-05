@@ -29,35 +29,35 @@ import java.util.List;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.impl.ProbeData;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.tileentity.TileEntityNote;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.ChatComponentTranslation;
 
 public class NoteBlockDataProvider implements VanillaDataProvider<TileEntityNote> {
 	
 	@Override
 	public void provideProbeData(TileEntityNote te, List<IProbeData> li) {
 		li.add(new ProbeData()
-				.withLabel(new TextComponentTranslation("fruitphone.note", new TextComponentTranslation("fruitphone.note."+te.note))));
-		IBlockState below = te.getWorld().getBlockState(te.getPos().down());
+				.withLabel(new ChatComponentTranslation("fruitphone.note", new ChatComponentTranslation("fruitphone.note."+te.note))));
+		Block below = te.getWorld().getBlock(te.xCoord, te.yCoord-1, te.zCoord);
 		Material m = below.getMaterial();
 		String instrument = "piano";
-		if (m == Material.ROCK) {
+		if (m == Material.rock) {
 			instrument = "drum";
 		}
-		if (m == Material.SAND) {
+		if (m == Material.sand) {
 			instrument = "snare";
 		}
-		if (m == Material.GLASS) {
+		if (m == Material.glass) {
 			instrument = "click";
 		}
-		if (m == Material.WOOD) {
+		if (m == Material.wood) {
 			instrument = "guitar";
 		}
 		
 		String s = "fruitphone.note.instrument."+instrument;
 		li.add(new ProbeData()
-				.withLabel(new TextComponentTranslation("fruitphone.note.instrument", new TextComponentTranslation(s))));
+				.withLabel(new ChatComponentTranslation("fruitphone.note.instrument", new ChatComponentTranslation(s))));
 	}
 }
