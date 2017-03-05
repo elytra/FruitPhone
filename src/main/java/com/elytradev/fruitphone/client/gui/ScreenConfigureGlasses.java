@@ -304,7 +304,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		int color = -1;
 		if (Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null)) {
 			ItemStack glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses;
-			if (glasses.getItem() instanceof ItemFruitPassive) {
+			if (glasses != null && glasses.getItem() instanceof ItemFruitPassive) {
 				ItemFruitPassive item = (ItemFruitPassive)glasses.getItem();
 				color = item.getColor(glasses);
 			}
