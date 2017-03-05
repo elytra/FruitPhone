@@ -111,7 +111,9 @@ fruitphone.beacon.none=None
 fruitphone.gui.snapToGuides=Snap to Guides
 fruitphone.gui.clampRegion=Clamp Region
 fruitphone.gui.restoreDefaults=Restore Defaults
+fruitphone.capError=<Capability Error>
 fruitphone.wailaError=<Waila Error>
+fruitphone.probeError=<ProbeData Error>
 
 subtitles.fruitphone.drill=Drill whirrs
 
