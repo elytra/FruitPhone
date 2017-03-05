@@ -8,3 +8,4 @@ bin
 private.properties
 .gradle
 minecraft
+libs

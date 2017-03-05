@@ -26,44 +26,53 @@ package com.elytradev.fruitphone.item;
 
 import java.util.List;
 
-import com.elytradev.fruitphone.FruitPhone;
-import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
+import com.elytradev.fruitphone.FruitEquipmentProperties;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
 
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 public class ItemFruitPassive extends ItemFruit {
 
+	private IIcon icon;
+	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn, EnumHand hand) {
-		if (playerIn.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
-			FruitEquipmentCapability fec = playerIn.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null);
-			ItemStack oldGlasses = fec.glasses;
-			fec.glasses = itemStackIn;
-			playerIn.playSound(SoundEvents.ITEM_ARMOR_EQUIP_IRON, 1.0f, 2.0f);
-			EquipmentDataPacket.forEntity(playerIn).ifPresent((m) -> m.sendToAllWatching(playerIn));
-			if (oldGlasses != null) {
-				return ActionResult.newResult(EnumActionResult.SUCCESS, oldGlasses);
-			} else {
-				ItemStack copy = itemStackIn.copy();
-				copy.stackSize = 0;
-				return ActionResult.newResult(EnumActionResult.SUCCESS, copy);
-			}
+	public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn) {
+		FruitEquipmentProperties props = (FruitEquipmentProperties)playerIn.getExtendedProperties("fruitphone:equipment");
+		if (props == null) return itemStackIn;
+		ItemStack oldGlasses = props.glasses;
+		props.glasses = itemStackIn;
+		EquipmentDataPacket.forEntity(playerIn).transform((m) -> {m.sendToAllWatching(playerIn); return Void.TYPE;});
+		if (oldGlasses == null) {
+			oldGlasses = itemStackIn.copy();
+			oldGlasses.stackSize = 0;
 		}
-		return ActionResult.newResult(EnumActionResult.PASS, itemStackIn);
+		return oldGlasses;
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
-		tooltip.add("\u00A77"+I18n.format("item.fruitphone.passive.hint"));
+	public void addInformation(ItemStack stack, EntityPlayer playerIn, List tooltip, boolean advanced) {
+		int i = 0;
+		while (StatCollector.canTranslate("item.fruitphone.passive.hint."+i)) {
+			tooltip.add("\u00A77"+I18n.format("item.fruitphone.passive.hint."+i));
+			i++;
+		}
 		super.addInformation(stack, playerIn, tooltip, advanced);
+	}
+	
+	@Override
+	public IIcon getIconFromDamage(int p_77617_1_) {
+		return icon;
+	}
+	
+	@Override
+	public void registerIcons(IIconRegister register) {
+		icon = register.registerIcon("fruitphone:passive");
 	}
 	
 }

@@ -26,16 +26,15 @@ package com.elytradev.fruitphone.client.render;
 
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 
 public class Rendering {
@@ -58,7 +57,7 @@ public class Rendering {
 		float g = (color >> 8 & 255) / 255f;
 		float b = (color & 255) / 255f;
 		
-		GlStateManager.color(r, g, b, a);
+		GL11.glColor4f(r, g, b, a);
 	}
 	
 	public static void drawRect(double left, double top, double right, double bottom, int color) {
@@ -74,24 +73,19 @@ public class Rendering {
 			bottom = swap;
 		}
 
-		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer vertexbuffer = tessellator.getBuffer();
-		GlStateManager.enableBlend();
-		GlStateManager.disableTexture2D();
-		GlStateManager.tryBlendFuncSeparate(
-				GlStateManager.SourceFactor.SRC_ALPHA,
-				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-				GlStateManager.SourceFactor.ONE,
-				GlStateManager.DestFactor.ZERO);
+		Tessellator tessellator = Tessellator.instance;
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_BLEND);
+		OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 		color4(color);
-		vertexbuffer.begin(7, DefaultVertexFormats.POSITION);
-		vertexbuffer.pos(left, bottom, 0).endVertex();
-		vertexbuffer.pos(right, bottom, 0).endVertex();
-		vertexbuffer.pos(right, top, 0).endVertex();
-		vertexbuffer.pos(left, top, 0).endVertex();
+		tessellator.startDrawingQuads();
+		tessellator.addVertex(left, bottom, 0);
+		tessellator.addVertex(right, bottom, 0);
+		tessellator.addVertex(right, top, 0);
+		tessellator.addVertex(left, top, 0);
 		tessellator.draw();
-		GlStateManager.enableTexture2D();
-		GlStateManager.disableBlend();
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 	
 	public static void drawTexturedRect(double left, double top, double right, double bottom, float minU, float minV, float maxU, float maxV, int color) {
@@ -107,25 +101,20 @@ public class Rendering {
 			bottom = swap;
 		}
 
-		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer vertexbuffer = tessellator.getBuffer();
-		GlStateManager.enableBlend();
-		GlStateManager.tryBlendFuncSeparate(
-				GlStateManager.SourceFactor.SRC_ALPHA,
-				GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-				GlStateManager.SourceFactor.ONE,
-				GlStateManager.DestFactor.ZERO);
+		Tessellator tessellator = Tessellator.instance;
+		GL11.glEnable(GL11.GL_BLEND);
+		OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
 		color4(color);
-		vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
-		vertexbuffer.pos(left, bottom, 0).tex(minU, maxV).endVertex();
-		vertexbuffer.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
-		vertexbuffer.pos(right, top, 0).tex(maxU, minV).endVertex();
-		vertexbuffer.pos(left, top, 0).tex(minU, minV).endVertex();
+		tessellator.startDrawingQuads();
+		tessellator.addVertexWithUV(left, bottom, 0, minU, maxV);
+		tessellator.addVertexWithUV(right, bottom, 0, maxU, maxV);
+		tessellator.addVertexWithUV(right, top, 0, maxU, minV);
+		tessellator.addVertexWithUV(left, top, 0, minU, minV);
 		tessellator.draw();
-		GlStateManager.disableBlend();
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 	
-	public static void drawTexturedRect(double left, double top, double right, double bottom, TextureAtlasSprite textureSprite) {
+	public static void drawTexturedRect(double left, double top, double right, double bottom, IIcon textureSprite) {
 		if (left < right) {
 			double swap = left;
 			left = right;
@@ -138,18 +127,17 @@ public class Rendering {
 			bottom = swap;
 		}
 		
-		GlStateManager.color(1, 1, 1);
-		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer vertexbuffer = tessellator.getBuffer();
+		GL11.glColor3f(1, 1, 1);
+		Tessellator tessellator = Tessellator.instance;
 		double maxU = textureSprite.getMinU();
 		double maxV = textureSprite.getMinV();
 		double minU = textureSprite.getInterpolatedU(left-right);
 		double minV = textureSprite.getInterpolatedV(top-bottom);
-		vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
-		vertexbuffer.pos(left, bottom, 0).tex(minU, maxV).endVertex();
-		vertexbuffer.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
-		vertexbuffer.pos(right, top, 0).tex(maxU, minV).endVertex();
-		vertexbuffer.pos(left, top, 0).tex(minU, minV).endVertex();
+		tessellator.startDrawingQuads();;
+		tessellator.addVertexWithUV(left, bottom, 0, minU, maxV);
+		tessellator.addVertexWithUV(right, bottom, 0, maxU, maxV);
+		tessellator.addVertexWithUV(right, top, 0, maxU, minV);
+		tessellator.addVertexWithUV(left, top, 0, minU, minV);
 		tessellator.draw();
 	}
 	
@@ -197,16 +185,8 @@ public class Rendering {
 		GUI.drawString(fontRendererIn, text, x, y, color);
 	}
 	
-	public static void drawTexturedModalRect(float xCoord, float yCoord, int minU, int minV, int maxU, int maxV) {
-		GUI.drawTexturedModalRect(xCoord, yCoord, minU, minV, maxU, maxV);
-	}
-	
 	public static void drawTexturedModalRect(int x, int y, int textureX, int textureY, int width, int height) {
 		GUI.drawTexturedModalRect(x, y, textureX, textureY, width, height);
-	}
-	
-	public static void drawTexturedModalRect(int xCoord, int yCoord, TextureAtlasSprite textureSprite, int widthIn, int heightIn) {
-		GUI.drawTexturedModalRect(xCoord, yCoord, textureSprite, widthIn, heightIn);
 	}
 	
 	public static void drawWorldBackground(int tint) {
@@ -229,12 +209,12 @@ public class Rendering {
 		}
 		
 		@Override
-		public void drawHoveringText(List<String> textLines, int x, int y) {
+		public void drawHoveringText(List textLines, int x, int y) {
 			super.drawHoveringText(textLines, x, y);
 		}
 		
 		@Override
-		public void drawHoveringText(List<String> textLines, int x, int y, FontRenderer font) {
+		public void drawHoveringText(List textLines, int x, int y, FontRenderer font) {
 			super.drawHoveringText(textLines, x, y, font);
 		}
 		

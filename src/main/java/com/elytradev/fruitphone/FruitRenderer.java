@@ -28,11 +28,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
 import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.proxy.ClientProxy;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
+import mcp.mobius.waila.api.SpecialChars;
 import mcp.mobius.waila.api.impl.DataAccessorCommon;
 import mcp.mobius.waila.api.impl.MetaDataProvider;
 import mcp.mobius.waila.api.impl.TipList;
@@ -43,31 +46,28 @@ import com.elytradev.probe.api.impl.ProbeData;
 import com.elytradev.probe.api.impl.SIUnit;
 import com.elytradev.probe.api.impl.Unit;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.GlStateManager.DestFactor;
-import net.minecraft.client.renderer.GlStateManager.SourceFactor;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * Public API. Feel free to re-use the intentionally generic Fruit Phone
@@ -140,7 +140,10 @@ public class FruitRenderer {
 	
 	// TODO entity support
 	
-	public static BlockPos currentDataPos;
+	public static boolean hasData = false;
+	public static int currentDataPosX;
+	public static int currentDataPosY;
+	public static int currentDataPosZ;
 	public static List<IProbeData> currentFormattedData;
 	public static List<IProbeData> currentRawData;
 	
@@ -153,48 +156,51 @@ public class FruitRenderer {
 		renderAndSyncTarget(width, height, lit, preferred);
 	}
 	public static void renderAndSyncTarget(int width, int height, boolean lit, DataSize preferred) {
-		GlStateManager.pushMatrix();
+		GL11.glPushMatrix();
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		World world = Minecraft.getMinecraft().theWorld;
 		
-		Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
-		Vec3d look = player.getLook(ClientProxy.partialTicks);
+		Vec3 eyes = player.getPosition(1).addVector(0, player.getEyeHeight(), 0);
+		Vec3 look = player.getLook(ClientProxy.partialTicks);
 		double dist = 4;
-		Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
-		RayTraceResult rtr = player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
+		Vec3 max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+		MovingObjectPosition rtr = player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
 		
-		if (rtr == null || rtr.typeOfHit != Type.BLOCK) return;
+		if (rtr == null || rtr.typeOfHit != MovingObjectType.BLOCK) return;
 		
-		BlockPos pos = rtr.getBlockPos();
+		int x = rtr.blockX;
+		int y = rtr.blockY;
+		int z = rtr.blockZ;
 		
-		if (!Objects.equal(pos, currentDataPos)) {
-			IBlockState state = world.getBlockState(pos);
-			if (!state.getBlock().hasTileEntity(state)) {
-				currentDataPos = pos;
+		if (!hasData || x != currentDataPosX || y != currentDataPosY || z != currentDataPosZ) {
+			Block b = world.getBlock(x, y, z);
+			int meta = world.getBlockMetadata(x, y, z);
+			if (!b.hasTileEntity(meta)) {
+				hasData = true;
+				currentDataPosX = x;
+				currentDataPosY = y;
+				currentDataPosZ = z;
 				currentRawData = Collections.emptyList();
 			} else {
-				render(format(Collections.emptyList(), pos), width, height, lit, preferred);
-				GlStateManager.disableBlend();
-				GlStateManager.enableBlend();
-				GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ZERO);
-				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-				GlStateManager.disableDepth();
-				GlStateManager.enableDepth();
-				GlStateManager.color(1, 1, 1);
-				GlStateManager.translate(0, 0, 500);
+				render(format(Collections.emptyList(), x, y, z), width, height, lit, preferred);
+				GL11.glEnable(GL11.GL_BLEND);
+				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				GL11.glEnable(GL11.GL_DEPTH_TEST);
+				GL11.glColor3f(1, 1, 1);
+				GL11.glTranslatef(0, 0, 500);
 				renderSpinner(0, 0);
-				GlStateManager.translate(0, 0, -500);
-				GlStateManager.disableBlend();
-				GlStateManager.popMatrix();
+				GL11.glTranslatef(0, 0, -500);
+				GL11.glDisable(GL11.GL_BLEND);
+				GL11.glPopMatrix();
 				return;
 			}
 		}
 		if (currentRawData != null) {
-			currentFormattedData = format(currentRawData, currentDataPos);
+			currentFormattedData = format(currentRawData, currentDataPosX, currentDataPosY, currentDataPosZ);
 			currentRawData = null;
 		}
 		render(currentFormattedData, width, height, lit, preferred);
-		GlStateManager.popMatrix();
+		GL11.glPopMatrix();
 	}
 	
 	public static MultiDataSize calculateAndSyncTarget(int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
@@ -209,27 +215,33 @@ public class FruitRenderer {
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		World world = Minecraft.getMinecraft().theWorld;
 		
-		Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
-		Vec3d look = player.getLook(ClientProxy.partialTicks);
+		Vec3 eyes = player.getPosition(1).addVector(0, player.getEyeHeight(), 0);
+		Vec3 look = player.getLook(ClientProxy.partialTicks);
 		double dist = 4;
-		Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
-		RayTraceResult rtr = player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
+		Vec3 max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+		MovingObjectPosition rtr = player.worldObj.rayTraceBlocks(eyes, max, false, false, false);
 		
-		if (rtr == null || rtr.typeOfHit != Type.BLOCK) return new DataSize();
+		if (rtr == null || rtr.typeOfHit != MovingObjectType.BLOCK) return new DataSize();
 		
-		BlockPos pos = rtr.getBlockPos();
+		int x = rtr.blockX;
+		int y = rtr.blockY;
+		int z = rtr.blockZ;
 		
-		if (!Objects.equal(pos, currentDataPos)) {
-			IBlockState state = world.getBlockState(pos);
-			if (!state.getBlock().hasTileEntity(state)) {
-				currentDataPos = pos;
+		if (!hasData || x != currentDataPosX || y != currentDataPosY || z != currentDataPosZ) {
+			Block b = world.getBlock(x, y, z);
+			int meta = world.getBlockMetadata(x, y, z);
+			if (!b.hasTileEntity(meta)) {
+				hasData = true;
+				currentDataPosX = x;
+				currentDataPosY = y;
+				currentDataPosZ = z;
 				currentRawData = Collections.emptyList();
 			} else {
-				return calculatePreferredDataSize(format(Collections.emptyList(), pos), preferredWidth, preferredHeight, maxWidth, maxHeight);
+				return calculatePreferredDataSize(format(Collections.emptyList(), x, y, z), preferredWidth, preferredHeight, maxWidth, maxHeight);
 			}
 		}
 		if (currentRawData != null) {
-			currentFormattedData = format(currentRawData, currentDataPos);
+			currentFormattedData = format(currentRawData, currentDataPosX, currentDataPosY, currentDataPosZ);
 			currentRawData = null;
 		}
 		return calculatePreferredDataSize(currentFormattedData, preferredWidth, preferredHeight, maxWidth, maxHeight);
@@ -245,10 +257,10 @@ public class FruitRenderer {
 	 * @param src The BlockPos that this data came from
 	 * @return The cleaned IProbeData lines
 	 */
-	public static List<IProbeData> format(List<IProbeData> data, BlockPos src) {
+	public static List<IProbeData> format(List<IProbeData> data, int srcX, int srcY, int srcZ) {
 		List<IProbeData> newData = Lists.newArrayList();
-		IBlockState b = Minecraft.getMinecraft().theWorld.getBlockState(src);
-		ItemStack pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().theWorld, src, Minecraft.getMinecraft().thePlayer);
+		Block b = Minecraft.getMinecraft().theWorld.getBlock(srcX, srcY, srcZ);
+		ItemStack pickblock = b.getPickBlock(Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().theWorld, srcX, srcY, srcZ, Minecraft.getMinecraft().thePlayer);
 		FruitProbeData ident = new FruitProbeData();
 		if (pickblock != null) {
 			ident.withInventory(Collections.singletonList(pickblock));
@@ -369,16 +381,17 @@ public class FruitRenderer {
 		
 		if (Minecraft.getMinecraft().gameSettings.showDebugInfo) {
 			Gui.drawRect(0, 0, width, height, 0xFF00FF00);
-			GlStateManager.translate(0, 0, 40);
+			GL11.glTranslatef(0, 0, 40);
 		}
-		GlStateManager.scale(contain, contain, 1);
+		GL11.glScalef(contain, contain, 1);
 		if (Minecraft.getMinecraft().gameSettings.showDebugInfo) {
 			Gui.drawRect(0, 0, preferred.width, preferred.height, 0xAAFF0000);
-			GlStateManager.translate(0, 0, 40);
+			GL11.glTranslatef(0, 0, 40);
 		}
 		
 		int actualWidth = glasses ? width : (int) (width/contain);
 		
+		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 		
 		int x = 0;
 		int y = 0;
@@ -390,8 +403,8 @@ public class FruitRenderer {
 			if (d.hasInventory() && !d.getInventory().isEmpty()) {
 				RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
-					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y-2);
-					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRendererObj, d.getInventory().get(0), x, y-2, "");
+					RenderItem.getInstance().renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRendererObj, Minecraft.getMinecraft().renderEngine, d.getInventory().get(0), x, y-2);
+					RenderItem.getInstance().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRendererObj, Minecraft.getMinecraft().renderEngine, d.getInventory().get(0), x, y-2, "");
 					x += 20;
 					if (d.hasBar()) {
 						textPosY -= 2;
@@ -430,24 +443,23 @@ public class FruitRenderer {
 				int color = d.getBarUnit() == null ? 0xFFAAAAAA : d.getBarUnit().getBarColor()|0xFF000000;
 				
 				Rendering.drawRect(x, barY, actualWidth, barY+11, -1);
-				GlStateManager.translate(0, 0, 40);
+				GL11.glTranslatef(0, 0, 40);
 				Rendering.drawRect(x+1, barY+1, actualWidth-1, barY+10, 0xFF000000);
-				GlStateManager.translate(0, 0, 40);
+				GL11.glTranslatef(0, 0, 40);
 				if (d.getBarUnit() != null && UnitDictionary.getInstance().isFluid(d.getBarUnit())) {
 					Fluid f = UnitDictionary.getInstance().getFluid(d.getBarUnit());
-					ResourceLocation tex = f.getStill(new FluidStack(f, (int)(d.getBarCurrent()*1000)));
-					TextureAtlasSprite tas = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tex.toString());
-					Rendering.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+					IIcon tex = f.getStillIcon();
+					Rendering.bindTexture(TextureMap.locationBlocksTexture);
 					int segments = (int)((endX-startX) / 16);
 					for (int i = 0; i < segments; i++) {
-						Rendering.drawTexturedRect(startX+(i*16), barY+1, startX+((i+1)*16), barY+10, tas);
+						Rendering.drawTexturedRect(startX+(i*16), barY+1, startX+((i+1)*16), barY+10, tex);
 					}
-					Rendering.drawTexturedRect(startX+(segments*16), barY+1, endX, barY+10, tas);
+					Rendering.drawTexturedRect(startX+(segments*16), barY+1, endX, barY+10, tex);
 				} else {
 					Rendering.drawRect(startX, barY+1, endX, barY+10, color);
 				}
 				
-				GlStateManager.translate(0, 0, 40);
+				GL11.glTranslatef(0, 0, 40);
 				String str;
 				if (d instanceof FruitProbeData && ((FruitProbeData) d).getBarLabel() != null) {
 					str = ((FruitProbeData) d).getBarLabel();
@@ -458,11 +470,11 @@ public class FruitRenderer {
 					str = d.getBarUnit() == null ? Unit.FORMAT_STANDARD.format(d.getBarCurrent()) : d.getBarUnit().format(d.getBarCurrent());
 				}
 				FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
-				GlStateManager.enableBlend();
-				GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR,
-						GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+				GL11.glEnable(GL11.GL_BLEND);
+				OpenGlHelper.glBlendFunc(GL11.GL_ONE_MINUS_DST_COLOR, GL11.GL_ONE_MINUS_SRC_COLOR,
+						GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				fr.drawString(str, (actualWidth-1)-fr.getStringWidth(str), barY+2, -1, false);
-				GlStateManager.disableBlend();
+				GL11.glDisable(GL11.GL_BLEND);
 				
 				lineSize = Math.max(lineSize, d.hasLabel() ? 22 : 11);
 			}
@@ -473,28 +485,28 @@ public class FruitRenderer {
 			if (d.hasInventory() && ((!d.hasBar() && !d.hasLabel()) || d.getInventory().size() > 1)) {
 				y += lineSize+2;
 				lineSize = 0;
-				GlStateManager.enableBlend();
-				GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				int perRow = d.getInventory().size() == 9 ? 3 : Math.min(9, actualWidth/18);
 				int i = 0;
 				for (ItemStack is : d.getInventory()) {
 					Rendering.bindTexture(SLOT);
-					GlStateManager.color(1, 1, 1);
+					GL11.glColor3f(1, 1, 1);
+					GL11.glEnable(GL11.GL_BLEND);
+					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 					Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, 18, 18, 18, 18);
 					if (is != null) {
 						RenderHelper.enableGUIStandardItemLighting();
 						int count = is.stackSize;
-						Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(is, x+1, y+1);
-						Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRendererObj, is, x+1, y+1, count >= 100 ? "" : null);
+						RenderItem.getInstance().renderItemIntoGUI(Minecraft.getMinecraft().fontRendererObj, Minecraft.getMinecraft().renderEngine, is, x+1, y+1);
+						RenderItem.getInstance().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRendererObj, Minecraft.getMinecraft().renderEngine, is, x+1, y+1, count >= 100 ? "" : null);
 						RenderHelper.disableStandardItemLighting();
 						if (count >= 100) {
-							GlStateManager.pushMatrix(); {
-								GlStateManager.scale(0.5f, 0.5f, 1);
-								GlStateManager.translate(0, 0, 400);
+							GL11.glPushMatrix(); {
+								GL11.glScalef(0.5f, 0.5f, 1);
+								GL11.glTranslatef(0, 0, 400);
 								String str = DUMMY_UNIT.format(count);
 								FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
 								fr.drawStringWithShadow(str, ((x*2)+34)-fr.getStringWidth(str), ((y*2)+34)-fr.FONT_HEIGHT, -1);
-							} GlStateManager.popMatrix();
+							} GL11.glPopMatrix();
 						}
 					}
 					x += 18;
@@ -512,6 +524,8 @@ public class FruitRenderer {
 			y += lineSize;
 			x = 0;
 		}
+		
+		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 	}
 
 	private static List<IProbeData> injectWailaData(List<IProbeData> data) {
@@ -525,7 +539,7 @@ public class FruitRenderer {
 				
 				EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 				DataAccessorCommon dac = DataAccessorCommon.instance;
-				RayTraceResult rtr = Minecraft.getMinecraft().objectMouseOver;
+				MovingObjectPosition rtr = Minecraft.getMinecraft().objectMouseOver;
 				World world = Minecraft.getMinecraft().theWorld;
 				
 				NBTTagCompound wailaData = null;
@@ -535,11 +549,7 @@ public class FruitRenderer {
 					IProbeData ipd = iter.next();
 					if (ipd instanceof WailaProbeData) {
 						iter.remove();
-						if (wailaData == null) {
-							wailaData = ((WailaProbeData) ipd).data;
-						} else {
-							wailaData.merge(((WailaProbeData) ipd).data);
-						}
+						wailaData = ((WailaProbeData) ipd).data;
 					}
 				}
 				
@@ -562,20 +572,23 @@ public class FruitRenderer {
 				int idx = 1;
 				for (String s : wailaHead) {
 					if ("<ERROR>".equals(s)) s = I18n.format("fruitphone.wailaError");
+					if (s.startsWith(SpecialChars.RENDER)) continue;
 					data.add(idx++, new ProbeData(s));
 				}
 				for (String s : wailaBody) {
 					if ("<ERROR>".equals(s)) s = I18n.format("fruitphone.wailaError");
+					if (s.startsWith(SpecialChars.RENDER)) continue;
 					data.add(idx++, new ProbeData(s));
 				}
 				for (String s : wailaTail) {
 					if ("<ERROR>".equals(s)) s = I18n.format("fruitphone.wailaError");
+					if (s.startsWith(SpecialChars.RENDER)) continue;
 					data.add(new ProbeData(s));
 				}
 			} catch (Throwable t) {
 				data = Lists.newArrayList(unchangedData);
 				FruitPhone.log.info("Error while retreiving Waila data", t);
-				unchangedData.add(new ProbeData(new TextComponentTranslation("fruitphone.wailaError")));
+				unchangedData.add(new ProbeData(new ChatComponentTranslation("fruitphone.wailaError")));
 			}
 		}
 		return data;

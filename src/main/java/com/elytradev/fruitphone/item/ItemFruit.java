@@ -35,16 +35,17 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class ItemFruit extends Item {
+public abstract class ItemFruit extends Item {
 
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+	public void addInformation(ItemStack stack, EntityPlayer playerIn, List tooltip, boolean advanced) {
 		if (stack.hasTagCompound() && stack.getTagCompound().hasKey("fruitphone:color", NBT.TAG_INT)) {
 			String colorHex = Integer.toHexString(getColor(stack)).substring(2).toUpperCase(Locale.ROOT);
 			String colorString;
-			if (I18n.hasKey("fruitphone.color."+colorHex)) {
+			if (StatCollector.canTranslate("fruitphone.color."+colorHex)) {
 				colorString = I18n.format("fruitphone.color."+colorHex);
 				if (advanced) {
 					colorString = colorString+" \u00A78(#"+colorHex+")";
@@ -54,6 +55,11 @@ public class ItemFruit extends Item {
 			}
 			tooltip.add(I18n.format("tooltip.fruitphone.color", colorString));
 		}
+	}
+	
+	@Override
+	public int getColorFromItemStack(ItemStack p_82790_1_, int p_82790_2_) {
+		return getColor(p_82790_1_);
 	}
 
 	public int getColor(ItemStack stack) {
@@ -65,7 +71,7 @@ public class ItemFruit extends Item {
 	
 	
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
+	public void getSubItems(Item itemIn, CreativeTabs tab, List subItems) {
 		addSubItems(itemIn, 0, subItems);
 	}
 	

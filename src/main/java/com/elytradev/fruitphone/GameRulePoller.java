@@ -33,8 +33,8 @@ import com.google.common.primitives.Ints;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.WorldTickEvent;
 
 public class GameRulePoller {
 
@@ -48,14 +48,14 @@ public class GameRulePoller {
 		this.rule = rule;
 		this.listener = listener;
 		this.world = world;
-		lastValue = world.getGameRules().getString(rule);
+		lastValue = world.getGameRules().getGameRuleStringValue(rule);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
 	@SubscribeEvent
 	public void onTick(WorldTickEvent e) {
 		if (e.world == this.world) {
-			String value = world.getGameRules().getString(rule);
+			String value = world.getGameRules().getGameRuleStringValue(rule);
 			if (!Objects.equals(lastValue, value)) {
 				lastValue = value;
 				listener.accept(value);
@@ -65,7 +65,7 @@ public class GameRulePoller {
 
 	@SubscribeEvent
 	public void onUnload(WorldEvent.Unload e) {
-		if (e.getWorld() == world) {
+		if (e.world == world) {
 			MinecraftForge.EVENT_BUS.unregister(this);
 		}
 	}

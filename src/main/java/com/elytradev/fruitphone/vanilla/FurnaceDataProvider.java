@@ -31,22 +31,22 @@ import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.ChatComponentTranslation;
 
 public class FurnaceDataProvider implements VanillaDataProvider<TileEntityFurnace> {
 	
 	@Override
 	public void provideProbeData(TileEntityFurnace te, List<IProbeData> li) {
-		int furnaceBurnTime = te.getField(0);
-		int currentItemBurnTime = te.getField(1);
-		int cookTime = te.getField(2);
-		int totalCookTime = te.getField(3);
+		int furnaceBurnTime = te.furnaceBurnTime;
+		int currentItemBurnTime = te.currentItemBurnTime;
+		int cookTime = te.furnaceCookTime;
+		int totalCookTime = 200;
 
 		li.add(new ProbeData()
-				.withLabel(new TextComponentTranslation("fruitphone.furnace.fuel"))
+				.withLabel(new ChatComponentTranslation("fruitphone.furnace.fuel"))
 				.withBar(0, furnaceBurnTime, currentItemBurnTime, UnitDictionary.TICKS));
 		li.add(new ProbeData()
-				.withLabel(new TextComponentTranslation("fruitphone.furnace.progress"))
+				.withLabel(new ChatComponentTranslation("fruitphone.furnace.progress"))
 				.withBar(0, totalCookTime == 0 ? 0 : (cookTime/(float)totalCookTime)*100, 100, UnitDictionary.PERCENT));
 	}
 

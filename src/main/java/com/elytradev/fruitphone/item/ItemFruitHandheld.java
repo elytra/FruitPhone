@@ -26,11 +26,16 @@ package com.elytradev.fruitphone.item;
 
 import java.util.List;
 
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIcon;
 
 public class ItemFruitHandheld extends ItemFruit {
+	
+	private IIcon phone;
+	private IIcon pad;
 	
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
@@ -38,9 +43,20 @@ public class ItemFruitHandheld extends ItemFruit {
 	}
 	
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
+	public void getSubItems(Item itemIn, CreativeTabs tab, List subItems) {
 		addSubItems(itemIn, 0, subItems);
 		addSubItems(itemIn, 1, subItems);
+	}
+	
+	@Override
+	public IIcon getIconFromDamage(int dmg) {
+		return dmg == 1 ? phone : pad;
+	}
+	
+	@Override
+	public void registerIcons(IIconRegister register) {
+		phone = register.registerIcon("fruitphone:handheld_mini");
+		pad = register.registerIcon("fruitphone:handheld");
 	}
 	
 }

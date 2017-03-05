@@ -26,50 +26,50 @@ package com.elytradev.fruitphone.item;
 
 import java.util.List;
 
+import com.elytradev.fruitphone.FruitEquipmentProperties;
 import com.elytradev.fruitphone.FruitPhone;
-import com.elytradev.fruitphone.FruitSounds;
-import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 public class ItemDrill extends Item {
 
+	public ItemDrill() {
+		setTextureName("fruitphone:drill");
+	}
+	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn, EnumHand hand) {
+	public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn) {
 		if (playerIn.isSneaking()) {
-			if (playerIn.hasCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null)) {
-				FruitEquipmentCapability fec = playerIn.getCapability(FruitPhone.inst.CAPABILITY_EQUIPMENT, null);
-				ItemStack oldGlasses = fec.glasses;
-				fec.glasses = null;
-				if (oldGlasses != null) {
-					playerIn.playSound(FruitSounds.DRILL, 0.33f, 0.875f+(itemRand.nextFloat()*0.25f));
-					EquipmentDataPacket.forEntity(playerIn).ifPresent((m) -> m.sendToAllWatching(playerIn));
-					if (!playerIn.inventory.addItemStackToInventory(oldGlasses)) {
-						playerIn.dropItem(oldGlasses, false);
-					}
-					return ActionResult.newResult(EnumActionResult.SUCCESS, itemStackIn);
-				} else {
-					return ActionResult.newResult(EnumActionResult.FAIL, itemStackIn);
+			FruitEquipmentProperties props = (FruitEquipmentProperties)playerIn.getExtendedProperties("fruitphone:equipment");
+			if (props == null) return itemStackIn;
+			ItemStack oldGlasses = props.glasses;
+			props.glasses = null;
+			if (oldGlasses != null) {
+				playerIn.playSound("fruitphone:drill", 0.33f, 0.875f+(itemRand.nextFloat()*0.25f));
+				EquipmentDataPacket.forEntity(playerIn).transform((m) -> {m.sendToAllWatching(playerIn); return Void.TYPE;});
+				if (!playerIn.inventory.addItemStackToInventory(oldGlasses)) {
+					playerIn.entityDropItem(oldGlasses, 0.2f);
 				}
 			}
 		} else {
 			FruitPhone.proxy.configureGlasses();
-			return ActionResult.newResult(EnumActionResult.SUCCESS, itemStackIn);
 		}
-		return ActionResult.newResult(EnumActionResult.PASS, itemStackIn);
+		return itemStackIn;
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
-		tooltip.add("\u00A77"+I18n.format("item.fruitphone.remover.hint"));
+	public void addInformation(ItemStack stack, EntityPlayer playerIn, List tooltip, boolean advanced) {
+		int i = 0;
+		while (StatCollector.canTranslate("item.fruitphone.remover.hint."+i)) {
+			tooltip.add("\u00A77"+I18n.format("item.fruitphone.remover.hint."+i));
+			i++;
+		}
 	}
 	
 }
