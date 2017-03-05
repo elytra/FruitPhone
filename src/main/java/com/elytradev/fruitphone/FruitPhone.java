@@ -370,7 +370,7 @@ public class FruitPhone {
 			}
 		} catch (Throwable t) {
 			log.warn("Exception thrown while building Waila data for {}, {}, {} in DIM{}",
-					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension());
+					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension(), t);
 			tag = new NBTTagCompound();
 			list.add(new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.wailaError")));
@@ -386,11 +386,11 @@ public class FruitPhone {
 			}
 		} catch (Throwable t) {
 			log.warn("Exception thrown while building probe data for {}, {}, {} in DIM{}",
-					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension());
+					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension(), t);
 			list.clear();
 			list.add(new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.probeError")));
-			return null;
+			return new NBTTagCompound();
 		}
 		
 		try {
@@ -482,11 +482,11 @@ public class FruitPhone {
 			return tag;
 		} catch (Throwable t) {
 			log.warn("Exception thrown while building default probe data for {}, {}, {} in DIM{}",
-					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension());
+					te.getPos().getX(), te.getPos().getY(), te.getPos().getZ(), te.getWorld().provider.getDimension(), t);
 			list.clear();
 			list.add(new ProbeData()
 					.withLabel(new TextComponentTranslation("fruitphone.capError")));
-			return null;
+			return new NBTTagCompound();
 		}
 	}
 
