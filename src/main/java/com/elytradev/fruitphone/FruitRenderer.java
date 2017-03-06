@@ -558,7 +558,7 @@ public class FruitRenderer {
 		
 				ItemStack stack = mdp.identifyBlockHighlight(world, player, rtr, dac);
 				if (stack == null) {
-					stack = data.get(0).getInventory().get(0);
+					stack = data.get(0).hasInventory() ? data.get(0).getInventory().get(0) : null;
 				} else {
 					((ProbeData)data.get(0))
 						.withInventory(Collections.singletonList(stack))
