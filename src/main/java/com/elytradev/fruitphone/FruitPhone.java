@@ -97,6 +97,7 @@ import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
@@ -306,6 +307,22 @@ public class FruitPhone {
 		if (optionalMode) return;
 		if (e.getObject() instanceof EntityPlayer) {
 			e.addCapability(new ResourceLocation(MODID, "equipment"), new FruitEquipmentCapability());
+		}
+	}
+	
+	@SubscribeEvent
+	public void onSwitchDimensions(PlayerChangedDimensionEvent e) {
+		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getBoolean("fruitphone:alwaysOn")).sendTo(e.player);
+		EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
+	}
+	
+	@SubscribeEvent
+	public void onPlayerClone(PlayerEvent.Clone e) {
+		if (!e.isWasDeath() && e.getOriginal().hasCapability(CAPABILITY_EQUIPMENT, null) &&
+				e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
+			FruitEquipmentCapability orig = e.getOriginal().getCapability(CAPABILITY_EQUIPMENT, null);
+			FruitEquipmentCapability nw = e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null);
+			nw.glasses = orig.glasses;
 		}
 	}
 	
