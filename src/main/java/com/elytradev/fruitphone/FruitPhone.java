@@ -94,6 +94,7 @@ import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent;
@@ -300,6 +301,21 @@ public class FruitPhone {
 			log.info("Always-on mode {}abled", newValue ? "en" : "dis");
 			new SetAlwaysOnPacket(newValue).sendToAllIn(world);
 		});
+	}
+	
+	@SubscribeEvent
+	public void onSwitchDimensions(PlayerChangedDimensionEvent e) {
+		new SetAlwaysOnPacket(e.player.worldObj.getGameRules().getGameRuleBooleanValue("fruitphone:alwaysOn")).sendTo(e.player);
+		EquipmentDataPacket.forEntity(e.player).transform((m) -> {m.sendTo(e.player); return Void.TYPE;});
+	}
+	
+	@SubscribeEvent
+	public void onPlayerClone(PlayerEvent.Clone e) {
+		if (!e.wasDeath) {
+			FruitEquipmentProperties orig = ((FruitEquipmentProperties)e.original.getExtendedProperties("fruitphone:equipment"));
+			FruitEquipmentProperties nw = ((FruitEquipmentProperties)e.entityPlayer.getExtendedProperties("fruitphone:equipment"));
+			nw.glasses = orig.glasses;
+		}
 	}
 	
 	private Map<EntityPlayer, ProbeDataPacket> lastData = new WeakHashMap<>();
