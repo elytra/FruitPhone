@@ -251,8 +251,10 @@ public class FruitRenderer {
 		IBlockState b = Minecraft.getMinecraft().world.getBlockState(src);
 		ItemStack pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().world, src, Minecraft.getMinecraft().player);
 		FruitProbeData ident = new FruitProbeData();
-		ident.withInventory(ImmutableList.of(pickblock));
-		ident.withLabel(pickblock.getDisplayName());
+		if (!pickblock.isEmpty()) {
+			ident.withInventory(ImmutableList.of(pickblock));
+			ident.withLabel(pickblock.getDisplayName());
+		}
 		newData.add(ident);
 		boolean first = true;
 		for (IProbeData ipd : data) {

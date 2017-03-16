@@ -61,6 +61,7 @@ public class LayerFruitGlass implements LayerRenderer<EntityPlayer> {
 	
 			if (itemstack.getItem() instanceof ItemFruitPassive) {
 				ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
+				if (item.isInvisible(itemstack)) return;
 				GlStateManager.pushMatrix(); {
 					GlStateManager.translate(0f, 0.01f, 0f);
 					if (player.isSneaking()) {
