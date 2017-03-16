@@ -60,6 +60,7 @@ public class LayerFruitGlass {
 		ItemStack itemstack = props.glasses;
 		if (itemstack != null && itemstack.getItem() instanceof ItemFruitPassive) {
 			ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
+			if (item.isInvisible(itemstack)) return;
 			GL11.glPushMatrix();; {
 				GL11.glTranslatef(0f, 0.01f, 0f);
 				if (player.isSneaking()) {

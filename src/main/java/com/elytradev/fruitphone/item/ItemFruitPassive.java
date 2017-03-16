@@ -31,7 +31,9 @@ import com.elytradev.fruitphone.network.EquipmentDataPacket;
 
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.StatCollector;
@@ -40,6 +42,7 @@ import net.minecraft.world.World;
 public class ItemFruitPassive extends ItemFruit {
 
 	private IIcon icon;
+	private IIcon iconInvisible;
 	
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn) {
@@ -56,6 +59,11 @@ public class ItemFruitPassive extends ItemFruit {
 	}
 	
 	@Override
+	public String getUnlocalizedName(ItemStack stack) {
+		return "item.fruitphone.passive"+(isInvisible(stack) ? "_invisible" : "");
+	}
+	
+	@Override
 	public void addInformation(ItemStack stack, EntityPlayer playerIn, List tooltip, boolean advanced) {
 		int i = 0;
 		while (StatCollector.canTranslate("item.fruitphone.passive.hint."+i)) {
@@ -67,12 +75,23 @@ public class ItemFruitPassive extends ItemFruit {
 	
 	@Override
 	public IIcon getIconFromDamage(int p_77617_1_) {
-		return icon;
+		return p_77617_1_ == 1 ? iconInvisible : icon;
 	}
 	
 	@Override
 	public void registerIcons(IIconRegister register) {
 		icon = register.registerIcon("fruitphone:passive");
+		iconInvisible = register.registerIcon("fruitphone:passive_invisible");
+	}
+	
+	public boolean isInvisible(ItemStack itemstack) {
+		return itemstack.getMetadata() == 1;
+	}
+	
+	@Override
+	public void getSubItems(Item itemIn, CreativeTabs tab, List subItems) {
+		addSubItems(itemIn, 0, subItems);
+		addSubItems(itemIn, 1, subItems);
 	}
 	
 }
