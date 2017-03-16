@@ -183,15 +183,17 @@ public class FruitRenderer {
 				currentRawData = Collections.emptyList();
 			} else {
 				render(format(Collections.emptyList(), x, y, z), width, height, lit, preferred);
-				GL11.glEnable(GL11.GL_BLEND);
-				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-				GL11.glEnable(GL11.GL_DEPTH_TEST);
-				GL11.glColor3f(1, 1, 1);
-				GL11.glTranslatef(0, 0, 500);
-				renderSpinner(0, 0);
-				GL11.glTranslatef(0, 0, -500);
-				GL11.glDisable(GL11.GL_BLEND);
-				GL11.glPopMatrix();
+				if (ClientProxy.doesServerHaveMod()) {
+					GL11.glEnable(GL11.GL_BLEND);
+					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+					GL11.glEnable(GL11.GL_DEPTH_TEST);
+					GL11.glColor3f(1, 1, 1);
+					GL11.glTranslatef(0, 0, 500);
+					renderSpinner(0, 0);
+					GL11.glTranslatef(0, 0, -500);
+					GL11.glDisable(GL11.GL_BLEND);
+					GL11.glPopMatrix();
+				}
 				return;
 			}
 		}
