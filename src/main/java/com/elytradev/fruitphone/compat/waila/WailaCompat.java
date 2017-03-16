@@ -33,7 +33,7 @@ import net.minecraftforge.common.config.Configuration;
 public class WailaCompat {
 
 	public static void init() {
-		FruitPhone.log.info("Messing with Waila");
+		FruitPhone.log.info("Disabling Waila");
 		ConfigHandler.instance().setConfig(Configuration.CATEGORY_GENERAL, Constants.CFG_WAILA_SHOW, false);
 	}
 
