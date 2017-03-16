@@ -59,6 +59,7 @@ public class FruitRecipes {
 				'g', "blockGlass",
 				'h', new ItemStack(FruitItems.HANDHELD, 1, OreDictionary.WILDCARD_VALUE)));
 		
+		// Pad <-> Phone
 		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 0),
 				"p",
 				'p', new ItemStack(FruitItems.HANDHELD, 1, 1)));
@@ -66,6 +67,15 @@ public class FruitRecipes {
 		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 1),
 				"p",
 				'p', new ItemStack(FruitItems.HANDHELD, 1, 0)));
+		
+		// Glasses <-> Contacts
+		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.PASSIVE, 1, 0),
+				"p",
+				'p', new ItemStack(FruitItems.PASSIVE, 1, 1)));
+		
+		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.PASSIVE, 1, 1),
+				"p",
+				'p', new ItemStack(FruitItems.PASSIVE, 1, 0)));
 		
 		GameRegistry.addRecipe(new FruitUpgradeRecipe(FruitItems.REMOVER,
 				"i ",
@@ -205,26 +215,32 @@ public class FruitRecipes {
 		ItemStack handheld = new ItemStack(FruitItems.HANDHELD);
 		ItemStack handheldMini = new ItemStack(FruitItems.HANDHELD, 1, 1);
 		ItemStack passive = new ItemStack(FruitItems.PASSIVE);
+		ItemStack passiveInvisible = new ItemStack(FruitItems.PASSIVE, 1, 1);
 		
 		handheld.setTagCompound((NBTTagCompound)tag.copy());
 		handheldMini.setTagCompound((NBTTagCompound)tag.copy());
 		passive.setTagCompound((NBTTagCompound)tag.copy());
+		passiveInvisible.setTagCompound((NBTTagCompound)tag.copy());
 		
 		Object[] handheldIngredients = new Object[ingredients.length+1];
 		Object[] handheldMiniIngredients = new Object[ingredients.length+1];
 		Object[] passiveIngredients = new Object[ingredients.length+1];
+		Object[] passiveInvisibleIngredients = new Object[ingredients.length+1];
 		
 		handheldIngredients[0] = FruitItems.HANDHELD;
 		handheldMiniIngredients[0] = new ItemStack(FruitItems.HANDHELD, 1, 1);
 		passiveIngredients[0] = FruitItems.PASSIVE;
+		passiveInvisibleIngredients[0] = new ItemStack(FruitItems.PASSIVE, 1, 1);
 		
 		System.arraycopy(ingredients, 0, handheldIngredients, 1, ingredients.length);
 		System.arraycopy(ingredients, 0, handheldMiniIngredients, 1, ingredients.length);
 		System.arraycopy(ingredients, 0, passiveIngredients, 1, ingredients.length);
+		System.arraycopy(ingredients, 0, passiveInvisibleIngredients, 1, ingredients.length);
 		
 		GameRegistry.addRecipe(new ShapelessOreRecipe(handheld, handheldIngredients));
 		GameRegistry.addRecipe(new ShapelessOreRecipe(handheldMini, handheldMiniIngredients));
 		GameRegistry.addRecipe(new ShapelessOreRecipe(passive, passiveIngredients));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(passiveInvisible, passiveInvisibleIngredients));
 		
 		Object[] handheldDirectIngredients = new Object[ingredients.length+2];
 		
