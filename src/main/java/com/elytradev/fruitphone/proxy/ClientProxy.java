@@ -79,7 +79,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class ClientProxy extends Proxy {
-	private boolean isServerVanilla = false;
+	private static boolean isServerVanilla = false;
 	public boolean alwaysOn = false;
 	
 	public static float ticks;
@@ -189,15 +189,13 @@ public class ClientProxy extends Proxy {
 			// check if any of the following are true:
 			// 1. optional mode is enabled
 			// 2. the fruitphone:alwaysOn gamerule is set to true
-			// 3. we are connected to a Forge server without Fruit Phone
-			// 4. we are connected to a vanilla server
-			// 5. the player has equipped glasses
+			// 3. we are connected to a server without Fruit Phone
+			// 4. the player has equipped glasses
 			ItemStack glasses = null;
 			if (
 				FruitPhone.inst.optionalMode ||
 				alwaysOn ||
-				Item.REGISTRY.getNameForObject(FruitItems.PASSIVE) == null ||
-				isServerVanilla ||
+				!doesServerHaveMod() ||
 				(
 					Minecraft.getMinecraft().thePlayer.hasCapability(FruitPhone.CAPABILITY_EQUIPMENT, null) &&
 					(glasses = Minecraft.getMinecraft().thePlayer.getCapability(FruitPhone.CAPABILITY_EQUIPMENT, null).glasses) != null
@@ -254,6 +252,11 @@ public class ClientProxy extends Proxy {
 		}
 	}
 
+	public static boolean doesServerHaveMod() {
+		return Item.REGISTRY.getNameForObject(FruitItems.PASSIVE) != null &&
+				!isServerVanilla;
+	}
+	
 	@SubscribeEvent
 	public void onRenderHand(RenderSpecificHandEvent e) {
 		if (FruitPhone.inst.optionalMode) return;

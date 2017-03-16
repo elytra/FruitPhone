@@ -174,18 +174,20 @@ public class FruitRenderer {
 				currentRawData = Collections.emptyList();
 			} else {
 				render(format(Collections.emptyList(), pos), width, height, lit, preferred);
-				GlStateManager.disableBlend();
-				GlStateManager.enableBlend();
-				GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ZERO);
-				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-				GlStateManager.disableDepth();
-				GlStateManager.enableDepth();
-				GlStateManager.color(1, 1, 1);
-				GlStateManager.translate(0, 0, 500);
-				renderSpinner(0, 0);
-				GlStateManager.translate(0, 0, -500);
-				GlStateManager.disableBlend();
-				GlStateManager.popMatrix();
+				if (ClientProxy.doesServerHaveMod()) {
+					GlStateManager.disableBlend();
+					GlStateManager.enableBlend();
+					GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ZERO);
+					GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+					GlStateManager.disableDepth();
+					GlStateManager.enableDepth();
+					GlStateManager.color(1, 1, 1);
+					GlStateManager.translate(0, 0, 500);
+					renderSpinner(0, 0);
+					GlStateManager.translate(0, 0, -500);
+					GlStateManager.disableBlend();
+					GlStateManager.popMatrix();
+				}
 				return;
 			}
 		}
