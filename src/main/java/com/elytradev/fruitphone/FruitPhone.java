@@ -167,7 +167,8 @@ public class FruitPhone {
 	public float glassesScale;
 	
 	public boolean optionalMode;
-	public boolean overwriteWaila;
+	public boolean disableWaila;
+	public boolean showWailaInformation;
 	
 	@CapabilityInject(FruitEquipmentCapability.class)
 	public static Capability<FruitEquipmentCapability> CAPABILITY_EQUIPMENT;
@@ -198,9 +199,10 @@ public class FruitPhone {
 				+ "Glass at all times, use /gamerule fruitphone:alwaysOn true\n"
 				+ "\n");
 		
-		overwriteWaila = config.getBoolean("overwriteWaila", "General", true,
-				"If true and Waila is installed, Fruit Phone will disable it and\n"
-				+ "claim all Waila requests.");
+		disableWaila = config.getBoolean("disableWaila", "General", true,
+				"If true and Waila is installed, Fruit Phone will disable it. Automatically turned off on first run.");
+		showWailaInformation = config.getBoolean("showWailaInformation", "General", true,
+				"If true and Waila is installed, Fruit Phone will display information from Waila plugins.");
 	
 		Gravity[] grav = Gravity.values();
 		String[] valid = new String[grav.length];
@@ -219,7 +221,8 @@ public class FruitPhone {
 		config.setCategoryComment("Glasses", "Configuration for the glasses overlay. This can be configured ingame much more easily with the Power Drill.");
 		
 		if (!Loader.isModLoaded("Waila")) {
-			overwriteWaila = false;
+			disableWaila = false;
+			showWailaInformation = false;
 		}
 		
 		config.save();
@@ -261,8 +264,10 @@ public class FruitPhone {
 	@EventHandler
 	public void onPostInit(FMLPostInitializationEvent e) {
 		proxy.postInit();
-		if (overwriteWaila) {
+		if (disableWaila) {
 			WailaCompat.init();
+			config.get("General", "disableWaila", true).set(false);
+			config.save();
 		}
 	}
 	
@@ -358,7 +363,7 @@ public class FruitPhone {
 	public NBTTagCompound generateProbeData(EntityPlayer player, TileEntity te, EnumFacing sideHit, List<IProbeData> list) {
 		NBTTagCompound tag = new NBTTagCompound();
 		try {
-			if (player instanceof EntityPlayerMP && overwriteWaila) {
+			if (player instanceof EntityPlayerMP && showWailaInformation) {
 				Map<Class<? extends TileEntity>, String> classToNameMap;
 				try {
 					classToNameMap = (Map<Class<? extends TileEntity>, String>) this.classToNameMap.get(null);
