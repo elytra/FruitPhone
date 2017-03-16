@@ -128,6 +128,7 @@ public class ClientProxy extends Proxy {
 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 2, new ModelResourceLocation("fruitphone:handheld_portrait#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 3, new ModelResourceLocation("fruitphone:handheld_portrait_mini#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 1, new ModelResourceLocation("fruitphone:passive_invisible#inventory"));
 			ModelLoader.setCustomModelResourceLocation(FruitItems.REMOVER, 0, new ModelResourceLocation("fruitphone:remover#inventory"));
 		}
 	}

@@ -31,12 +31,15 @@ import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 
 public class ItemFruitPassive extends ItemFruit {
@@ -56,9 +59,24 @@ public class ItemFruitPassive extends ItemFruit {
 	}
 	
 	@Override
+	public String getUnlocalizedName(ItemStack stack) {
+		return "item.fruitphone.passive"+(isInvisible(stack) ? "_invisible" : "");
+	}
+	
+	@Override
 	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
 		tooltip.add("\u00A77"+I18n.format("item.fruitphone.passive.hint"));
 		super.addInformation(stack, playerIn, tooltip, advanced);
+	}
+
+	public boolean isInvisible(ItemStack itemstack) {
+		return itemstack.getItemDamage() == 1;
+	}
+	
+	@Override
+	public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
+		addSubItems(itemIn, 0, subItems);
+		addSubItems(itemIn, 1, subItems);
 	}
 	
 }
