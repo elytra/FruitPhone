@@ -1,14 +1,15 @@
-FruitPhone
-=========
-*What could your One Probe do if your One Probe was a Fruit Phone™?*
+<img src="https://rawgit.com/elytra/FruitPhone/1.11.2/doc/emblem.svg" align="right" width="180px"/>
 
-Essentially a reference implementation for ProbeDataProviderAPI, though it
-doubles as an extra I M M E R S I V E alternative to Waila, through its Fruit
-Phone item, which you hold in your hand and the data is actually on the screen.
+# Fruit Phone
+*An extra-immersive Waila alternative*
 
-It also acts as an alternative frontend for Waila, as it includes a Waila shim.
-A TheOneProbe shim was attempted but is quite difficult due to how rigid that
-API is. PRs accepted.
+Fruit Phone is an implementation of an information renderer for
+[ProbeDataProviderAPI](https://github.com/elytra/ProbeDataProviderAPI), and
+includes an optional shim to convert Waila information to ProbeData format.
 
-Yes, making things render on the item required a lot of ugly hacks. Would've
-been really easy and clean in 1.7 with render hooks. *glares*
+It has a focus on being stylish and requires an item to show information by
+default. The items can be disabled entirely in the config, and a gamerule is
+offered to disable the item requirement.
+
+It works best if the server and client both have the mod, but it also works if
+only the client has it or only the server has it.
