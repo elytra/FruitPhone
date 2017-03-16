@@ -515,7 +515,7 @@ public class FruitRenderer {
 	}
 
 	private static List<IProbeData> injectWailaData(List<IProbeData> data) {
-		if (FruitPhone.inst.overwriteWaila) {
+		if (FruitPhone.inst.showWailaInformation) {
 			List<IProbeData> unchangedData = data;
 			try {
 				if (mdp == null) mdp = new MetaDataProvider();
