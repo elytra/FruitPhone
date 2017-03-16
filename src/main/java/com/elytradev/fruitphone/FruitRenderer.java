@@ -294,7 +294,7 @@ public class FruitRenderer {
 				y += 2;
 			}
 			boolean renderLabel = true;
-			if (d.hasInventory() && !d.getInventory().isEmpty()) {
+			if (d.hasInventory() && !d.getInventory().isEmpty() && d.getInventory().get(0) != null) {
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
 					ds.setWidthIfGreater(x+16);
 					y -= 2;
@@ -387,7 +387,7 @@ public class FruitRenderer {
 			int textPosY = y+2;
 			y += 2;
 			boolean renderLabel = true;
-			if (d.hasInventory() && !d.getInventory().isEmpty()) {
+			if (d.hasInventory() && !d.getInventory().isEmpty() && d.getInventory().get(0) != null) {
 				RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
 					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y-2);
@@ -548,7 +548,7 @@ public class FruitRenderer {
 		
 				ItemStack stack = mdp.identifyBlockHighlight(world, player, rtr, dac);
 				if (stack == null) {
-					stack = data.get(0).getInventory().get(0);
+					stack = data.get(0).hasInventory() ? data.get(0).getInventory().get(0) : null;
 				} else {
 					((ProbeData)data.get(0))
 						.withInventory(Collections.singletonList(stack))
