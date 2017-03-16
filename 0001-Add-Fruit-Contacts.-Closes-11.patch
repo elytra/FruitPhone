@@ -1,0 +1,256 @@
+From a9752550375a1fbe644fe0b893c1f140142d8d4e Mon Sep 17 00:00:00 2001
+From: Una Thompson <aesen@unascribed.com>
+Date: Wed, 15 Mar 2017 20:43:24 -0400
+Subject: [PATCH] Add Fruit Contacts. Closes #11
+
+---
+ .../com/elytradev/fruitphone/FruitRenderer.java    |   6 +++--
+ .../fruitphone/client/render/LayerFruitGlass.java  |   1 +
+ .../fruitphone/item/ItemFruitPassive.java          |  18 +++++++++++++
+ .../elytradev/fruitphone/proxy/ClientProxy.java    |   1 +
+ .../elytradev/fruitphone/recipe/FruitRecipes.java  |  16 ++++++++++++
+ .../resources/assets/fruitphone/lang/en_US.lang    |   1 +
+ .../fruitphone/models/item/passive_invisible.json  |  28 +++++++++++++++++++++
+ .../fruitphone/textures/item/passive_invisible.png | Bin 0 -> 3679 bytes
+ 8 files changed, 69 insertions(+), 2 deletions(-)
+ create mode 100644 src/main/resources/assets/fruitphone/models/item/passive_invisible.json
+ create mode 100644 src/main/resources/assets/fruitphone/textures/item/passive_invisible.png
+
+diff --git a/src/main/java/com/elytradev/fruitphone/FruitRenderer.java b/src/main/java/com/elytradev/fruitphone/FruitRenderer.java
+index 0a9feb0..e03c814 100644
+--- a/src/main/java/com/elytradev/fruitphone/FruitRenderer.java
++++ b/src/main/java/com/elytradev/fruitphone/FruitRenderer.java
+@@ -251,8 +251,10 @@ public class FruitRenderer {
+ 		IBlockState b = Minecraft.getMinecraft().world.getBlockState(src);
+ 		ItemStack pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().world, src, Minecraft.getMinecraft().player);
+ 		FruitProbeData ident = new FruitProbeData();
+-		ident.withInventory(ImmutableList.of(pickblock));
+-		ident.withLabel(pickblock.getDisplayName());
++		if (!pickblock.isEmpty()) {
++			ident.withInventory(ImmutableList.of(pickblock));
++			ident.withLabel(pickblock.getDisplayName());
++		}
+ 		newData.add(ident);
+ 		boolean first = true;
+ 		for (IProbeData ipd : data) {
+diff --git a/src/main/java/com/elytradev/fruitphone/client/render/LayerFruitGlass.java b/src/main/java/com/elytradev/fruitphone/client/render/LayerFruitGlass.java
+index 42dcdd9..3d622fb 100644
+--- a/src/main/java/com/elytradev/fruitphone/client/render/LayerFruitGlass.java
++++ b/src/main/java/com/elytradev/fruitphone/client/render/LayerFruitGlass.java
+@@ -61,6 +61,7 @@ public class LayerFruitGlass implements LayerRenderer<EntityPlayer> {
+ 	
+ 			if (itemstack.getItem() instanceof ItemFruitPassive) {
+ 				ItemFruitPassive item = ((ItemFruitPassive)itemstack.getItem());
++				if (item.isInvisible(itemstack)) return;
+ 				GlStateManager.pushMatrix(); {
+ 					GlStateManager.translate(0f, 0.01f, 0f);
+ 					if (player.isSneaking()) {
+diff --git a/src/main/java/com/elytradev/fruitphone/item/ItemFruitPassive.java b/src/main/java/com/elytradev/fruitphone/item/ItemFruitPassive.java
+index 543f831..141003d 100644
+--- a/src/main/java/com/elytradev/fruitphone/item/ItemFruitPassive.java
++++ b/src/main/java/com/elytradev/fruitphone/item/ItemFruitPassive.java
+@@ -31,12 +31,15 @@ import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
+ import com.elytradev.fruitphone.network.EquipmentDataPacket;
+ 
+ import net.minecraft.client.resources.I18n;
++import net.minecraft.creativetab.CreativeTabs;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.init.SoundEvents;
++import net.minecraft.item.Item;
+ import net.minecraft.item.ItemStack;
+ import net.minecraft.util.ActionResult;
+ import net.minecraft.util.EnumActionResult;
+ import net.minecraft.util.EnumHand;
++import net.minecraft.util.NonNullList;
+ import net.minecraft.world.World;
+ 
+ public class ItemFruitPassive extends ItemFruit {
+@@ -56,9 +59,24 @@ public class ItemFruitPassive extends ItemFruit {
+ 	}
+ 	
+ 	@Override
++	public String getUnlocalizedName(ItemStack stack) {
++		return "item.fruitphone.passive"+(isInvisible(stack) ? "_invisible" : "");
++	}
++	
++	@Override
+ 	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+ 		tooltip.add("\u00A77"+I18n.format("item.fruitphone.passive.hint"));
+ 		super.addInformation(stack, playerIn, tooltip, advanced);
+ 	}
++
++	public boolean isInvisible(ItemStack itemstack) {
++		return itemstack.getItemDamage() == 1;
++	}
++	
++	@Override
++	public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
++		addSubItems(itemIn, 0, subItems);
++		addSubItems(itemIn, 1, subItems);
++	}
+ 	
+ }
+diff --git a/src/main/java/com/elytradev/fruitphone/proxy/ClientProxy.java b/src/main/java/com/elytradev/fruitphone/proxy/ClientProxy.java
+index 61e8f00..92c02b2 100644
+--- a/src/main/java/com/elytradev/fruitphone/proxy/ClientProxy.java
++++ b/src/main/java/com/elytradev/fruitphone/proxy/ClientProxy.java
+@@ -128,6 +128,7 @@ public class ClientProxy extends Proxy {
+ 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 2, new ModelResourceLocation("fruitphone:handheld_portrait#inventory"));
+ 			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 3, new ModelResourceLocation("fruitphone:handheld_portrait_mini#inventory"));
+ 			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
++			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 1, new ModelResourceLocation("fruitphone:passive_invisible#inventory"));
+ 			ModelLoader.setCustomModelResourceLocation(FruitItems.REMOVER, 0, new ModelResourceLocation("fruitphone:remover#inventory"));
+ 		}
+ 	}
+diff --git a/src/main/java/com/elytradev/fruitphone/recipe/FruitRecipes.java b/src/main/java/com/elytradev/fruitphone/recipe/FruitRecipes.java
+index c4b679d..24ab3e1 100644
+--- a/src/main/java/com/elytradev/fruitphone/recipe/FruitRecipes.java
++++ b/src/main/java/com/elytradev/fruitphone/recipe/FruitRecipes.java
+@@ -59,6 +59,7 @@ public class FruitRecipes {
+ 				'g', "blockGlass",
+ 				'h', new ItemStack(FruitItems.HANDHELD, 1, OreDictionary.WILDCARD_VALUE)));
+ 		
++		// Pad <-> Phone
+ 		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 0),
+ 				"p",
+ 				'p', new ItemStack(FruitItems.HANDHELD, 1, 1)));
+@@ -67,6 +68,15 @@ public class FruitRecipes {
+ 				"p",
+ 				'p', new ItemStack(FruitItems.HANDHELD, 1, 0)));
+ 		
++		// Glasses <-> Contacts
++		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.PASSIVE, 1, 0),
++				"p",
++				'p', new ItemStack(FruitItems.PASSIVE, 1, 1)));
++		
++		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.PASSIVE, 1, 1),
++				"p",
++				'p', new ItemStack(FruitItems.PASSIVE, 1, 0)));
++		
+ 		GameRegistry.addRecipe(new FruitUpgradeRecipe(FruitItems.REMOVER,
+ 				"i ",
+ 				"/w",
+@@ -215,26 +225,32 @@ public class FruitRecipes {
+ 		ItemStack handheld = new ItemStack(FruitItems.HANDHELD);
+ 		ItemStack handheldMini = new ItemStack(FruitItems.HANDHELD, 1, 1);
+ 		ItemStack passive = new ItemStack(FruitItems.PASSIVE);
++		ItemStack passiveInvisible = new ItemStack(FruitItems.PASSIVE, 1, 1);
+ 		
+ 		handheld.setTagCompound(tag.copy());
+ 		handheldMini.setTagCompound(tag.copy());
+ 		passive.setTagCompound(tag.copy());
++		passiveInvisible.setTagCompound(tag.copy());
+ 		
+ 		Object[] handheldIngredients = new Object[ingredients.length+1];
+ 		Object[] handheldMiniIngredients = new Object[ingredients.length+1];
+ 		Object[] passiveIngredients = new Object[ingredients.length+1];
++		Object[] passiveInvisibleIngredients = new Object[ingredients.length+1];
+ 		
+ 		handheldIngredients[0] = FruitItems.HANDHELD;
+ 		handheldMiniIngredients[0] = new ItemStack(FruitItems.HANDHELD, 1, 1);
+ 		passiveIngredients[0] = FruitItems.PASSIVE;
++		passiveInvisibleIngredients[0] = new ItemStack(FruitItems.PASSIVE, 1, 1);
+ 		
+ 		System.arraycopy(ingredients, 0, handheldIngredients, 1, ingredients.length);
+ 		System.arraycopy(ingredients, 0, handheldMiniIngredients, 1, ingredients.length);
+ 		System.arraycopy(ingredients, 0, passiveIngredients, 1, ingredients.length);
++		System.arraycopy(ingredients, 0, passiveInvisibleIngredients, 1, ingredients.length);
+ 		
+ 		GameRegistry.addRecipe(new ShapelessOreRecipe(handheld, handheldIngredients));
+ 		GameRegistry.addRecipe(new ShapelessOreRecipe(handheldMini, handheldMiniIngredients));
+ 		GameRegistry.addRecipe(new ShapelessOreRecipe(passive, passiveIngredients));
++		GameRegistry.addRecipe(new ShapelessOreRecipe(passiveInvisible, passiveInvisibleIngredients));
+ 		
+ 		Object[] handheldDirectIngredients = new Object[ingredients.length+2];
+ 		
+diff --git a/src/main/resources/assets/fruitphone/lang/en_US.lang b/src/main/resources/assets/fruitphone/lang/en_US.lang
+index 0301e1e..3090253 100644
+--- a/src/main/resources/assets/fruitphone/lang/en_US.lang
++++ b/src/main/resources/assets/fruitphone/lang/en_US.lang
+@@ -3,6 +3,7 @@ itemGroup.fruitphone=Fruit Phone
+ item.fruitphone.handheld.name=Fruit Pad
+ item.fruitphone.handheld_mini.name=Fruit Phone
+ item.fruitphone.passive.name=Fruit Glass
++item.fruitphone.passive_invisible.name=Fruit Contacts
+ item.fruitphone.passive.hint=Does not use your helmet slot, right-click while holding to equip.
+ item.fruitphone.remover.name=Power Drill
+ item.fruitphone.remover.hint=Removes or configures glasses. Right-click to configure, sneak right-click to remove;
+diff --git a/src/main/resources/assets/fruitphone/models/item/passive_invisible.json b/src/main/resources/assets/fruitphone/models/item/passive_invisible.json
+new file mode 100644
+index 0000000..28964dc
+--- /dev/null
++++ b/src/main/resources/assets/fruitphone/models/item/passive_invisible.json
+@@ -0,0 +1,28 @@
++{
++	"parent": "builtin/generated",
++	"textures": {
++		"layer0": "fruitphone:item/passive_invisible"
++	},
++	"display": {
++		"ground": {
++			"rotation": [ 0, 0, 0 ],
++			"translation": [ 0, 2, 0],
++			"scale":[ 0.5, 0.5, 0.5 ]
++		},
++		"head": {
++			"rotation": [ 0, 180, 0 ],
++			"translation": [ 0, 13, 7],
++			"scale":[ 1, 1, 1]
++		},
++		"thirdperson_righthand": {
++			"rotation": [ 0, 0, 0 ],
++			"translation": [ 0, 3, 1 ],
++			"scale": [ 0.55, 0.55, 0.55 ]
++		},
++		"firstperson_righthand": {
++			"rotation": [ 0, -90, 25 ],
++			"translation": [ 1.13, 3.2, 1.13],
++			"scale": [ 0.68, 0.68, 0.68 ]
++		}
++	}
++}
+\ No newline at end of file
+diff --git a/src/main/resources/assets/fruitphone/textures/item/passive_invisible.png b/src/main/resources/assets/fruitphone/textures/item/passive_invisible.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..fc383c5adc9b875b324629edd0baee6e3f801201
+GIT binary patch
+literal 3679
+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
+N22WQ%mvv4FO#l)qwSWKs
+
+literal 0
+HcmV?d00001
+
+-- 
+2.12.0
+
