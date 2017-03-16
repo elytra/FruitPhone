@@ -526,7 +526,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			item.getSubItems(item, item.getCreativeTab(), nnl);
 			if (!nnl.isEmpty()) {
 				is = nnl.get(rand.nextInt(nnl.size()));
-				if (item.isDamageable()) {
+				if (item.isDamageable() && is.getMaxDurability() > 0) {
 					is.setMetadata(rand.nextInt(is.getMaxDurability()));
 				}
 				chestData[idx] = is;
