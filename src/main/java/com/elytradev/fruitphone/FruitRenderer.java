@@ -306,7 +306,7 @@ public class FruitRenderer {
 				y += 2;
 			}
 			boolean renderLabel = true;
-			if (d.hasInventory() && !d.getInventory().isEmpty()) {
+			if (d.hasInventory() && !d.getInventory().isEmpty() && d.getInventory().get(0) != null) {
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
 					ds.setWidthIfGreater(x+16);
 					y -= 2;
@@ -400,7 +400,7 @@ public class FruitRenderer {
 			int textPosY = y+2;
 			y += 2;
 			boolean renderLabel = true;
-			if (d.hasInventory() && !d.getInventory().isEmpty()) {
+			if (d.hasInventory() && !d.getInventory().isEmpty() && d.getInventory().get(0) != null) {
 				RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
 					RenderItem.getInstance().renderItemAndEffectIntoGUI(Minecraft.getMinecraft().fontRendererObj, Minecraft.getMinecraft().renderEngine, d.getInventory().get(0), x, y-2);
