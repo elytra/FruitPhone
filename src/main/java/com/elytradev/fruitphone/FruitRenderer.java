@@ -58,6 +58,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
@@ -174,6 +175,9 @@ public class FruitRenderer {
 		
 		if (!hasData || x != currentDataPosX || y != currentDataPosY || z != currentDataPosZ) {
 			Block b = world.getBlock(x, y, z);
+			if (isBlacklisted(b)) {
+				return;
+			}
 			int meta = world.getBlockMetadata(x, y, z);
 			if (!b.hasTileEntity(meta)) {
 				hasData = true;
@@ -231,6 +235,9 @@ public class FruitRenderer {
 		
 		if (!hasData || x != currentDataPosX || y != currentDataPosY || z != currentDataPosZ) {
 			Block b = world.getBlock(x, y, z);
+			if (isBlacklisted(b)) {
+				return new DataSize();
+			}
 			int meta = world.getBlockMetadata(x, y, z);
 			if (!b.hasTileEntity(meta)) {
 				hasData = true;
@@ -262,6 +269,9 @@ public class FruitRenderer {
 	public static List<IProbeData> format(List<IProbeData> data, int srcX, int srcY, int srcZ) {
 		List<IProbeData> newData = Lists.newArrayList();
 		Block b = Minecraft.getMinecraft().theWorld.getBlock(srcX, srcY, srcZ);
+		if (isBlacklisted(b)) {
+			return data;
+		}
 		ItemStack pickblock = b.getPickBlock(Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().theWorld, srcX, srcY, srcZ, Minecraft.getMinecraft().thePlayer);
 		FruitProbeData ident = new FruitProbeData();
 		if (pickblock != null) {
@@ -293,6 +303,27 @@ public class FruitRenderer {
 			first = false;
 		}
 		return newData;
+	}
+	
+	/**
+	 * @return {@code true} if this block is known to be problematic, probably
+	 * 		by trying to be a special snowflake and instead being a broken
+	 * 		snowflake.
+	 */
+	public static boolean isBlacklisted(Block b) {
+		if (b == null) return true; // ???
+		if (b.getClass().getName().startsWith("codechicken")) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isBlacklisted(TileEntity te) {
+		if (te == null) return false;
+		if (te.getClass().getName().startsWith("codechicken")) {
+			return true;
+		}
+		return false;
 	}
 	
 	public static DataSize calculatePreferredDataSize(List<IProbeData> data, int preferredWidth, int preferredHeight, int maxWidth, int maxHeight) {
