@@ -59,6 +59,7 @@ import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
@@ -548,7 +549,10 @@ public class FruitPhone {
 		if (e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
 			ItemStack glasses = e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).glasses;
 			if (!glasses.isEmpty()) {
-				e.getEntityPlayer().entityDropItem(glasses, 1.2f);
+				EntityItem ei = new EntityItem(e.getEntityPlayer().world, e.getEntityPlayer().posX, e.getEntityPlayer().posY + 1.2, e.getEntityPlayer().posZ, glasses);
+	            ei.setDefaultPickupDelay();
+	            e.getDrops().add(ei);
+	            e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).glasses = ItemStack.EMPTY;
 			}
 		}
 	}
