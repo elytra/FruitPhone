@@ -1,6 +1,8 @@
 <img src="https://rawgit.com/elytra/FruitPhone/1.11.2/doc/emblem.svg" align="right" width="180px"/>
 
 # Fruit Phone
+[>> Downloads <<](https://github.com/elytra/FruitPhone/releases)
+
 *An extra-immersive Waila alternative*
 
 Fruit Phone is an implementation of an information renderer for
