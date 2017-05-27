@@ -122,12 +122,14 @@ def parseConfig(File config) {
 	}
 }
 
-uploadArchives {
-	repositories.mavenDeployer {
-		configuration = configurations.deploy
-		pom.artifactId = 'fruitphone'
-		repository(url: "sftp://"+priv.sftpHost+priv.sftpPath) {
-			authentication(userName: priv.sftpUser, privateKey: file(priv.sftpKey))
+if (file("private.properties").exists()) {
+	uploadArchives {
+		repositories.mavenDeployer {
+			configuration = configurations.deploy
+			pom.artifactId = 'fruitphone'
+			repository(url: "sftp://"+priv.sftpHost+priv.sftpPath) {
+				authentication(userName: priv.sftpUser, privateKey: file(priv.sftpKey))
+			}
 		}
 	}
 }
