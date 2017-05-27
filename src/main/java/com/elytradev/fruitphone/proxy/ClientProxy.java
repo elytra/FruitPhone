@@ -368,53 +368,72 @@ public class ClientProxy extends Proxy {
 				
 				GlStateManager.translate(5, 5, 40);
 				if (ds.getWidth() > 0 && ds.getWidth() > 0) {
-					GlStateManager.matrixMode(GL11.GL_PROJECTION);
-					GlStateManager.pushMatrix();
-					GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-					GlStateManager.pushMatrix();
-					// using a framebuffer fixes z-fighting and lighting
-					int size = (int)(Math.max(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight)*0.3);
-					if (fb == null || fb.framebufferWidth != size) {
-						if (fb != null) fb.deleteFramebuffer();
-						fb = new Framebuffer(size, size, true);
-						fb.setFramebufferFilter(GL11.GL_LINEAR);
-					} else {
-						fb.bindFramebuffer(true);
-					}
-					GlStateManager.clearColor(0, 0, 0, 0);
-					GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-					GlStateManager.matrixMode(GL11.GL_PROJECTION);
-			        GlStateManager.loadIdentity();
-			        GlStateManager.ortho(0, 90, 90, 0, 1000, 3000);
-			        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-			        GlStateManager.loadIdentity();
-			        GlStateManager.translate(0, 0, -2000);
-					if (portraitMode) {
-						FruitRenderer.renderAndSyncTarget(50, 90, false, ds);
-					} else {
-						FruitRenderer.renderAndSyncTarget(90, 50, false, ds);
-					}
-					
-					Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
-					GlStateManager.enableBlend();
-					GlStateManager.matrixMode(GL11.GL_PROJECTION);
-					GlStateManager.popMatrix();
-					GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-					GlStateManager.popMatrix();
-					GlStateManager.enableBlend();
-					GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-					fb.bindFramebufferTexture();
-					
-					if (portraitMode) {
-						if (handSide == EnumHandSide.RIGHT) {
-							GlStateManager.rotate(90f, 0, 0, 1);
-							GlStateManager.translate(0, -90, 0);
+					if (OpenGlHelper.isFramebufferEnabled()) {
+						GlStateManager.matrixMode(GL11.GL_PROJECTION);
+						GlStateManager.pushMatrix();
+						GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+						GlStateManager.pushMatrix();
+						// using a framebuffer fixes z-fighting and lighting
+						int size = (int)(Math.max(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight)*0.3);
+						if (fb == null || fb.framebufferWidth != size) {
+							if (fb != null) fb.deleteFramebuffer();
+							fb = new Framebuffer(size, size, true);
+							fb.setFramebufferFilter(GL11.GL_LINEAR);
 						} else {
-							GlStateManager.rotate(-90f, 0, 0, 1);
-							GlStateManager.translate(-50, 0, 0);
+							fb.bindFramebuffer(true);
+						}
+						GlStateManager.clearColor(0, 0, 0, 0);
+						GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+						GlStateManager.matrixMode(GL11.GL_PROJECTION);
+				        GlStateManager.loadIdentity();
+				        GlStateManager.ortho(0, 90, 90, 0, 1000, 3000);
+				        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+				        GlStateManager.loadIdentity();
+				        GlStateManager.translate(0, 0, -2000);
+						if (portraitMode) {
+							FruitRenderer.renderAndSyncTarget(50, 90, false, ds);
+						} else {
+							FruitRenderer.renderAndSyncTarget(90, 50, false, ds);
+						}
+					
+						Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
+						GlStateManager.enableBlend();
+						GlStateManager.matrixMode(GL11.GL_PROJECTION);
+						GlStateManager.popMatrix();
+						GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+						GlStateManager.popMatrix();
+						GlStateManager.enableBlend();
+						GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+						fb.bindFramebufferTexture();
+						
+						if (portraitMode) {
+							if (handSide == EnumHandSide.RIGHT) {
+								GlStateManager.rotate(90f, 0, 0, 1);
+								GlStateManager.translate(0, -90, 0);
+							} else {
+								GlStateManager.rotate(-90f, 0, 0, 1);
+								GlStateManager.translate(-50, 0, 0);
+							}
+						}
+						Rendering.drawTexturedRect(0, 0, 90, 90, 1, 0, 0, 1, -1);
+					} else {
+						if (portraitMode) {
+							if (handSide == EnumHandSide.RIGHT) {
+								GlStateManager.rotate(90f, 0, 0, 1);
+								GlStateManager.translate(0, -90, 0);
+							} else {
+								GlStateManager.rotate(-90f, 0, 0, 1);
+								GlStateManager.translate(-50, 0, 0);
+							}
+							FruitRenderer.renderAndSyncTarget(50, 90, false, ds);
+						} else {
+							FruitRenderer.renderAndSyncTarget(90, 50, false, ds);
 						}
 					}
-					Rendering.drawTexturedRect(0, 0, 90, 90, 1, 0, 0, 1, -1);
+				}
+				
+				if (!OpenGlHelper.isFramebufferEnabled()) {
+					Minecraft.getMinecraft().fontRenderer.drawString("LEGACY MODE", 40, 56, ~Minecraft.getMinecraft().getItemColors().getColorFromItemstack(is, 0));
 				}
 				
 				GL11.glEnable(GL11.GL_LIGHTING);
