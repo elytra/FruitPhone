@@ -67,6 +67,7 @@ import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityEnderChest;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -444,6 +445,9 @@ public class FruitPhone {
 			} catch (Throwable t) {}
 			if (sidelessItem == null && te instanceof IInventory) {
 				sidelessItem = new InvWrapper((IInventory)te);
+			}
+			if (te instanceof TileEntityEnderChest) {
+				sidelessItem = new InvWrapper(player.getInventoryEnderChest());
 			}
 			
 			
