@@ -56,6 +56,10 @@ repositories {
 		name = 'elytra'
 		url = 'http://repo.elytradev.com'
 	}
+	maven {
+		name = 'waila'
+		url = 'http://mobiusstrip.eu/maven'
+	}
 	jcenter()
 	ivy {
 		artifactPattern "http://unascribed.com/jars/[organisation]/[module].[ext]"
@@ -70,8 +74,7 @@ configurations {
 
 dependencies {
 	deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
-	
-	compile files('libs/Waila-1.5.10_1.7.10-deobf.jar')
+	compile 'mcp.mobius.waila:Waila:1.5.9b_dev2_1.7.10'
 }
 
 jar {
