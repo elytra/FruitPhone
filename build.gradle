@@ -60,6 +60,10 @@ repositories {
 		name = 'waila'
 		url = 'http://mobiusstrip.eu/maven'
 	}
+	maven {
+		name = 'codechicken'
+		url = 'http://chickenbones.net/maven/'
+	}
 	jcenter()
 	ivy {
 		artifactPattern "http://unascribed.com/jars/[organisation]/[module].[ext]"
