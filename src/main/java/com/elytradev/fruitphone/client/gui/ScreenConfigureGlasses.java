@@ -467,7 +467,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 	}
 	
 	private void drawButtonIcon(GuiButton button, ItemStack is) {
-		Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(is, button.xPosition+2, button.yPosition+2);
+		Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(is, button.x+2, button.y+2);
 	}
 
 	@Override
@@ -509,7 +509,7 @@ public class ScreenConfigureGlasses extends GuiScreen {
 			Item item;
 			while (!(item = Item.REGISTRY.getRandomObject(rand)).getRegistryName().getResourceDomain().equals("minecraft")) {}
 			NonNullList<ItemStack> nnl = NonNullList.create();
-			item.getSubItems(item, item.getCreativeTab(), nnl);
+			item.getSubItems(item.getCreativeTab(), nnl);
 			is = nnl.get(rand.nextInt(nnl.size()));
 			if (item.isDamageable() && is.getMaxDamage() > 0) {
 				is.setItemDamage(rand.nextInt(is.getMaxDamage()));

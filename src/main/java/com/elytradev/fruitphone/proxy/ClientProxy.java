@@ -25,6 +25,9 @@
 package com.elytradev.fruitphone.proxy;
 
 import java.util.Map;
+
+import com.google.common.base.MoreObjects;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import org.lwjgl.opengl.GL11;
 
 import com.elytradev.fruitphone.FruitPhone;
@@ -117,21 +120,6 @@ public class ClientProxy extends Proxy {
 		applyBobbing = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78475_f", "applyBobbing", "e"}, float.class);
 		hurtCameraEffect = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78482_e", "hurtCameraEffect", "d"}, float.class);
 	}
-	
-	@Override
-	public void preInit() {
-		super.preInit();
-
-		if (!FruitPhone.inst.optionalMode) {
-			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
-			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
-			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 2, new ModelResourceLocation("fruitphone:handheld_portrait#inventory"));
-			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 3, new ModelResourceLocation("fruitphone:handheld_portrait_mini#inventory"));
-			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
-			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 1, new ModelResourceLocation("fruitphone:passive_invisible#inventory"));
-			ModelLoader.setCustomModelResourceLocation(FruitItems.REMOVER, 0, new ModelResourceLocation("fruitphone:remover#inventory"));
-		}
-	}
 
 	@Override
 	public void postInit() {
@@ -148,7 +136,20 @@ public class ClientProxy extends Proxy {
 			}
 		}
 	}
-	
+
+	@SubscribeEvent
+	public void onModelRegister(ModelRegistryEvent event) {
+		if (!FruitPhone.inst.optionalMode) {
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 0, new ModelResourceLocation("fruitphone:handheld#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 1, new ModelResourceLocation("fruitphone:handheld_mini#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 2, new ModelResourceLocation("fruitphone:handheld_portrait#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.HANDHELD, 3, new ModelResourceLocation("fruitphone:handheld_portrait_mini#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 0, new ModelResourceLocation("fruitphone:passive#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.PASSIVE, 1, new ModelResourceLocation("fruitphone:passive_invisible#inventory"));
+			ModelLoader.setCustomModelResourceLocation(FruitItems.REMOVER, 0, new ModelResourceLocation("fruitphone:remover#inventory"));
+		}
+	}
+
 	@Override
 	public void configureGlasses() {
 		Minecraft.getMinecraft().displayGuiScreen(new ScreenConfigureGlasses());
@@ -289,7 +290,7 @@ public class ClientProxy extends Proxy {
 			}
 			
 			float swingProgress = p.getSwingProgress(partialTicks);
-			EnumHand swingingHand = Objects.firstNonNull(p.swingingHand, EnumHand.MAIN_HAND);
+			EnumHand swingingHand = MoreObjects.firstNonNull(p.swingingHand, EnumHand.MAIN_HAND);
 			
 			float interpPitch = p.prevRotationPitch + (p.rotationPitch - p.prevRotationPitch) * partialTicks;
 			float interpYaw = p.prevRotationYaw + (p.rotationYaw - p.prevRotationYaw) * partialTicks;

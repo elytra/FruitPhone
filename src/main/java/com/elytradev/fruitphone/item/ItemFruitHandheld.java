@@ -24,6 +24,7 @@
 
 package com.elytradev.fruitphone.item;
 
+import com.elytradev.fruitphone.FruitPhone;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -37,9 +38,11 @@ public class ItemFruitHandheld extends ItemFruit {
 	}
 	
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
-		addSubItems(itemIn, 0, subItems);
-		addSubItems(itemIn, 1, subItems);
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+		if(tab.equals(FruitPhone.tab)){
+			addSubItems(this,0, subItems);
+			addSubItems(this,1, subItems);
+		}
 	}
 	
 }

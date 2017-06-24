@@ -31,6 +31,7 @@ import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 import com.elytradev.fruitphone.network.EquipmentDataPacket;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
@@ -41,6 +42,8 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 
 public class ItemFruitPassive extends ItemFruit {
 
@@ -64,9 +67,9 @@ public class ItemFruitPassive extends ItemFruit {
 	}
 	
 	@Override
-	public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
+	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 		tooltip.add("\u00A77"+I18n.format("item.fruitphone.passive.hint"));
-		super.addInformation(stack, playerIn, tooltip, advanced);
+		super.addInformation(stack, worldIn, tooltip, flagIn);
 	}
 
 	public boolean isInvisible(ItemStack itemstack) {
@@ -74,9 +77,11 @@ public class ItemFruitPassive extends ItemFruit {
 	}
 	
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
-		addSubItems(itemIn, 0, subItems);
-		addSubItems(itemIn, 1, subItems);
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems) {
+		if(tab.equals(FruitPhone.tab)) {
+			addSubItems(this, 0, subItems);
+			addSubItems(this, 1, subItems);
+		}
 	}
 	
 }

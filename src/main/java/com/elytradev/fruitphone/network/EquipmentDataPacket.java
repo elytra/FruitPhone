@@ -29,10 +29,10 @@ import java.util.Optional;
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.capability.FruitEquipmentCapability;
 
-import com.elytradev.concrete.Message;
-import com.elytradev.concrete.NetworkContext;
-import com.elytradev.concrete.annotation.field.MarshalledAs;
-import com.elytradev.concrete.annotation.type.ReceivedOn;
+import com.elytradev.concrete.network.Message;
+import com.elytradev.concrete.network.NetworkContext;
+import com.elytradev.concrete.network.annotation.field.MarshalledAs;
+import com.elytradev.concrete.network.annotation.type.ReceivedOn;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;

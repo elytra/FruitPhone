@@ -30,9 +30,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
@@ -75,7 +75,7 @@ public class Rendering {
 		}
 
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer vertexbuffer = tessellator.getBuffer();
+		BufferBuilder bufferBuilder = tessellator.getBuffer();
 		GlStateManager.enableBlend();
 		GlStateManager.disableTexture2D();
 		GlStateManager.tryBlendFuncSeparate(
@@ -84,11 +84,11 @@ public class Rendering {
 				GlStateManager.SourceFactor.ONE,
 				GlStateManager.DestFactor.ZERO);
 		color4(color);
-		vertexbuffer.begin(7, DefaultVertexFormats.POSITION);
-		vertexbuffer.pos(left, bottom, 0).endVertex();
-		vertexbuffer.pos(right, bottom, 0).endVertex();
-		vertexbuffer.pos(right, top, 0).endVertex();
-		vertexbuffer.pos(left, top, 0).endVertex();
+		bufferBuilder.begin(7, DefaultVertexFormats.POSITION);
+		bufferBuilder.pos(left, bottom, 0).endVertex();
+		bufferBuilder.pos(right, bottom, 0).endVertex();
+		bufferBuilder.pos(right, top, 0).endVertex();
+		bufferBuilder.pos(left, top, 0).endVertex();
 		tessellator.draw();
 		GlStateManager.enableTexture2D();
 		GlStateManager.disableBlend();
@@ -108,7 +108,7 @@ public class Rendering {
 		}
 
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer vertexbuffer = tessellator.getBuffer();
+		BufferBuilder bufferBuilder = tessellator.getBuffer();
 		GlStateManager.enableBlend();
 		GlStateManager.tryBlendFuncSeparate(
 				GlStateManager.SourceFactor.SRC_ALPHA,
@@ -116,11 +116,11 @@ public class Rendering {
 				GlStateManager.SourceFactor.ONE,
 				GlStateManager.DestFactor.ZERO);
 		color4(color);
-		vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
-		vertexbuffer.pos(left, bottom, 0).tex(minU, maxV).endVertex();
-		vertexbuffer.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
-		vertexbuffer.pos(right, top, 0).tex(maxU, minV).endVertex();
-		vertexbuffer.pos(left, top, 0).tex(minU, minV).endVertex();
+		bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+		bufferBuilder.pos(left, bottom, 0).tex(minU, maxV).endVertex();
+		bufferBuilder.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
+		bufferBuilder.pos(right, top, 0).tex(maxU, minV).endVertex();
+		bufferBuilder.pos(left, top, 0).tex(minU, minV).endVertex();
 		tessellator.draw();
 		GlStateManager.disableBlend();
 	}
@@ -140,16 +140,16 @@ public class Rendering {
 		
 		GlStateManager.color(1, 1, 1);
 		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer vertexbuffer = tessellator.getBuffer();
+		BufferBuilder bufferBuilder = tessellator.getBuffer();
 		double maxU = textureSprite.getMinU();
 		double maxV = textureSprite.getMinV();
 		double minU = textureSprite.getInterpolatedU(left-right);
 		double minV = textureSprite.getInterpolatedV(top-bottom);
-		vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
-		vertexbuffer.pos(left, bottom, 0).tex(minU, maxV).endVertex();
-		vertexbuffer.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
-		vertexbuffer.pos(right, top, 0).tex(maxU, minV).endVertex();
-		vertexbuffer.pos(left, top, 0).tex(minU, minV).endVertex();
+		bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+		bufferBuilder.pos(left, bottom, 0).tex(minU, maxV).endVertex();
+		bufferBuilder.pos(right, bottom, 0).tex(maxU, maxV).endVertex();
+		bufferBuilder.pos(right, top, 0).tex(maxU, minV).endVertex();
+		bufferBuilder.pos(left, top, 0).tex(minU, minV).endVertex();
 		tessellator.draw();
 	}
 	
