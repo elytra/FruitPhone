@@ -51,7 +51,7 @@ import com.google.common.collect.Lists;
 import mcp.mobius.waila.api.IWailaDataProvider;
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
 
-import com.elytradev.concrete.NetworkContext;
+import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
 import com.elytradev.probe.api.IUnit;

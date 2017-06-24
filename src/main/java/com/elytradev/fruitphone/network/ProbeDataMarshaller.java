@@ -25,7 +25,7 @@
 package com.elytradev.fruitphone.network;
 
 import com.google.common.collect.ImmutableList;
-import com.elytradev.concrete.Marshaller;
+import com.elytradev.concrete.network.Marshaller;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.UnitDictionary;
 import com.elytradev.probe.api.impl.ProbeData;
