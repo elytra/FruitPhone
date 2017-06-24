@@ -1,0 +1,36 @@
+ext.package = 'com.elytradev.fruitphone'
+ext.group = 'com.elytradev'
+ext.projectName = 'FruitPhone'
+ext.useElytraVersionFormat = true
+ext.version = '2'
+
+// 0.2.1 is the earliest Concrete version supported by the skeleton.
+ext.concreteVersion = '0.2.1'
+ext.concreteModules = [ 'common', 'network', 'reflect' ]
+
+ext.forge = '1.12-14.21.0.2359'
+ext.mappings = 'snapshot_20170623'
+
+ext.enforceLicenseHeaders = false
+
+ext.verbose = false
+
+repositories {
+    // the skeleton already defines mavenCentral, jcenter, and the Elytra repo
+    maven {
+        url 'http://dvs1.progwml6.com/files/maven'
+    }
+    maven {
+        url "http://tehnut.info/maven"
+    }
+}
+
+dependencies {
+    compile project(':ProbeDataProviderAPI')
+
+    compile 'mezz.jei:jei_1.12:4.7.0.67:api'
+    runtime 'mezz.jei:jei_1.12:4.7.0.67'
+
+    compile 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
+    runtime 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
+}

@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import com.elytradev.concrete.network.NetworkContext;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -51,7 +53,6 @@ import com.google.common.collect.Lists;
 import mcp.mobius.waila.api.IWailaDataProvider;
 import mcp.mobius.waila.api.impl.ModuleRegistrar;
 
-import com.elytradev.concrete.NetworkContext;
 import com.elytradev.probe.api.IProbeData;
 import com.elytradev.probe.api.IProbeDataProvider;
 import com.elytradev.probe.api.IUnit;
@@ -227,15 +228,11 @@ public class FruitPhone {
 		config.save();
 		
 		if (!optionalMode) {
-			RecipeSorter.register("fruitphone:upgrade", FruitUpgradeRecipe.class, Category.SHAPED, "after:forge:shapedore");
-			
-			FruitItems.register();
-			FruitRecipes.register();
-			FruitSounds.register();
+			MinecraftForge.EVENT_BUS.register(FruitItems.class);
+			MinecraftForge.EVENT_BUS.register(FruitRecipes.class);
+			MinecraftForge.EVENT_BUS.register(FruitSounds.class);
 			
 			CapabilityManager.INSTANCE.register(FruitEquipmentCapability.class, new FruitEquipmentStorage(), FruitEquipmentCapability::new);
-			
-			proxy.preInit();
 		}
 		
 		NETWORK = NetworkContext.forChannel("FruitPhone")
@@ -259,7 +256,7 @@ public class FruitPhone {
 		
 		config.save();
 	}
-	
+
 	@EventHandler
 	public void onPostInit(FMLPostInitializationEvent e) {
 		proxy.postInit();
@@ -339,7 +336,7 @@ public class FruitPhone {
 			Vec3d eyes = e.player.getPositionEyes(1);
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
-			Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+			Vec3d max = eyes.addVector(look.x * dist, look.y * dist, look.z * dist);
 			RayTraceResult rtr = e.player.world.rayTraceBlocks(eyes, max, false, false, false);
 			if (rtr != null && rtr.typeOfHit == Type.BLOCK) {
 				List<IProbeData> list = Lists.newArrayList();

@@ -30,20 +30,24 @@ import net.minecraft.block.Block;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 public class FruitUpgradeRecipe extends ShapedOreRecipe {
 
-	public FruitUpgradeRecipe(Block result, Object... recipe) {
-		super(result, recipe);
+	public FruitUpgradeRecipe(ResourceLocation group, Block result, Object... recipe) {
+		super(null, result, recipe);
+		this.setRegistryName(group);
 	}
 
-	public FruitUpgradeRecipe(Item result, Object... recipe) {
-		super(result, recipe);
+	public FruitUpgradeRecipe(ResourceLocation group, Item result, Object... recipe) {
+		super(null, result, recipe);
+		this.setRegistryName(group);
 	}
 
-	public FruitUpgradeRecipe(ItemStack result, Object... recipe) {
-		super(result, recipe);
+	public FruitUpgradeRecipe(ResourceLocation group, ItemStack result, Object... recipe) {
+		super(null, result, recipe);
+		this.setRegistryName(group);
 	}
 	
 	@Override

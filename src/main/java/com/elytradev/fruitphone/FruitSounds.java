@@ -26,15 +26,18 @@ package com.elytradev.fruitphone;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class FruitSounds {
 
 	public static SoundEvent DRILL;
-	
-	public static void register() {
+
+	@SubscribeEvent
+	public static void register(RegistryEvent.Register<SoundEvent> registryEvent) {
 		DRILL = ev(new ResourceLocation("fruitphone", "drill"));
-		GameRegistry.register(DRILL);
+		registryEvent.getRegistry().register(DRILL);
 	}
 
 	private static SoundEvent ev(ResourceLocation loc) {

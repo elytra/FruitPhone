@@ -161,7 +161,7 @@ public class FruitRenderer {
 		Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
 		Vec3d look = player.getLook(ClientProxy.partialTicks);
 		double dist = 4;
-		Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+		Vec3d max = eyes.addVector(look.x * dist, look.y * dist, look.z * dist);
 		RayTraceResult rtr = player.world.rayTraceBlocks(eyes, max, false, false, false);
 		
 		if (rtr == null || rtr.typeOfHit != Type.BLOCK) return;
@@ -215,7 +215,7 @@ public class FruitRenderer {
 		Vec3d eyes = player.getPositionEyes(ClientProxy.partialTicks);
 		Vec3d look = player.getLook(ClientProxy.partialTicks);
 		double dist = 4;
-		Vec3d max = eyes.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist);
+		Vec3d max = eyes.addVector(look.x * dist, look.y * dist, look.z * dist);
 		RayTraceResult rtr = player.world.rayTraceBlocks(eyes, max, false, false, false);
 		
 		if (rtr == null || rtr.typeOfHit != Type.BLOCK) return new DataSize();
