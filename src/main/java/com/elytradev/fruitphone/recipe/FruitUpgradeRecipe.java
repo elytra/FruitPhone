@@ -36,16 +36,17 @@ import net.minecraftforge.oredict.ShapedOreRecipe;
 public class FruitUpgradeRecipe extends ShapedOreRecipe {
 
 	public FruitUpgradeRecipe(ResourceLocation group, Block result, Object... recipe) {
-		super(group, result, recipe);
+		super(null, result, recipe);
+		this.setRegistryName(group);
 	}
 
 	public FruitUpgradeRecipe(ResourceLocation group, Item result, Object... recipe) {
-		super(group, result, recipe);
+		super(null, result, recipe);
 		this.setRegistryName(group);
 	}
 
 	public FruitUpgradeRecipe(ResourceLocation group, ItemStack result, Object... recipe) {
-		super(group, result, recipe);
+		super(null, result, recipe);
 		this.setRegistryName(group);
 	}
 	

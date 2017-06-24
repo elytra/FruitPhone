@@ -289,11 +289,11 @@ public class FruitRecipes {
 	}
 
 	private static ShapelessOreRecipe createOreRecipe(ResourceLocation location, Item out, Object... in){
-		return (ShapelessOreRecipe) new ShapelessOreRecipe(location, out, in).setRegistryName(location);
+		return (ShapelessOreRecipe) new ShapelessOreRecipe(null, out, in).setRegistryName(location);
 	}
 
 	private static ShapelessOreRecipe createOreRecipe(ResourceLocation location, ItemStack out, Object... in){
-		return (ShapelessOreRecipe) new ShapelessOreRecipe(location, out, in).setRegistryName(location);
+		return (ShapelessOreRecipe) new ShapelessOreRecipe(null, out, in).setRegistryName(location);
 	}
 
 }
