@@ -228,8 +228,6 @@ public class FruitPhone {
 		config.save();
 		
 		if (!optionalMode) {
-			RecipeSorter.register("fruitphone:upgrade", FruitUpgradeRecipe.class, Category.SHAPED, "after:forge:shapedore");
-			
 			MinecraftForge.EVENT_BUS.register(FruitItems.class);
 			MinecraftForge.EVENT_BUS.register(FruitRecipes.class);
 			MinecraftForge.EVENT_BUS.register(FruitSounds.class);
