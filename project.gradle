@@ -1,5 +1,7 @@
 ext.package = 'com.elytradev.fruitphone'
+ext.group = 'com.elytradev'
 ext.projectName = 'FruitPhone'
+ext.useElytraVersionFormat = true
 ext.version = '0.1.7'
 
 // 0.2.1 is the earliest Concrete version supported by the skeleton.
