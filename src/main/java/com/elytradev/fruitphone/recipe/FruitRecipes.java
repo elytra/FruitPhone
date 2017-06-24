@@ -26,6 +26,7 @@ package com.elytradev.fruitphone.recipe;
 
 import java.util.List;
 
+import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.google.common.collect.Lists;
 
@@ -33,26 +34,34 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
+import net.minecraftforge.registries.IForgeRegistry;
 
 public class FruitRecipes {
 
 	public static List<Integer> craftableColors = Lists.newArrayList();
-	
-	public static void register() {
+
+	@SubscribeEvent
+	public static void register(RegistryEvent.Register<IRecipe> registryEvent) {
+		IForgeRegistry<IRecipe> registry = registryEvent.getRegistry();
 		OreDictionary.registerOre("blockObsidian", Blocks.OBSIDIAN);
 		OreDictionary.registerOre("clay", Items.CLAY_BALL);
 		// using the (broken) listAllfruit name for Pam's HarvestCraft compat
 		OreDictionary.registerOre("listAllfruit", Items.APPLE);
 		OreDictionary.registerOre("listAllfruit", Items.MELON);
 		OreDictionary.registerOre("listAllfruit", Items.CHORUS_FRUIT);
-		
-		GameRegistry.addRecipe(new ShapelessOreRecipe(FruitItems.HANDHELD,
+
+		registry.register(createOreRecipe(new ResourceLocation(FruitPhone.MODID, "create_handheld"),
+				FruitItems.HANDHELD,
 				"ingotIron", "listAllfruit"));
-		GameRegistry.addRecipe(new FruitUpgradeRecipe(FruitItems.PASSIVE,
+		registry.register(new FruitUpgradeRecipe(new ResourceLocation(FruitPhone.MODID, "create_passive"),
+				FruitItems.PASSIVE,
 				"/ /",
 				"ghg",
 				'/', "ingotIron",
@@ -60,24 +69,29 @@ public class FruitRecipes {
 				'h', new ItemStack(FruitItems.HANDHELD, 1, OreDictionary.WILDCARD_VALUE)));
 		
 		// Pad <-> Phone
-		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 0),
+		registry.register(new FruitUpgradeRecipe(new ResourceLocation(FruitPhone.MODID, "convert_pad_phone"),
+				new ItemStack(FruitItems.HANDHELD, 1, 0),
 				"p",
 				'p', new ItemStack(FruitItems.HANDHELD, 1, 1)));
-		
-		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.HANDHELD, 1, 1),
+
+		registry.register(new FruitUpgradeRecipe(new ResourceLocation(FruitPhone.MODID, "convert_phone_pad"),
+				new ItemStack(FruitItems.HANDHELD, 1, 1),
 				"p",
 				'p', new ItemStack(FruitItems.HANDHELD, 1, 0)));
 		
 		// Glasses <-> Contacts
-		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.PASSIVE, 1, 0),
+		registry.register(new FruitUpgradeRecipe(new ResourceLocation(FruitPhone.MODID, "convert_glasses_contacts"),
+				new ItemStack(FruitItems.PASSIVE, 1, 0),
 				"p",
 				'p', new ItemStack(FruitItems.PASSIVE, 1, 1)));
 		
-		GameRegistry.addRecipe(new FruitUpgradeRecipe(new ItemStack(FruitItems.PASSIVE, 1, 1),
+		registry.register(new FruitUpgradeRecipe(new ResourceLocation(FruitPhone.MODID, "convert_contacts_glasses"),
+				new ItemStack(FruitItems.PASSIVE, 1, 1),
 				"p",
 				'p', new ItemStack(FruitItems.PASSIVE, 1, 0)));
 		
-		GameRegistry.addRecipe(new FruitUpgradeRecipe(FruitItems.REMOVER,
+		registry.register(new FruitUpgradeRecipe(new ResourceLocation(FruitPhone.MODID, "create_remover"),
+				FruitItems.REMOVER,
 				"i ",
 				"/w",
 				'/', "stickWood",
@@ -85,124 +99,120 @@ public class FruitRecipes {
 				'i', "ingotIron"));
 		
 		// Elegant Tungsten
-		colorRecipe(0x2C2D2D, "ingotTungsten");
-		colorRecipe(0x2C2D2D, "dyeBlack", "ingotIron");
+		colorRecipe(registry, 0x2C2D2D, "ingotTungsten");
+		colorRecipe(registry, 0x2C2D2D, "dyeBlack", "ingotIron");
 		// Obsidian
-		colorRecipe(0x322D44, "blockObsidian");
-		colorRecipe(0x322D44, "dyeBlack", "dyePurple");
+		colorRecipe(registry, 0x322D44, "blockObsidian");
+		colorRecipe(registry, 0x322D44, "dyeBlack", "dyePurple");
 		// Silver
-		colorRecipe(0xCDCDCD, "ingotSilver");
-		colorRecipe(0xCDCDCD, "dyeLightGray");
+		colorRecipe(registry, 0xCDCDCD, "ingotSilver");
+		colorRecipe(registry, 0xCDCDCD, "dyeLightGray");
 		// White
-		colorRecipe(0xFFFFFF, "dyeWhite");
+		colorRecipe(registry, 0xFFFFFF, "dyeWhite");
 		
 		// Slate Red
-		colorRecipe(0xB15573, "dustRedstone");
-		colorRecipe(0xB15573, "dyeRed", "dyeGray");
+		colorRecipe(registry, 0xB15573, "dustRedstone");
+		colorRecipe(registry, 0xB15573, "dyeRed", "dyeGray");
 		// Dull Pink
-		colorRecipe(0xAC5596, "dyeMagenta", "dyeGray");
+		colorRecipe(registry, 0xAC5596, "dyeMagenta", "dyeGray");
 		// Lucious Lavender
-		colorRecipe(0x8851AC, "cropLavender");
-		colorRecipe(0x8851AC, "dyePurple", "dyeGray");
+		colorRecipe(registry, 0x8851AC, "cropLavender");
+		colorRecipe(registry, 0x8851AC, "dyePurple", "dyeGray");
 		// Kinda Blue
-		colorRecipe(0x5557B1, "dyeBlue", "dyeGray");
+		colorRecipe(registry, 0x5557B1, "dyeBlue", "dyeGray");
 		// Steel Blue
-		colorRecipe(0x5589B1, "ingotSteel");
-		colorRecipe(0x5589B1, "dyeLightBlue", "dyeGray");
+		colorRecipe(registry, 0x5589B1, "ingotSteel");
+		colorRecipe(registry, 0x5589B1, "dyeLightBlue", "dyeGray");
 		// Sea Green
-		colorRecipe(0x55A9B1, "dyeGreen", "dyeCyan", "dyeGray");
+		colorRecipe(registry, 0x55A9B1, "dyeGreen", "dyeCyan", "dyeGray");
 		// Real Teal
-		colorRecipe(0x55AF90, "dyeCyan", "dyeGray");
+		colorRecipe(registry, 0x55AF90, "dyeCyan", "dyeGray");
 		// Cactus Green
-		colorRecipe(0x73B155, "dyeGreen", "dyeGray");
+		colorRecipe(registry, 0x73B155, "dyeGreen", "dyeGray");
 		// Wasabi
-		colorRecipe(0x9CB055, "dyeLime", "dyeGreen", "dyeGray");
+		colorRecipe(registry, 0x9CB055, "dyeLime", "dyeGreen", "dyeGray");
 		// Sulfur
-		colorRecipe(0xB8AA4D, "dustSulfur");
-		colorRecipe(0xB8AA4D, "dustSulphur");
-		colorRecipe(0xB8AA4D, "dyeYellow", "dyeGray");
+		colorRecipe(registry, 0xB8AA4D, "dustSulfur");
+		colorRecipe(registry, 0xB8AA4D, "dustSulphur");
+		colorRecipe(registry, 0xB8AA4D, "dyeYellow", "dyeGray");
 		// Cinnamon
-		colorRecipe(0xB18255, "dyeBrown", "dyeGray");
+		colorRecipe(registry, 0xB18255, "dyeBrown", "dyeGray");
 		// Wet Clay
-		colorRecipe(0xB17355, "clay");
-		colorRecipe(0xB17355, "dyeBrown", "dyeOrange", "dyeGray");
+		colorRecipe(registry, 0xB17355, "clay");
+		colorRecipe(registry, 0xB17355, "dyeBrown", "dyeOrange", "dyeGray");
 		// Scarlet
-		colorRecipe(0xAF5454, "dyeRed", "dyeGray");
+		colorRecipe(registry, 0xAF5454, "dyeRed", "dyeGray");
 		
 		// Cherry Red
-		colorRecipe(0xFD004D, "dustGlowstone", "dyeRed");
+		colorRecipe(registry, 0xFD004D, "dustGlowstone", "dyeRed");
 		// Terrific Pink
-		colorRecipe(0xE300FF, "dustGlowstone", "dyeMagenta");
+		colorRecipe(registry, 0xE300FF, "dustGlowstone", "dyeMagenta");
 		// Vivid Violet
-		colorRecipe(0x9C00FF, "dustGlowstone", "dyePurple");
+		colorRecipe(registry, 0x9C00FF, "dustGlowstone", "dyePurple");
 		// Really Blue
-		colorRecipe(0x1B1BEC, "dustGlowstone", "dyeBlue");
+		colorRecipe(registry, 0x1B1BEC, "dustGlowstone", "dyeBlue");
 		// Cerulean
-		colorRecipe(0x0078FF, "dustGlowstone", "dyeLightBlue");
+		colorRecipe(registry, 0x0078FF, "dustGlowstone", "dyeLightBlue");
 		// Sky Blue
-		colorRecipe(0x00BAFF, "dustGlowstone", "dyeCyan");
+		colorRecipe(registry, 0x00BAFF, "dustGlowstone", "dyeCyan");
 		// Brilliant Verdant
-		colorRecipe(0x00FFCC, "dustGlowstone", "dyeLime");
+		colorRecipe(registry, 0x00FFCC, "dustGlowstone", "dyeLime");
 		Item misc = Item.getByNameOrId("correlated:misc");
-		if (misc == null) {
-			// try the legacy modid
-			misc = Item.getByNameOrId("correlatedpotentialistics:misc");
-		}
 		if (misc != null) {
 			ItemStack lum = new ItemStack(misc, 1, 3);
-			colorRecipe(0x00FFCC, lum);
+			colorRecipe(registry, 0x00FFCC, lum);
 		} else {
-			colorRecipe(0x00FFCC, "dustGlowstone", "enderpearl");
+			colorRecipe(registry, 0x00FFCC, "dustGlowstone", "enderpearl");
 		}
 		// Mean Green
-		colorRecipe(0x8BFF00, "dustGlowstone", "dyeGreen");
+		colorRecipe(registry, 0x8BFF00, "dustGlowstone", "dyeGreen");
 		// Electric Green
-		colorRecipe(0xCCFE00, "dustGlowstone", "dyeLime", "dyeLime");
+		colorRecipe(registry, 0xCCFE00, "dustGlowstone", "dyeLime", "dyeLime");
 		// Mustard Yellow
-		colorRecipe(0xF6E700, "dustGlowstone", "cropMustard");
-		colorRecipe(0xF6E700, "dustGlowstone", "seedMustard");
-		colorRecipe(0xF6E700, "dustGlowstone", "dyeYellow", "dyeBrown");
+		colorRecipe(registry, 0xF6E700, "dustGlowstone", "cropMustard");
+		colorRecipe(registry, 0xF6E700, "dustGlowstone", "seedMustard");
+		colorRecipe(registry, 0xF6E700, "dustGlowstone", "dyeYellow", "dyeBrown");
 		// Dandelion Yellow
-		colorRecipe(0xFEC501, "dustGlowstone", "dyeYellow");
+		colorRecipe(registry, 0xFEC501, "dustGlowstone", "dyeYellow");
 		// Sunset Orange
-		colorRecipe(0xFF9C00, "dustGlowstone", "dyeOrange");
+		colorRecipe(registry, 0xFF9C00, "dustGlowstone", "dyeOrange");
 		// Vibrant Vermillion
-		colorRecipe(0xFF5C00, "dustGlowstone", "dyeOrange", "dyeRed");
+		colorRecipe(registry, 0xFF5C00, "dustGlowstone", "dyeOrange", "dyeRed");
 		
 		// Rose Gold
 		if (doesOreExist("ingotCopper")) {
 			if (doesOreExist("ingotSilver")) {
-				colorRecipe(0xEFC6BF, "ingotGold", "ingotSilver", "ingotCopper");
-				colorRecipe(0xEFC6BF, "dustGold", "dustSilver", "dustCopper");
+				colorRecipe(registry, 0xEFC6BF, "ingotGold", "ingotSilver", "ingotCopper");
+				colorRecipe(registry, 0xEFC6BF, "dustGold", "dustSilver", "dustCopper");
 			} else {
-				colorRecipe(0xEFC6BF, "ingotGold", "ingotCopper");
-				colorRecipe(0xEFC6BF, "dustGold", "dustCopper");
+				colorRecipe(registry, 0xEFC6BF, "ingotGold", "ingotCopper");
+				colorRecipe(registry, 0xEFC6BF, "dustGold", "dustCopper");
 			}
 		} else {
-			colorRecipe(0xEFC6BF, "ingotGold", "dyeRed");
-			colorRecipe(0xEFC6BF, "dustGold", "dyeRed");
+			colorRecipe(registry, 0xEFC6BF, "ingotGold", "dyeRed");
+			colorRecipe(registry, 0xEFC6BF, "dustGold", "dyeRed");
 		}
 		// Platinum
 		if (doesOreExist("ingotPlatinum")) {
-			colorRecipe(0xC9D2D2, "ingotPlatinum");
-			colorRecipe(0xC9D2D2, "dustPlatinum");
+			colorRecipe(registry, 0xC9D2D2, "ingotPlatinum");
+			colorRecipe(registry, 0xC9D2D2, "dustPlatinum");
 		} else if (doesOreExist("ingotSilver")) {
-			colorRecipe(0xC9D2D2, "ingotSilver", "gemDiamond");
-			colorRecipe(0xC9D2D2, "dustSilver", "gemDiamond");
+			colorRecipe(registry, 0xC9D2D2, "ingotSilver", "gemDiamond");
+			colorRecipe(registry, 0xC9D2D2, "dustSilver", "gemDiamond");
 		} else {
-			colorRecipe(0xC9D2D2, "ingotIron", "gemDiamond", "gemDiamond");
-			colorRecipe(0xC9D2D2, "dustIron", "gemDiamond", "gemDiamond");
+			colorRecipe(registry, 0xC9D2D2, "ingotIron", "gemDiamond", "gemDiamond");
+			colorRecipe(registry, 0xC9D2D2, "dustIron", "gemDiamond", "gemDiamond");
 		}
 		// Sriracha Red
 		if (doOresExist("cropTomato", "cropChilipepper", "cropGarlic", "foodVinegar")) {
-			colorRecipe(0xB31E02, "cropTomato", "cropChilipepper", "cropGarlic", "foodVinegar");
+			colorRecipe(registry, 0xB31E02, "cropTomato", "cropChilipepper", "cropGarlic", "foodVinegar");
 		} else if (doOresExist("cropTomato", "cropGarlic")) {
-			colorRecipe(0xB31E02, "cropTomato", "cropGarlic");
+			colorRecipe(registry, 0xB31E02, "cropTomato", "cropGarlic");
 		} else {
-			colorRecipe(0xB31E02, "dyeRed", "dyeRed", "dyeRed");
+			colorRecipe(registry, 0xB31E02, "dyeRed", "dyeRed", "dyeRed");
 		}
 		// Ender Green
-		colorRecipe(0x258474, "enderpearl");
+		colorRecipe(registry, 0x258474, "enderpearl");
 	}
 
 	private static boolean doesOreExist(String ore) {
@@ -216,7 +226,7 @@ public class FruitRecipes {
 		return true;
 	}
 
-	private static void colorRecipe(int color, Object... ingredients) {
+	private static void colorRecipe(IForgeRegistry<IRecipe> registry, int color, Object... ingredients) {
 		craftableColors.add(color);
 		
 		NBTTagCompound tag = new NBTTagCompound();
@@ -246,11 +256,26 @@ public class FruitRecipes {
 		System.arraycopy(ingredients, 0, handheldMiniIngredients, 1, ingredients.length);
 		System.arraycopy(ingredients, 0, passiveIngredients, 1, ingredients.length);
 		System.arraycopy(ingredients, 0, passiveInvisibleIngredients, 1, ingredients.length);
-		
-		GameRegistry.addRecipe(new ShapelessOreRecipe(handheld, handheldIngredients));
-		GameRegistry.addRecipe(new ShapelessOreRecipe(handheldMini, handheldMiniIngredients));
-		GameRegistry.addRecipe(new ShapelessOreRecipe(passive, passiveIngredients));
-		GameRegistry.addRecipe(new ShapelessOreRecipe(passiveInvisible, passiveInvisibleIngredients));
+
+		String suffix = String.valueOf(color);
+		int variant = 0;
+		while(registry.containsKey(new ResourceLocation(FruitPhone.MODID, "dye_handheld_" + suffix))){
+			suffix = color + "_variant_" + variant;
+			variant++;
+		}
+
+		registry.register(createOreRecipe(
+				new ResourceLocation(FruitPhone.MODID, "dye_handheld_" + suffix),
+				handheld, handheldIngredients));
+		registry.register(createOreRecipe(
+				new ResourceLocation(FruitPhone.MODID, "dye_handheld_mini_" + suffix),
+				handheldMini, handheldMiniIngredients));
+		registry.register(createOreRecipe(
+				new ResourceLocation(FruitPhone.MODID, "dye_passive_" + suffix),
+				passive, passiveIngredients));
+		registry.register(createOreRecipe(
+				new ResourceLocation(FruitPhone.MODID, "dye_passive_invisible_" + suffix),
+				passiveInvisible, passiveInvisibleIngredients));
 		
 		Object[] handheldDirectIngredients = new Object[ingredients.length+2];
 		
@@ -259,7 +284,16 @@ public class FruitRecipes {
 		
 		System.arraycopy(ingredients, 0, handheldDirectIngredients, 2, ingredients.length);
 		
-		GameRegistry.addRecipe(new ShapelessOreRecipe(handheld, handheldDirectIngredients));
+		registry.register(createOreRecipe(new ResourceLocation(FruitPhone.MODID, "dye_direct_handheld_" + suffix),
+				handheld, handheldDirectIngredients));
+	}
+
+	private static ShapelessOreRecipe createOreRecipe(ResourceLocation location, Item out, Object... in){
+		return (ShapelessOreRecipe) new ShapelessOreRecipe(location, out, in).setRegistryName(location);
+	}
+
+	private static ShapelessOreRecipe createOreRecipe(ResourceLocation location, ItemStack out, Object... in){
+		return (ShapelessOreRecipe) new ShapelessOreRecipe(location, out, in).setRegistryName(location);
 	}
 
 }
