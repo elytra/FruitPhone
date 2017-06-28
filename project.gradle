@@ -5,7 +5,7 @@ ext.useElytraVersionFormat = true
 ext.version = '2'
 
 // 0.2.1 is the earliest Concrete version supported by the skeleton.
-ext.concreteVersion = '0.2.1'
+ext.concreteVersion = '0.3.1'
 ext.concreteModules = [ 'common', 'network', 'reflect' ]
 
 ext.forge = '1.12-14.21.0.2359'
