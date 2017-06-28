@@ -111,14 +111,14 @@ public class ClientProxy extends Proxy {
 		prevEquippedProgressMainHand = Accessors.findField(ItemRenderer.class, "field_187470_g", "prevEquippedProgressMainHand", "g");
 		prevEquippedProgressOffHand = Accessors.findField(ItemRenderer.class, "field_187472_i", "prevEquippedProgressOffHand", "i");
 		
-		setLightmap = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187464_b", "setLightmap", "b"});
-		rotateArroundXAndY = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_178101_a", "rotateArroundXAndY", "a"}, float.class, float.class);
-		transformSideFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187459_b", "transformSideFirstPerson", "b"}, EnumHandSide.class, float.class);
-		transformFirstPerson = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187453_a", "transformFirstPerson", "a"}, EnumHandSide.class, float.class);
-		rotateArm = Invokers.findMethod(ItemRenderer.class, null, new String[] {"func_187458_c", "rotateArm", "c"}, float.class);
+		setLightmap = Invokers.findMethod(ItemRenderer.class, "setLightmap", "func_187464_b");
+		rotateArroundXAndY = Invokers.findMethod(ItemRenderer.class, "rotateArroundXAndY", "func_178101_a", float.class, float.class);
+		transformSideFirstPerson = Invokers.findMethod(ItemRenderer.class, "transformSideFirstPerson", "func_187459_b", EnumHandSide.class, float.class);
+		transformFirstPerson = Invokers.findMethod(ItemRenderer.class, "transformFirstPerson", "func_187453_a", EnumHandSide.class, float.class);
+		rotateArm = Invokers.findMethod(ItemRenderer.class, "rotateArm", "func_187458_c", float.class);
 		
-		applyBobbing = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78475_f", "applyBobbing", "e"}, float.class);
-		hurtCameraEffect = Invokers.findMethod(EntityRenderer.class, null, new String[] {"func_78482_e", "hurtCameraEffect", "d"}, float.class);
+		applyBobbing = Invokers.findMethod(EntityRenderer.class, "applyBobbing", "func_78475_f", float.class);
+		hurtCameraEffect = Invokers.findMethod(EntityRenderer.class, "hurtCameraEffect", "func_78482_e", float.class);
 	}
 
 	@Override
