@@ -120,7 +120,7 @@ public class FruitPhone {
 	public static final String VERSION = "@VERSION@";
 	public static final String DEPENDENCIES = "required-after:probedataprovider;after:waila";
 
-	public static final String SYNC_TAG = "resyncFroot";
+	public static final String SYNC_TAG = "fruitphone:resyncNextTick";
 	
 	public static final Logger log = LogManager.getLogger("FruitPhone");
 
@@ -325,15 +325,15 @@ public class FruitPhone {
 	
 	@SubscribeEvent
 	public void onPlayerClone(PlayerEvent.Clone e) {
-		if (! e.getOriginal().hasCapability(CAPABILITY_EQUIPMENT, null) ||
-				! e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null))
+		if (!e.getOriginal().hasCapability(CAPABILITY_EQUIPMENT, null) ||
+				!e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null))
 			return;
 
 		if ((!e.isWasDeath() || e.getEntityPlayer().getEntityWorld().getGameRules().getBoolean("keepInventory"))) {
 			e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).copyFrom(e.getOriginal().getCapability(CAPABILITY_EQUIPMENT, null));
-			if (e.isWasDeath())
+			if (e.isWasDeath()) {
 				e.getEntityPlayer().addTag(SYNC_TAG);
-//
+			}
 		}
 	}
 	
