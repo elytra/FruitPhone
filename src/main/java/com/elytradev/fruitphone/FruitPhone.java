@@ -343,8 +343,9 @@ public class FruitPhone {
 	public void onPlayerTick(PlayerTickEvent e) {
 		if (e.phase == Phase.START) {
 			if (e.player.worldObj.isRemote) return;
-			if (e.player.removeTag(SYNC_TAG))
+			if (e.player.removeTag(SYNC_TAG)) {
 				EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
+			}
 			Vec3d eyes = new Vec3d(e.player.posX, e.player.posY + e.player.getEyeHeight(), e.player.posZ);;
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
