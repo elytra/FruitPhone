@@ -119,6 +119,8 @@ public class FruitPhone {
 	public static final String NAME = "Fruit Phone";
 	public static final String VERSION = "@VERSION@";
 	public static final String DEPENDENCIES = "required-after:probedataprovider;after:waila";
+
+	public static final String SYNC_TAG = "fruitphone:resyncNextTick";
 	
 	public static final Logger log = LogManager.getLogger("FruitPhone");
 
@@ -323,11 +325,15 @@ public class FruitPhone {
 	
 	@SubscribeEvent
 	public void onPlayerClone(PlayerEvent.Clone e) {
-		if (!e.isWasDeath() && e.getOriginal().hasCapability(CAPABILITY_EQUIPMENT, null) &&
-				e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null)) {
-			FruitEquipmentCapability orig = e.getOriginal().getCapability(CAPABILITY_EQUIPMENT, null);
-			FruitEquipmentCapability nw = e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null);
-			nw.glasses = orig.glasses;
+		if (!e.getOriginal().hasCapability(CAPABILITY_EQUIPMENT, null) ||
+				!e.getEntityPlayer().hasCapability(CAPABILITY_EQUIPMENT, null))
+			return;
+
+		if ((!e.isWasDeath() || e.getEntityPlayer().getEntityWorld().getGameRules().getBoolean("keepInventory"))) {
+			e.getEntityPlayer().getCapability(CAPABILITY_EQUIPMENT, null).copyFrom(e.getOriginal().getCapability(CAPABILITY_EQUIPMENT, null));
+			if (e.isWasDeath()) {
+				e.getEntityPlayer().addTag(SYNC_TAG);
+			}
 		}
 	}
 	
@@ -337,6 +343,9 @@ public class FruitPhone {
 	public void onPlayerTick(PlayerTickEvent e) {
 		if (e.phase == Phase.START) {
 			if (e.player.worldObj.isRemote) return;
+			if (e.player.removeTag(SYNC_TAG)) {
+				EquipmentDataPacket.forEntity(e.player).ifPresent((m) -> m.sendTo(e.player));
+			}
 			Vec3d eyes = new Vec3d(e.player.posX, e.player.posY + e.player.getEyeHeight(), e.player.posZ);;
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
