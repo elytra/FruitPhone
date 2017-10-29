@@ -109,6 +109,7 @@ public class LayerFruitGlass implements LayerRenderer<EntityPlayer> {
 			        render(limbSwing);
 			        
 				} GlStateManager.popMatrix();
+				GlStateManager.color(1, 1, 1);
 			}
 		}
 	}

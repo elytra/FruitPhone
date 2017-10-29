@@ -508,13 +508,17 @@ public class ScreenConfigureGlasses extends GuiScreen {
 		if (is.isEmpty()) {
 			Item item;
 			while (!(item = Item.REGISTRY.getRandomObject(rand)).getRegistryName().getResourceDomain().equals("minecraft")) {}
-			NonNullList<ItemStack> nnl = NonNullList.create();
-			item.getSubItems(item.getCreativeTab(), nnl);
-			is = nnl.get(rand.nextInt(nnl.size()));
-			if (item.isDamageable() && is.getMaxDamage() > 0) {
-				is.setItemDamage(rand.nextInt(is.getMaxDamage()));
+			try {
+				NonNullList<ItemStack> nnl = NonNullList.create();
+				item.getSubItems(item.getCreativeTab(), nnl);
+				is = nnl.get(rand.nextInt(nnl.size()));
+				if (item.isDamageable() && is.getMaxDamage() > 0) {
+					is.setItemDamage(rand.nextInt(is.getMaxDamage()));
+				}
+				chestData[idx] = is;
+			} catch (Exception e) {
+				// swallow it, #21
 			}
-			chestData[idx] = is;
 		} else if (is.isStackable()) {
 			is.setCount(is.getCount()+1);
 		}
