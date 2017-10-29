@@ -251,7 +251,13 @@ public class FruitRenderer {
 	public static List<IProbeData> format(List<IProbeData> data, BlockPos src) {
 		List<IProbeData> newData = Lists.newArrayList();
 		IBlockState b = Minecraft.getMinecraft().world.getBlockState(src);
-		ItemStack pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().world, src, Minecraft.getMinecraft().player);
+		ItemStack pickblock;
+		try {
+			pickblock = b.getBlock().getPickBlock(b, Minecraft.getMinecraft().objectMouseOver, Minecraft.getMinecraft().world, src, Minecraft.getMinecraft().player);
+		} catch (Exception e) {
+			// MCMP is known to throw NPEs in getPickBlock in some cases
+			pickblock = ItemStack.EMPTY;
+		}
 		FruitProbeData ident = new FruitProbeData();
 		if (pickblock != null && !pickblock.isEmpty()) {
 			ident.withInventory(ImmutableList.of(pickblock));
@@ -393,8 +399,12 @@ public class FruitRenderer {
 			if (d.hasInventory() && !d.getInventory().isEmpty() && !d.getInventory().get(0).isEmpty()) {
 				RenderHelper.enableGUIStandardItemLighting();
 				if (d.getInventory().size() == 1 && (d.hasLabel() || d.hasBar())) {
-					Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y-2);
-					Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, d.getInventory().get(0), x, y-2, "");
+					try {
+						Minecraft.getMinecraft().getRenderItem().renderItemAndEffectIntoGUI(d.getInventory().get(0), x, y-2);
+						Minecraft.getMinecraft().getRenderItem().renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, d.getInventory().get(0), x, y-2, "");
+					} catch (Exception e) {
+						// swallow it, #15
+					}
 					x += 20;
 					if (d.hasBar()) {
 						textPosY -= 2;

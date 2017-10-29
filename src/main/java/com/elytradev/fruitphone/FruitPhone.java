@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import com.elytradev.concrete.network.NetworkContext;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,7 +43,6 @@ import com.elytradev.fruitphone.network.SetAlwaysOnPacket;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.fruitphone.proxy.Proxy;
 import com.elytradev.fruitphone.recipe.FruitRecipes;
-import com.elytradev.fruitphone.recipe.FruitUpgradeRecipe;
 import com.elytradev.fruitphone.vanilla.VanillaProviders;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -111,8 +109,6 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraftforge.items.wrapper.SidedInvWrapper;
-import net.minecraftforge.oredict.RecipeSorter;
-import net.minecraftforge.oredict.RecipeSorter.Category;
 
 @Mod(modid=FruitPhone.MODID, name=FruitPhone.NAME, version=FruitPhone.VERSION, dependencies=FruitPhone.DEPENDENCIES)
 public class FruitPhone {
@@ -336,6 +332,9 @@ public class FruitPhone {
 			Vec3d eyes = e.player.getPositionEyes(1);
 			Vec3d look = e.player.getLookVec();
 			double dist = 4;
+			if (e.player instanceof EntityPlayerMP) {
+				dist = ((EntityPlayerMP)e.player).interactionManager.getBlockReachDistance();
+			}
 			Vec3d max = eyes.addVector(look.x * dist, look.y * dist, look.z * dist);
 			RayTraceResult rtr = e.player.world.rayTraceBlocks(eyes, max, false, false, false);
 			if (rtr != null && rtr.typeOfHit == Type.BLOCK) {
