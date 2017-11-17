@@ -50,7 +50,8 @@ public class FruitEquipmentCapability implements ICapabilityProvider, INBTSerial
 	}
 
 	public void copyFrom(FruitEquipmentCapability that) {
-		this.glasses = that.glasses.copy();
+		if (that.glasses == null) this.glasses = null;
+		else this.glasses = that.glasses.copy();
 	}
 
 	@Override
