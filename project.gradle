@@ -1,20 +1,29 @@
-ext.package = 'com.elytradev.fruitphone'
-ext.group = 'com.elytradev'
-ext.projectName = 'FruitPhone'
-ext.useElytraVersionFormat = true
-ext.version = '2'
+// See https://github.com/elytra/Skeleton/wiki for what all these values mean
 
-// 0.2.1 is the earliest Concrete version supported by the skeleton.
-ext.concreteVersion = '0.3.1'
-ext.concreteModules = [ 'common', 'network', 'reflect' ]
+ext {
+	group = 'com.elytradev'
+	projectName = 'FruitPhone'
 
-ext.forge = '1.12-14.21.0.2359'
-ext.mappings = 'snapshot_20170623'
+	useElytraVersionFormat = true
+	version = '2'
 
-ext.enforceLicenseHeaders = false
+	concreteVersion = '0.3.4-SNAPSHOT'
+	concreteModules = [ 'common', 'network', 'reflect' ]
 
-ext.verbose = false
+	coremod = null
+	miniVersion = null
 
+	language = 'java'
+
+	forge = '1.12.2-14.23.1.2557'
+	mappings = 'snapshot_20171130'
+
+	enforceLicenseHeaders = false
+
+	verbose = false
+}
+
+if (!ext.early) {
 repositories {
     // the skeleton already defines mavenCentral, jcenter, and the Elytra repo
     maven {
@@ -28,9 +37,11 @@ repositories {
 dependencies {
     compile project(':ProbeDataProviderAPI')
 
-    compile 'mezz.jei:jei_1.12:4.7.0.67:api'
-    runtime 'mezz.jei:jei_1.12:4.7.0.67'
+    compile 'mezz.jei:jei_1.12.2:4.8.4.131:api'
+    runtime 'mezz.jei:jei_1.12.2:4.8.4.131'
 
-    compile 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
-    runtime 'mcp.mobius.waila:Hwyla:1.8.10-B23_1.11'
+    compile 'mcp.mobius.waila:Hwyla:1.8.22-B37_1.12'
+    runtime 'mcp.mobius.waila:Hwyla:1.8.22-B37_1.12'
+}
+
 }

@@ -41,8 +41,6 @@ import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.item.FruitItems;
 import com.elytradev.fruitphone.item.ItemFruit;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
-import com.google.common.base.Objects;
-
 import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.concrete.reflect.invoker.Invoker;
@@ -434,7 +432,7 @@ public class ClientProxy extends Proxy {
 				}
 				
 				if (!OpenGlHelper.isFramebufferEnabled()) {
-					Minecraft.getMinecraft().fontRenderer.drawString("LEGACY MODE", 40, 56, ~Minecraft.getMinecraft().getItemColors().getColorFromItemstack(is, 0));
+					Minecraft.getMinecraft().fontRenderer.drawString("LEGACY MODE", 40, 56, ~Minecraft.getMinecraft().getItemColors().colorMultiplier(is, 0));
 				}
 				
 				GL11.glEnable(GL11.GL_LIGHTING);
