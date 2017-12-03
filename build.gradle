@@ -83,8 +83,6 @@ if (!project.ext.concreteModules.isEmpty()) {
 println("Forge Version: "+project.ext.forge)
 println("Mappings: "+project.ext.mappings)
 
-project.ext.priv = parseConfig(file('private.properties'))
-
 group = project.ext.group
 archivesBaseName = project.ext.projectName
 
@@ -139,7 +137,7 @@ if (!project.ext.concreteModules.isEmpty()) {
 	}
 }
 
-if (priv != null) {
+if (file('private.gradle').exists()) {
 	apply plugin: 'maven'
 
 	configurations {
@@ -150,18 +148,8 @@ if (priv != null) {
 		deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
 	}
 
-	uploadArchives {
-		repositories.mavenDeployer {
-			configuration = configurations.deploy
-			pom.artifactId = project.ext.projectName.toLowerCase()
-			repository(url: "sftp://"+priv.sftpHost+priv.sftpPath) {
-				authentication(userName: priv.sftpUser, privateKey: file(priv.sftpKey))
-			}
-		}
-	}
+	apply from: 'private.gradle'
 }
-
-
 
 minecraft {
 	version = project.ext.forge
@@ -194,11 +182,3 @@ processResources {
 	}
 }
 
-def parseConfig(File config) {
-	if (!config.exists()) return null
-	config.withReader {
-		def prop = new Properties()
-		prop.load(it)
-		return (new ConfigSlurper().parse(prop))
-	}
-}
