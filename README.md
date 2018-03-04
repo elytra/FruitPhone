@@ -3,6 +3,8 @@
 # Fruit Phone
 [>> Downloads <<](https://github.com/elytra/FruitPhone/releases)
 
+## Notice: Fruit Phone is currently unmaintained.
+
 *An extra-immersive Waila alternative*
 
 **This mod is open source and under a permissive license.** All Elytra mods are,
