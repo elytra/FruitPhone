@@ -109,6 +109,8 @@ fruitphone.beacon.primary=Primary: %s %s
 fruitphone.beacon.secondary=Secondary: %s %s
 fruitphone.beacon.none=None
 
+fruitphone.mobSpawner.title=%1$s %2$s
+
 fruitphone.gui.snapToGuides=Snap to Guides
 fruitphone.gui.clampRegion=Clamp Region
 fruitphone.gui.restoreDefaults=Restore Defaults
