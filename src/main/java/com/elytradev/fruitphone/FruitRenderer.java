@@ -560,7 +560,9 @@ public class FruitRenderer {
 		
 				ItemStack stack = mdp.identifyBlockHighlight(world, player, rtr, dac);
 				if (stack == null || stack.isEmpty()) {
-					stack = data.get(0).getInventory().get(0);
+					if (!data.isEmpty() && data.get(0).hasInventory() && !data.get(0).getInventory().isEmpty()) {
+						stack = data.get(0).getInventory().get(0);
+					}
 				} else {
 					((ProbeData)data.get(0))
 						.withInventory(ImmutableList.of(stack))
@@ -573,15 +575,22 @@ public class FruitRenderer {
 				
 				int idx = 1;
 				for (String s : wailaHead) {
-					if ("<ERROR>".equals(s)) s = I18n.format("fruitphone.wailaError");
+					if ("<ERROR>".equals(s)) {
+						s = I18n.format("fruitphone.wailaError");
+					}
+					
 					data.add(idx++, new ProbeData(s));
 				}
 				for (String s : wailaBody) {
-					if ("<ERROR>".equals(s)) s = I18n.format("fruitphone.wailaError");
+					if ("<ERROR>".equals(s)) {
+						s = I18n.format("fruitphone.wailaError");
+					}
 					data.add(idx++, new ProbeData(s));
 				}
 				for (String s : wailaTail) {
-					if ("<ERROR>".equals(s)) s = I18n.format("fruitphone.wailaError");
+					if ("<ERROR>".equals(s)) {
+						s = I18n.format("fruitphone.wailaError");
+					}
 					data.add(new ProbeData(s));
 				}
 			} catch (Throwable t) {

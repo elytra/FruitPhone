@@ -28,6 +28,7 @@ import net.minecraft.block.BlockJukebox.TileEntityJukebox;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityBeacon;
 import net.minecraft.tileentity.TileEntityFurnace;
+import net.minecraft.tileentity.TileEntityMobSpawner;
 import net.minecraft.tileentity.TileEntityNote;
 
 import java.util.List;
@@ -61,6 +62,7 @@ public class VanillaProviders {
 		map.put(TileEntityJukebox.class, new JukeboxDataProvider());
 		map.put(TileEntityNote.class, new NoteBlockDataProvider());
 		map.put(TileEntityBeacon.class, new BeaconDataProvider());
+		map.put(TileEntityMobSpawner.class, new MobSpawnerDataProvider());
 	}
 	
 }
