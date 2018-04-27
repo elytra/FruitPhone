@@ -227,7 +227,7 @@ public class FruitRecipes {
 	}
 
 	private static void colorRecipe(IForgeRegistry<IRecipe> registry, int color, Object... ingredients) {
-		craftableColors.add(color);
+		if (!craftableColors.contains(color)) craftableColors.add(color);
 		
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setInteger("fruitphone:color", color);
