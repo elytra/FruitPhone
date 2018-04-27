@@ -11,11 +11,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntityMobSpawner;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.translation.I18n;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
-@SuppressWarnings("deprecation")
 public class MobSpawnerDataProvider  implements VanillaDataProvider<TileEntityMobSpawner> {
 	
 	@Override
@@ -26,12 +25,12 @@ public class MobSpawnerDataProvider  implements VanillaDataProvider<TileEntityMo
 		if (spawnData.hasKey("id")) {
 			String entityId = spawnData.getString("id");
 			EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(entityId));
-			String entityName = I18n.translateToLocal("entity."+entry.getName()+".name");
-			String mobSpawner = I18n.translateToLocal("tile.mobSpawner.name");
+			
+			TextComponentTranslation title = new TextComponentTranslation("fruitphone.mobSpawner.title", new TextComponentTranslation("entity."+entry.getName()+".name"), new TextComponentTranslation("tile.mobSpawner.name"));
 			
 			li.add(new ProbeData()
 					.withInventory(ImmutableList.of(new ItemStack(Blocks.MOB_SPAWNER)))
-					.withLabel(I18n.translateToLocalFormatted("%1$s %2$s", entityName, mobSpawner)));
+					.withLabel(title));
 		}
 		
 	}
