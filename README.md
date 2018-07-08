@@ -3,7 +3,7 @@
 # Fruit Phone
 [>> Downloads <<](https://github.com/elytra/FruitPhone/releases)
 
-## Notice: Fruit Phone is currently unmaintained.
+## Notice: Fruit Phone is currently unmaintained. PRs welcome.
 
 *An extra-immersive Waila alternative*
 
