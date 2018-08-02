@@ -135,7 +135,7 @@ public class FruitPhone {
 			}
 			int iTicks = (int)ClientProxy.ticks;
 			if (iTicks%20 == 0) {
-				int col = FruitRecipes.craftableColors.get((iTicks/20) % FruitRecipes.craftableColors.size());
+				int col = FruitRecipes.craftableColors.get((iTicks == 0 ? 0 : iTicks / 20) % FruitRecipes.craftableColors.size());
 				icon.getTagCompound().setInteger("fruitphone:color", col);
 			}
 			return icon;
