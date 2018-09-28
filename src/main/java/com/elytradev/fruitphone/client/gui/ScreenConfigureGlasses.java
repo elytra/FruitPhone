@@ -31,13 +31,14 @@ import java.util.Random;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+
+import com.elytradev.concrete.common.Rendering;
 import com.elytradev.fruitphone.FruitPhone;
 import com.elytradev.fruitphone.FruitProbeData;
 import com.elytradev.fruitphone.FruitRenderer;
 import com.elytradev.fruitphone.FruitSounds;
 import com.elytradev.fruitphone.Gravity;
 import com.elytradev.fruitphone.FruitRenderer.DataSize;
-import com.elytradev.fruitphone.client.render.Rendering;
 import com.elytradev.fruitphone.item.ItemFruitPassive;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.elytradev.probe.api.IProbeData;

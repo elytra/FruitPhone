@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.elytradev.fruitphone.client.render.Rendering;
+import com.elytradev.concrete.common.Rendering;
 import com.elytradev.fruitphone.proxy.ClientProxy;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
